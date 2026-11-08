@@ -186,8 +186,20 @@ function currentEvent(){
 }
 function finishMonth(keepFeedback){
   if (!keepFeedback) feedback = '';
+  const endingYear = state.month === 12 ? state.year : null;
   monthlyTick(state, rng('tick', state.year, state.month));
   advanceMonth(state);
+  if (endingYear !== null && state.alive) {
+    state.annals = state.annals || [];
+    state.annals.push({
+      year: endingYear, generation: state.dynasty.generation,
+      treasury: Math.round(state.stats.treasury), people: Math.round(state.stats.people),
+      military: Math.round(state.stats.military), agriculture: Math.round(state.stats.agriculture),
+      wars: state.wars.length, wins: state.wars.filter(w => w.won).length,
+      officials: state.officials.length, consorts: state.consorts.length,
+      dc: state.dongchang.cases.filter(c => c.status !== 'closed').length
+    });
+  }
   autoAppoint(state);
   if (!state.alive) tryAccession(state);
   save(); render();
@@ -356,7 +368,10 @@ function renderDC(){
 function renderThrone(){
   const wins = state.wars.filter(w => w.won).length;
   const chron = state.chronicle.map(c => `<li><span>第${c.generation}世 · ${c.endedInYear}年</span><span class="loy">${esc(c.endReason||'駕崩')}</span></li>`).join('');
+  const annals = (state.annals || []).slice().reverse().map(a =>
+    `<li><span>第${a.generation}世 ${a.year}年</span><span class="loy">國庫 ${a.treasury}　民心 ${a.people}　兵力 ${a.military}　勝 ${a.wins}/${a.wars}</span></li>`).join('');
   app.innerHTML = `
+    <section class="card"><h2>年度回顧</h2><ul class="list">${annals || '<li><span class="empty">歲末方有回顧。</span></li>'}</ul></section>
     <section class="card"><h2>帝王</h2>
       <div class="meters">
         <div class="meter"><div class="row1"><span>年歲</span><b>${state.age}</b></div></div>
