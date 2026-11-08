@@ -7,6 +7,11 @@ import { makeRng } from './rng.js';
 export const ADULT_AGE = 15;
 const LEGACY_KEYS = ['literature', 'military', 'power', 'benevolence', 'prestige'];
 
+// 幼子月死亡率（依年齡，0–4 歲；5 歲以上不受此項影響）。暫定值，見模擬校準。
+export const CHILD_MORTALITY = [0.035, 0.014, 0.007, 0.0035, 0.0018];
+// 奪嫡期間，最弱的成年皇子每月遭除名（薨逝或被貶）的機率。
+export const RIVALRY_LOSS = 0.02;
+
 export function heirStrength(heir) {
   return Object.values(heir.abilities).reduce((a, b) => a + b, 0);
 }
@@ -37,7 +42,7 @@ export function tryAccession(state) {
     wars: state.wars.filter((w) => w.won).length,
   });
 
-  // 只有男性皇子可繼位
+  // 只有男性皇子可繼位；無合格皇子即為斷嗣，國祚終結
   const candidates = state.heirs.filter((h) => h.gender === 'male' && h.age >= ADULT_AGE);
   if (candidates.length === 0) {
     state.dynasty.ended = true;
@@ -60,6 +65,41 @@ export function tryAccession(state) {
 
 export function advanceHeirs(state) {
   for (const h of state.heirs) h.age += 1;
+}
+
+export function childMortalityRate(age) {
+  return age >= 0 && age < CHILD_MORTALITY.length ? CHILD_MORTALITY[age] : 0;
+}
+
+function removeHeir(state, heir, cause) {
+  state.heirs = state.heirs.filter((h) => h !== heir);
+  state.chronicle.push({
+    kind: 'heir_death',
+    generation: state.dynasty.generation,
+    year: state.year,
+    month: state.month,
+    heirId: heir.id,
+    name: heir.name,
+    age: heir.age,
+    cause,
+  });
+}
+
+// 每月皇嗣結算：幼子夭折，以及成年皇子 2 人以上時的奪嫡壓力。
+// 所有隨機數皆由 (seed, 年, 月, 皇嗣 id) 決定，同一局永遠同樣結果。
+export function tickHeirs(state) {
+  const base = [state.seed, 'heirs', state.year, state.month];
+  for (const h of [...state.heirs]) {
+    const p = childMortalityRate(h.age);
+    if (p > 0 && makeRng([...base, 'child', h.id])() < p) removeHeir(state, h, 'child_mortality');
+  }
+
+  const adults = state.heirs.filter((h) => h.gender === 'male' && h.age >= ADULT_AGE);
+  state.dynasty.rivalry = adults.length >= 2;
+  if (state.dynasty.rivalry) {
+    const weakest = [...adults].sort((a, b) => heirStrength(a) - heirStrength(b) || a.id.localeCompare(b.id))[0];
+    if (makeRng([...base, 'rivalry'])() < RIVALRY_LOSS) removeHeir(state, weakest, 'rivalry');
+  }
 }
 
 export function heirRng(seed, generation, nonce) {
