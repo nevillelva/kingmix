@@ -426,7 +426,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
-              "strength": 252,
+              "strength": 244,
               "reward": {
                 "treasury": 30,
                 "prestige": 4
@@ -473,7 +473,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
-              "strength": 408,
+              "strength": 396,
               "reward": {
                 "prestige": 6,
                 "treasury": 60,
@@ -1078,7 +1078,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
-              "strength": 304,
+              "strength": 295,
               "reward": {
                 "prestige": 5,
                 "armament": 30
@@ -6173,7 +6173,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
-              "strength": 328,
+              "strength": 318,
               "reward": {
                 "prestige": 5,
                 "treasury": 40
@@ -6224,7 +6224,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
-              "strength": 285,
+              "strength": 276,
               "reward": {
                 "treasury": 30,
                 "prestige": 3
@@ -6403,7 +6403,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
-              "strength": 361,
+              "strength": 350,
               "reward": {
                 "military": 4,
                 "prestige": 4
@@ -6579,7 +6579,7 @@
           "tone": "冒險",
           "effects": {
             "war": {
-              "strength": 390,
+              "strength": 378,
               "reward": {
                 "prestige": 6,
                 "treasury": 50
@@ -6682,7 +6682,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
-              "strength": 275,
+              "strength": 267,
               "reward": {
                 "prestige": 3
               },
