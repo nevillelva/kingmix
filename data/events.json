@@ -396,9 +396,9 @@
           "tone": "穩妥",
           "effects": {
             "commerce": 20,
-            "treasury": 40
-          },
-          "chain": "E201"
+            "treasury": 40,
+            "chain": "E201"
+          }
         },
         {
           "key": "C",
@@ -867,9 +867,9 @@
           "label": "嚴查到底",
           "tone": "強硬",
           "effects": {
-            "investigate_lowest": true
-          },
-          "shared_event": true
+            "investigate_lowest": true,
+            "shared_event": true
+          }
         },
         {
           "key": "B",
@@ -1649,10 +1649,10 @@
           "tone": "強硬",
           "effects": {
             "investigate_lowest": true,
-            "benevolence": 2
-          },
-          "chain": "E206",
-          "shared_event": true
+            "benevolence": 2,
+            "chain": "E206",
+            "shared_event": true
+          }
         },
         {
           "key": "B",
@@ -1775,9 +1775,9 @@
           "tone": "強硬",
           "effects": {
             "official_loyalty_add": -5,
-            "power": -2
-          },
-          "shared_event": true
+            "power": -2,
+            "shared_event": true
+          }
         },
         {
           "key": "C",
@@ -1810,9 +1810,9 @@
           "effects": {
             "prestige": -2,
             "treasury": 20,
-            "benevolence": 2
-          },
-          "chain": "E204"
+            "benevolence": 2,
+            "chain": "E204"
+          }
         },
         {
           "key": "B",
@@ -1859,9 +1859,9 @@
           "tone": "強硬",
           "effects": {
             "prestige": -3,
-            "official_loyalty_add": 3
-          },
-          "shared_event": true
+            "official_loyalty_add": 3,
+            "shared_event": true
+          }
         },
         {
           "key": "C",
@@ -1970,9 +1970,9 @@
           "tone": "冒險",
           "effects": {
             "treasury": -120,
-            "agriculture": 30
-          },
-          "chain": "E202"
+            "agriculture": 30,
+            "chain": "E202"
+          }
         },
         {
           "key": "B",
@@ -2010,9 +2010,9 @@
           "tone": "穩妥",
           "effects": {
             "literature": 8,
-            "treasury": -20
-          },
-          "shared_event": true
+            "treasury": -20,
+            "shared_event": true
+          }
         },
         {
           "key": "B",
@@ -2050,9 +2050,9 @@
           "tone": "強硬",
           "effects": {
             "official_loyalty_add": -6,
-            "investigate_lowest": true
-          },
-          "shared_event": true
+            "investigate_lowest": true,
+            "shared_event": true
+          }
         },
         {
           "key": "B",
@@ -2099,9 +2099,9 @@
           "tone": "仁厚",
           "effects": {
             "treasury": -50,
-            "people": 10
-          },
-          "chain": "E207"
+            "people": 10,
+            "chain": "E207"
+          }
         },
         {
           "key": "C",
@@ -2445,9 +2445,9 @@
           "effects": {
             "military": -5,
             "armament": 4,
-            "treasury": -60
-          },
-          "chain": "E205"
+            "treasury": -60,
+            "chain": "E205"
+          }
         },
         {
           "key": "B",
@@ -2578,9 +2578,9 @@
           "label": "遣官代祭",
           "tone": "穩妥",
           "effects": {
-            "heaven": 1
-          },
-          "shared_event": true
+            "heaven": 1,
+            "shared_event": true
+          }
         },
         {
           "key": "C",
@@ -2651,9 +2651,9 @@
           "tone": "強硬",
           "effects": {
             "investigate_lowest": true,
-            "treasury": 30
-          },
-          "shared_event": true
+            "treasury": 30,
+            "shared_event": true
+          }
         },
         {
           "key": "B",
@@ -2706,9 +2706,9 @@
           "label": "留任以備顧問",
           "tone": "穩妥",
           "effects": {
-            "official_loyalty_add": 2
-          },
-          "shared_event": true
+            "official_loyalty_add": 2,
+            "shared_event": true
+          }
         }
       ]
     },
@@ -2729,9 +2729,9 @@
           "effects": {
             "military": -4,
             "official_loyalty_add": -5,
-            "power": 2
-          },
-          "shared_event": true
+            "power": 2,
+            "shared_event": true
+          }
         },
         {
           "key": "B",
@@ -2888,9 +2888,9 @@
           "tone": "冒險",
           "effects": {
             "treasury": -90,
-            "armament": 8
-          },
-          "shared_event": true
+            "armament": 8,
+            "shared_event": true
+          }
         },
         {
           "key": "B",
@@ -3039,9 +3039,9 @@
           "tone": "仁厚",
           "effects": {
             "military": 5,
-            "treasury": -50
-          },
-          "shared_event": true
+            "treasury": -50,
+            "shared_event": true
+          }
         },
         {
           "key": "B",
@@ -3084,9 +3084,9 @@
           "effects": {
             "military": -3,
             "armament": 5,
-            "treasury": -40
-          },
-          "chain": "E208"
+            "treasury": -40,
+            "chain": "E208"
+          }
         },
         {
           "key": "B",
@@ -3127,9 +3127,9 @@
           "tone": "仁厚",
           "effects": {
             "treasury": -70,
-            "charm": 4
-          },
-          "chain": "E203"
+            "charm": 4,
+            "chain": "E203"
+          }
         },
         {
           "key": "B",
