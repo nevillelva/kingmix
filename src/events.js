@@ -37,3 +37,24 @@ export function isEligible(state, event, rng) {
 
 // Phase 1 只開放 phase <= 1 的事件與選項；其餘留待後續階段。
 export const isAvailable = (node) => !node.phase || node.phase <= 1;
+
+// 事件冷卻與每局上限（方案：24 個月冷卻；任一事件每局不超過 8 次）。
+export const EVENT_COOLDOWN = 24;
+export const EVENT_MAX_PER_RUN = 8;
+const monthIndex = (state) => (state.year - 1) * 12 + (state.month - 1);
+
+export function eventAllowed(state, id) {
+  const h = state.eventHistory || { counts: {}, last: {} };
+  if ((h.counts[id] || 0) >= EVENT_MAX_PER_RUN) return false;
+  const last = h.last[id];
+  if (last !== undefined && monthIndex(state) - last < EVENT_COOLDOWN) return false;
+  return true;
+}
+
+// 只有真正被選中並套用的事件才記錄，渲染時的預覽不記錄。
+export function recordEvent(state, id) {
+  state.eventHistory = state.eventHistory || { counts: {}, last: {} };
+  const h = state.eventHistory;
+  h.counts[id] = (h.counts[id] || 0) + 1;
+  h.last[id] = monthIndex(state);
+}

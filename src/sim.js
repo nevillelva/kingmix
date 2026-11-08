@@ -2,7 +2,7 @@
 // 東廠有待處置的把柄時，該月的奏摺改為「東廠密報」。
 
 import { createInitialState } from './state.js';
-import { isEligible, isAvailable } from './events.js';
+import { isEligible, isAvailable, eventAllowed, recordEvent } from './events.js';
 import { makeRng } from './rng.js';
 import { applyOption, monthlyTick, advanceMonth } from './turn.js';
 import { applyDongchangAction, DC_ACTIONS } from './dongchang.js';
@@ -27,10 +27,22 @@ export function autoAppoint(state) {
 }
 
 // 從所有符合條件的事件中，以種子隨機挑一則；避免清單前段事件長期壟斷。
+// 加權抽選：時序事件（every_years / months）權重 3，避免被大量一般事件稀釋；其餘權重 1。
+export function eventWeight(e) {
+  const w = e.when || {};
+  return ('every_years' in w || 'months' in w) ? 3 : 1;
+}
+
 export function pickEvent(state, events, rng) {
-  const eligible = events.filter((e) => isAvailable(e) && isEligible(state, e, rng));
+  const eligible = events.filter((e) => isAvailable(e) && eventAllowed(state, e.id) && isEligible(state, e, rng));
   if (eligible.length === 0) return null;
-  return eligible[Math.floor(rng() * eligible.length)];
+  const total = eligible.reduce((sum, e) => sum + eventWeight(e), 0);
+  let r = rng() * total;
+  for (const e of eligible) {
+    r -= eventWeight(e);
+    if (r < 0) return e;
+  }
+  return eligible[eligible.length - 1];
 }
 
 export function runSimulation({ seed, months, events, policy = 'agrarian' }) {
@@ -62,6 +74,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian' }) {
         const option = options[Math.floor(pick * options.length)];
         applyOption(state, option, makeRng([seed, year, month, 'recruit']));
         bump(event.id);
+        recordEvent(state, event.id);
         log.push({ year, month, event: event.id, option: option.key });
       }
     }

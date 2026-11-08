@@ -6,7 +6,7 @@
       "id": "E001",
       "name": "農業低迷",
       "when": {
-        "agriculture_lt": 300
+        "agriculture_lt": 340
       },
       "options": [
         {
@@ -237,9 +237,9 @@
     },
     {
       "id": "E008",
-      "name": "太傅任命完成",
+      "name": "皇子課業",
       "when": {
-        "flag": "tutor_appointed",
+        "heirs_gt": 0,
         "chance": 0.3
       },
       "options": [
@@ -368,7 +368,7 @@
           "label": "水師剿滅",
           "effects": {
             "war": {
-              "strength": 230,
+              "strength": 252,
               "reward": {
                 "treasury": 30,
                 "prestige": 4
@@ -410,7 +410,7 @@
           "label": "出兵迎擊",
           "effects": {
             "war": {
-              "strength": 380,
+              "strength": 408,
               "reward": {
                 "prestige": 6,
                 "treasury": 60,
@@ -480,7 +480,7 @@
       "name": "後宮誕育",
       "when": {
         "consorts_gt": 0,
-        "chance": 0.2
+        "chance": 0.4
       },
       "options": [
         {
@@ -512,8 +512,8 @@
       "id": "E016",
       "name": "水利淤塞",
       "when": {
-        "agriculture_lt": 350,
-        "chance": 0.1
+        "agriculture_lt": 380,
+        "chance": 0.15
       },
       "options": [
         {
@@ -545,7 +545,7 @@
       "id": "E017",
       "name": "商賈囤積",
       "when": {
-        "commerce_gt": 500,
+        "commerce_gt": 200,
         "chance": 0.2
       },
       "options": [
@@ -647,7 +647,7 @@
       "id": "E020",
       "name": "邊將擁兵",
       "when": {
-        "official_loyalty_lt": 50,
+        "official_loyalty_lt": 65,
         "chance": 0.25
       },
       "options": [
@@ -850,8 +850,8 @@
       "id": "E026",
       "name": "方士獻丹",
       "when": {
-        "health_lt": 60,
-        "chance": 0.15
+        "chance": 0.15,
+        "health_lt": 75
       },
       "options": [
         {
@@ -913,7 +913,7 @@
       "id": "E028",
       "name": "叛將作亂",
       "when": {
-        "official_loyalty_lt": 40,
+        "official_loyalty_lt": 55,
         "chance": 0.3
       },
       "options": [
@@ -937,7 +937,7 @@
           "label": "派兵圍剿",
           "effects": {
             "war": {
-              "strength": 280,
+              "strength": 304,
               "reward": {
                 "prestige": 5,
                 "armament": 30
@@ -1340,6 +1340,5194 @@
           "label": "令其讀書",
           "effects": {
             "literature": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E041",
+      "name": "江南水患",
+      "when": {
+        "months": [
+          7,
+          8
+        ],
+        "chance": 0.35
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開倉賑濟",
+          "effects": {
+            "treasury": -60,
+            "people": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "責令地方自救",
+          "effects": {
+            "people": -8,
+            "benevolence": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "減免賦稅",
+          "effects": {
+            "treasury": -30,
+            "people": 6,
+            "benevolence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E042",
+      "name": "邊關糧餉遲發",
+      "when": {
+        "months": [
+          3,
+          4
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "從內帑撥銀",
+          "effects": {
+            "treasury": -50,
+            "military": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "催促戶部",
+          "effects": {
+            "military": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "讓邊將自籌",
+          "effects": {
+            "military": -6,
+            "official_loyalty_add": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E043",
+      "name": "科舉舞弊案",
+      "when": {
+        "every_years": 3,
+        "months": [
+          8,
+          9
+        ],
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴查到底",
+          "effects": {
+            "investigate_lowest": true,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "從輕發落",
+          "effects": {
+            "official_loyalty_add": 3,
+            "prestige": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "暗中壓下",
+          "effects": {
+            "treasury": 10,
+            "prestige": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E044",
+      "name": "海外商船來朝",
+      "when": {
+        "commerce_gt": 20,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設市舶司抽稅",
+          "effects": {
+            "treasury": 40,
+            "commerce": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "厚賞以示天朝",
+          "effects": {
+            "treasury": -30,
+            "prestige": 5
+          }
+        },
+        {
+          "key": "C",
+          "label": "閉關拒絕",
+          "effects": {
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E045",
+      "name": "太醫進獻丹方",
+      "when": {
+        "health_lt": 75,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "服用",
+          "effects": {
+            "health": 10,
+            "heaven": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "召太醫詳驗",
+          "effects": {
+            "treasury": -10,
+            "health": 4
+          }
+        },
+        {
+          "key": "C",
+          "label": "拒而不用",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E046",
+      "name": "宗室請封王",
+      "when": {
+        "every_years": 2,
+        "months": [
+          2
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允准",
+          "effects": {
+            "official_loyalty_add": 2,
+            "treasury": -40
+          }
+        },
+        {
+          "key": "B",
+          "label": "駁回",
+          "effects": {
+            "official_loyalty_add": -5,
+            "power": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "封小王以安撫",
+          "effects": {
+            "treasury": -15,
+            "official_loyalty_add": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E047",
+      "name": "北狄遣使求和",
+      "when": {
+        "chance": 0.25,
+        "months": [
+          9,
+          10
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "和親納貢",
+          "effects": {
+            "prestige": -2,
+            "treasury": 20,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "拒絕並加強戍守",
+          "effects": {
+            "treasury": -30,
+            "military": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "假意應允暗中備戰",
+          "effects": {
+            "armament": 6,
+            "prestige": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E048",
+      "name": "史官直書奏疏",
+      "when": {
+        "prestige_lt": 65,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "容許直言",
+          "effects": {
+            "benevolence": 4,
+            "power": -1
+          }
+        },
+        {
+          "key": "B",
+          "label": "削其言",
+          "effects": {
+            "prestige": -3,
+            "official_loyalty_add": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不理",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E049",
+      "name": "鹽商囤積",
+      "when": {
+        "treasury_lt": 500,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "整頓鹽政",
+          "effects": {
+            "treasury": 50,
+            "commerce": -2,
+            "people": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "借貸於商",
+          "effects": {
+            "treasury": 80,
+            "benevolence": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "放任",
+          "effects": {
+            "people": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "E050",
+      "name": "皇后病重",
+      "when": {
+        "every_years": 4,
+        "months": [
+          12
+        ],
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遍求良醫",
+          "effects": {
+            "treasury": -25,
+            "health": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "聽天由命",
+          "effects": {
+            "health": -4
+          }
+        },
+        {
+          "key": "C",
+          "label": "大赦天下",
+          "effects": {
+            "benevolence": 4,
+            "treasury": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E051",
+      "name": "黃河改道",
+      "when": {
+        "every_years": 5,
+        "months": [
+          6
+        ],
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "大興河工",
+          "effects": {
+            "treasury": -120,
+            "agriculture": 30
+          }
+        },
+        {
+          "key": "B",
+          "label": "遷村避水",
+          "effects": {
+            "people": -12,
+            "agriculture": -10
+          }
+        },
+        {
+          "key": "C",
+          "label": "築堤加固",
+          "effects": {
+            "treasury": -60,
+            "agriculture": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E052",
+      "name": "翰林請修史",
+      "when": {
+        "literature_lt": 105,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准修",
+          "effects": {
+            "literature": 8,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "暫緩",
+          "effects": {}
+        },
+        {
+          "key": "C",
+          "label": "改由內閣擬稿",
+          "effects": {
+            "official_loyalty_add": 2,
+            "literature": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E053",
+      "name": "御史彈劾重臣",
+      "when": {
+        "every_years": 2,
+        "months": [
+          5
+        ],
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "採信彈劾",
+          "effects": {
+            "official_loyalty_add": -6,
+            "investigate_lowest": true
+          }
+        },
+        {
+          "key": "B",
+          "label": "兩罰其一",
+          "effects": {
+            "official_loyalty_add": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "駁回御史",
+          "effects": {
+            "official_loyalty_add": 4,
+            "power": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E054",
+      "name": "民間起義苗頭",
+      "when": {
+        "people_lt": 40,
+        "chance": 0.35
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "派兵鎮壓",
+          "effects": {
+            "military": -4,
+            "people": -6,
+            "armament": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "開倉安撫",
+          "effects": {
+            "treasury": -50,
+            "people": 10
+          }
+        },
+        {
+          "key": "C",
+          "label": "招撫為屯田",
+          "effects": {
+            "agriculture": 15,
+            "people": 4,
+            "treasury": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E055",
+      "name": "太子出閣讀書",
+      "when": {
+        "heirs_gt": 0,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "延請名師",
+          "effects": {
+            "tutor_teach": true,
+            "treasury": -15
+          }
+        },
+        {
+          "key": "B",
+          "label": "親自教導",
+          "effects": {
+            "tutor_teach": true,
+            "health": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "任其自學",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E056",
+      "name": "鄉紳捐資助學",
+      "when": {
+        "commerce_gt": 30,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "褒獎並授官",
+          "effects": {
+            "literature": 4,
+            "official_loyalty_add": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "收其田產",
+          "effects": {
+            "treasury": 50,
+            "people": -5
+          }
+        },
+        {
+          "key": "C",
+          "label": "婉拒",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E057",
+      "name": "西域進貢良馬",
+      "when": {
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "收下",
+          "effects": {
+            "armament": 5,
+            "treasury": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "退還",
+          "effects": {
+            "prestige": -1
+          }
+        },
+        {
+          "key": "C",
+          "label": "賞賜厚禮",
+          "effects": {
+            "treasury": -25,
+            "prestige": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E058",
+      "name": "皇陵工程停滯",
+      "when": {
+        "treasury_lt": 300,
+        "every_years": 3,
+        "months": [
+          4
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "撥款續建",
+          "effects": {
+            "treasury": -80,
+            "heaven": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "暫停",
+          "effects": {
+            "heaven": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "改由民工充役",
+          "effects": {
+            "people": -8,
+            "treasury": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E059",
+      "name": "佛道之爭",
+      "when": {
+        "chance": 0.25,
+        "months": [
+          4
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "尊儒抑佛",
+          "effects": {
+            "benevolence": -2,
+            "literature": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "兼容並蓄",
+          "effects": {
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "崇道",
+          "effects": {
+            "heaven": 4,
+            "treasury": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E060",
+      "name": "軍糧倉失火",
+      "when": {
+        "chance": 0.2,
+        "months": [
+          10,
+          11
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴懲守倉官",
+          "effects": {
+            "official_loyalty_add": -4,
+            "treasury": -30
+          }
+        },
+        {
+          "key": "B",
+          "label": "掩蓋不報",
+          "effects": {
+            "military": -4,
+            "prestige": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "緊急調撥補足",
+          "effects": {
+            "treasury": -60,
+            "military": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E061",
+      "name": "寵妃請立",
+      "when": {
+        "charm_gt": 200,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允准",
+          "effects": {
+            "charm": 3,
+            "official_loyalty_add": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "堅拒",
+          "effects": {
+            "official_loyalty_add": 3,
+            "charm": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "封號加一等",
+          "effects": {
+            "treasury": -20,
+            "charm": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E062",
+      "name": "鐵礦新脈",
+      "when": {
+        "chance": 0.25,
+        "months": [
+          2,
+          3
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "官營開採",
+          "effects": {
+            "treasury": 60,
+            "people": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "召民間開採",
+          "effects": {
+            "treasury": 25,
+            "commerce": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "封禁待查",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E063",
+      "name": "西南土司叛亂",
+      "when": {
+        "chance": 0.25,
+        "months": [
+          8,
+          9
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "出兵征剿",
+          "effects": {
+            "military": -5,
+            "armament": 4,
+            "treasury": -60
+          }
+        },
+        {
+          "key": "B",
+          "label": "授以土官",
+          "effects": {
+            "prestige": -2,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "聯絡其他土司分化",
+          "effects": {
+            "official_loyalty_add": -2,
+            "armament": 2,
+            "treasury": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E064",
+      "name": "天象異常",
+      "when": {
+        "every_years": 2,
+        "months": [
+          1
+        ],
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "罪己詔",
+          "effects": {
+            "benevolence": 4,
+            "heaven": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "詔問群臣",
+          "effects": {
+            "official_loyalty_add": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "斥為妖言",
+          "effects": {
+            "heaven": -3,
+            "prestige": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E065",
+      "name": "糧價飛漲",
+      "when": {
+        "chance": 0.3,
+        "months": [
+          5,
+          6
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "平糶",
+          "effects": {
+            "treasury": -40,
+            "people": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "禁囤積",
+          "effects": {
+            "commerce": -3,
+            "people": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "任其自然",
+          "effects": {
+            "people": -7
+          }
+        }
+      ]
+    },
+    {
+      "id": "E066",
+      "name": "太常寺請祭天",
+      "when": {
+        "every_years": 3,
+        "months": [
+          1
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "親祭",
+          "effects": {
+            "heaven": 5,
+            "health": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣官代祭",
+          "effects": {
+            "heaven": 1
+          }
+        },
+        {
+          "key": "C",
+          "label": "省去",
+          "effects": {
+            "heaven": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E067",
+      "name": "驛道失修",
+      "when": {
+        "months": [
+          11,
+          12
+        ],
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "撥銀修整",
+          "effects": {
+            "treasury": -40,
+            "commerce": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "由地方負責",
+          "effects": {
+            "people": -4
+          }
+        },
+        {
+          "key": "C",
+          "label": "暫不理會",
+          "effects": {
+            "commerce": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E068",
+      "name": "戶部查出虧空",
+      "when": {
+        "treasury_lt": 400,
+        "every_years": 2,
+        "months": [
+          12
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴追",
+          "effects": {
+            "investigate_lowest": true,
+            "treasury": 30
+          }
+        },
+        {
+          "key": "B",
+          "label": "寬限三年",
+          "effects": {
+            "treasury": -10
+          }
+        },
+        {
+          "key": "C",
+          "label": "以他款填補",
+          "effects": {
+            "treasury": -30,
+            "benevolence": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E069",
+      "name": "老臣致仕",
+      "when": {
+        "chance": 0.25,
+        "months": [
+          3
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "厚恤",
+          "effects": {
+            "treasury": -25,
+            "benevolence": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "準其歸老",
+          "effects": {}
+        },
+        {
+          "key": "C",
+          "label": "留任以備顧問",
+          "effects": {
+            "official_loyalty_add": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E070",
+      "name": "邊將擁兵自重",
+      "when": {
+        "official_loyalty_lt": 60,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "削其兵權",
+          "effects": {
+            "military": -4,
+            "official_loyalty_add": -5,
+            "power": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "厚賞以籠絡",
+          "effects": {
+            "treasury": -30,
+            "official_loyalty_add": 5
+          }
+        },
+        {
+          "key": "C",
+          "label": "另派監軍",
+          "effects": {
+            "treasury": -15,
+            "power": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E071",
+      "name": "書院講學之風",
+      "when": {
+        "literature_lt": 105,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "獎掖書院",
+          "effects": {
+            "literature": 6,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "以禁令限制",
+          "effects": {
+            "literature": -2,
+            "prestige": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "不加過問",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E072",
+      "name": "洪澇後瘟疫",
+      "when": {
+        "people_lt": 60,
+        "chance": 0.25,
+        "months": [
+          7,
+          8
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遣醫施藥",
+          "effects": {
+            "treasury": -40,
+            "health": 3,
+            "people": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "封村隔離",
+          "effects": {
+            "people": -6,
+            "health": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "祈禱",
+          "effects": {
+            "heaven": 2,
+            "people": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E073",
+      "name": "番商請開互市",
+      "when": {
+        "commerce_gt": 40,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允之",
+          "effects": {
+            "treasury": 35,
+            "commerce": 5,
+            "armament": -1
+          }
+        },
+        {
+          "key": "B",
+          "label": "限額通商",
+          "effects": {
+            "treasury": 15,
+            "commerce": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "不允",
+          "effects": {
+            "prestige": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E074",
+      "name": "工部奏請新造戰船",
+      "when": {
+        "armament_lt": 320,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "批准",
+          "effects": {
+            "treasury": -90,
+            "armament": 8
+          }
+        },
+        {
+          "key": "B",
+          "label": "緩造",
+          "effects": {
+            "armament": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "以舊船修葺",
+          "effects": {
+            "treasury": -30,
+            "armament": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E075",
+      "name": "宮廷樂師獻新曲",
+      "when": {
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "重賞",
+          "effects": {
+            "treasury": -15,
+            "charm": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "斥其靡靡",
+          "effects": {
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "留於內廷",
+          "effects": {
+            "charm": 2,
+            "literature": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E076",
+      "name": "皇子夭折傳聞",
+      "when": {
+        "heirs_gt": 0,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴查流言",
+          "effects": {
+            "investigate_lowest": true,
+            "official_loyalty_add": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "安撫後宮",
+          "effects": {
+            "charm": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不理",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E077",
+      "name": "民間善書流行",
+      "when": {
+        "people_gt": 60,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "頒行全國",
+          "effects": {
+            "benevolence": 3,
+            "literature": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "查禁",
+          "effects": {
+            "prestige": -2,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "順其自然",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E078",
+      "name": "將帥請求增兵",
+      "when": {
+        "months": [
+          4,
+          5,
+          6
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准予",
+          "effects": {
+            "military": 5,
+            "treasury": -50
+          }
+        },
+        {
+          "key": "B",
+          "label": "只給糧草",
+          "effects": {
+            "military": 2,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "C",
+          "label": "拒絕",
+          "effects": {
+            "military": -4,
+            "official_loyalty_add": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E079",
+      "name": "海盜擾東南",
+      "when": {
+        "months": [
+          6,
+          7,
+          8
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "水師剿滅",
+          "effects": {
+            "military": -3,
+            "armament": 5,
+            "treasury": -40
+          }
+        },
+        {
+          "key": "B",
+          "label": "設海禁",
+          "effects": {
+            "commerce": -4,
+            "treasury": -10
+          }
+        },
+        {
+          "key": "C",
+          "label": "招安",
+          "effects": {
+            "prestige": -1,
+            "treasury": -20,
+            "official_loyalty_add": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E080",
+      "name": "皇帝壽辰",
+      "when": {
+        "every_years": 5,
+        "months": [
+          10
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "大宴群臣",
+          "effects": {
+            "treasury": -70,
+            "charm": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "簡辦",
+          "effects": {
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "接受百官賀表",
+          "effects": {
+            "prestige": 3,
+            "official_loyalty_add": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E081",
+      "name": "漕糧北運遲滯",
+      "when": {
+        "months": [
+          6,
+          7
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "加派民夫疏浚河道",
+          "effects": {
+            "treasury": -50,
+            "people": -4,
+            "agriculture": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "改由海運輸糧",
+          "effects": {
+            "treasury": -80,
+            "commerce": 10
+          }
+        },
+        {
+          "key": "C",
+          "label": "聽任延誤",
+          "effects": {
+            "agriculture": -10,
+            "people": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E082",
+      "name": "考成法行",
+      "when": {
+        "every_years": 2,
+        "months": [
+          11
+        ],
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴行考成",
+          "effects": {
+            "official_loyalty_add": -3,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "寬以待人",
+          "effects": {
+            "benevolence": 3,
+            "official_loyalty_add": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "按例而行",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E083",
+      "name": "胥吏舞文弄法",
+      "when": {
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴懲首惡",
+          "effects": {
+            "treasury": 20,
+            "prestige": 2,
+            "official_loyalty_add": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "罰俸充庫",
+          "effects": {
+            "treasury": 40,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "以律示寬",
+          "effects": {
+            "people": 3,
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E084",
+      "name": "銀價大跌",
+      "when": {
+        "months": [
+          3,
+          4,
+          9
+        ],
+        "treasury_lt": 600,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "改鑄大錢",
+          "effects": {
+            "treasury": 60,
+            "commerce": -5,
+            "people": -4
+          }
+        },
+        {
+          "key": "B",
+          "label": "以米折納稅銀",
+          "effects": {
+            "treasury": -30,
+            "people": 4
+          }
+        },
+        {
+          "key": "C",
+          "label": "聽市自定",
+          "effects": {
+            "commerce": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E085",
+      "name": "驛站積弊",
+      "when": {
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "整頓驛站",
+          "effects": {
+            "treasury": -40,
+            "commerce": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "裁減驛卒",
+          "effects": {
+            "treasury": 30,
+            "people": -4
+          }
+        },
+        {
+          "key": "C",
+          "label": "不予過問",
+          "effects": {
+            "commerce": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E086",
+      "name": "官俸不足",
+      "when": {
+        "months": [
+          1,
+          2
+        ],
+        "treasury_lt": 300,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "加俸養廉",
+          "effects": {
+            "treasury": -60,
+            "benevolence": 4,
+            "official_loyalty_add": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "暫緩發放",
+          "effects": {
+            "official_loyalty_add": -6
+          }
+        },
+        {
+          "key": "C",
+          "label": "以祿米折算",
+          "effects": {
+            "treasury": -20,
+            "official_loyalty_add": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E087",
+      "name": "太學生伏闕上書",
+      "when": {
+        "chance": 0.2,
+        "literature_gt": 110
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "召見答問",
+          "effects": {
+            "literature": 3,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "下獄治罪",
+          "effects": {
+            "prestige": -3,
+            "benevolence": -4
+          }
+        },
+        {
+          "key": "C",
+          "label": "許其上書言事",
+          "effects": {
+            "benevolence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E088",
+      "name": "州縣清丈田畝",
+      "when": {
+        "every_years": 4,
+        "months": [
+          2
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "全面清丈",
+          "effects": {
+            "treasury": 80,
+            "people": -8
+          }
+        },
+        {
+          "key": "B",
+          "label": "只查隱田",
+          "effects": {
+            "treasury": 40,
+            "people": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "姑且不問",
+          "effects": {
+            "agriculture": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E089",
+      "name": "鹽引爭利",
+      "when": {
+        "months": [
+          7,
+          8
+        ],
+        "commerce_gt": 100,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "增引發賣",
+          "effects": {
+            "treasury": 50,
+            "commerce": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "嚴禁私販",
+          "effects": {
+            "treasury": 20,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "准商人自運",
+          "effects": {
+            "people": 3,
+            "commerce": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E090",
+      "name": "運河決口",
+      "when": {
+        "every_years": 2,
+        "months": [
+          7,
+          8,
+          9
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "急發國帑修堤",
+          "effects": {
+            "treasury": -130,
+            "agriculture": 20
+          }
+        },
+        {
+          "key": "B",
+          "label": "開閘分洪保京",
+          "effects": {
+            "people": -10,
+            "agriculture": -15
+          }
+        },
+        {
+          "key": "C",
+          "label": "聽其泛濫",
+          "effects": {
+            "treasury": -20,
+            "people": -8
+          }
+        }
+      ]
+    },
+    {
+      "id": "E091",
+      "name": "冗官充斥",
+      "when": {
+        "treasury_lt": 450,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "裁汰冗官",
+          "effects": {
+            "removeOfficial": true,
+            "treasury": 20
+          }
+        },
+        {
+          "key": "B",
+          "label": "添設衙門安置",
+          "effects": {
+            "treasury": -40,
+            "recruit": 1
+          }
+        },
+        {
+          "key": "C",
+          "label": "另設考核以觀其後",
+          "effects": {
+            "prestige": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E092",
+      "name": "田賦改折",
+      "when": {
+        "every_years": 3,
+        "months": [
+          1
+        ],
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "推行一條鞭法",
+          "effects": {
+            "treasury": 50,
+            "people": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "仍用舊制",
+          "effects": {}
+        },
+        {
+          "key": "C",
+          "label": "折銀徵收",
+          "effects": {
+            "treasury": 30,
+            "people": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E093",
+      "name": "工匠罷作",
+      "when": {
+        "commerce_gt": 200,
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "加給工錢",
+          "effects": {
+            "treasury": -30,
+            "people": 3,
+            "armament": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "嚴禁聚眾",
+          "effects": {
+            "armament": -5,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "招入官坊效力",
+          "effects": {
+            "recruit": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E094",
+      "name": "惠民藥局之議",
+      "when": {
+        "health_lt": 70,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設惠民藥局",
+          "effects": {
+            "treasury": -40,
+            "health": 3,
+            "people": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "准其所請但緩行",
+          "effects": {
+            "health": 1
+          }
+        },
+        {
+          "key": "C",
+          "label": "駁回",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E095",
+      "name": "賑濟款項被貪",
+      "when": {
+        "people_lt": 50,
+        "treasury_lt": 400,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "追查到底",
+          "effects": {
+            "investigate_lowest": true,
+            "people": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "再撥款項",
+          "effects": {
+            "treasury": -50,
+            "people": 6
+          }
+        },
+        {
+          "key": "C",
+          "label": "掩過不問",
+          "effects": {
+            "people": -4,
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E096",
+      "name": "豐年加征",
+      "when": {
+        "agriculture_gt": 350,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "照例加徵常稅",
+          "effects": {
+            "treasury": 60,
+            "people": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "頒賞有功州縣",
+          "effects": {
+            "treasury": -30,
+            "prestige": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "寬減一年",
+          "effects": {
+            "people": 4,
+            "treasury": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E097",
+      "name": "屯田招墾",
+      "when": {
+        "agriculture_lt": 340,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "招民墾荒",
+          "effects": {
+            "agriculture": 25,
+            "people": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "撥兵屯田",
+          "effects": {
+            "agriculture": 15,
+            "armament": 10
+          }
+        },
+        {
+          "key": "C",
+          "label": "免租三年",
+          "effects": {
+            "treasury": -40,
+            "agriculture": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E098",
+      "name": "禮部議改祭服",
+      "when": {
+        "months": [
+          9
+        ],
+        "literature_gt": 105,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "依古制改定",
+          "effects": {
+            "literature": 4,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "從簡施行",
+          "effects": {
+            "treasury": 20
+          }
+        },
+        {
+          "key": "C",
+          "label": "交群臣再議",
+          "effects": {
+            "official_loyalty_add": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E099",
+      "name": "內閣擬旨爭執",
+      "when": {
+        "official_loyalty_lt": 60,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "罷其首議者",
+          "effects": {
+            "removeOfficial": true,
+            "power": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "兩相調和",
+          "effects": {
+            "official_loyalty_add": 5
+          }
+        },
+        {
+          "key": "C",
+          "label": "皇帝親斷",
+          "effects": {
+            "power": 3,
+            "benevolence": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E100",
+      "name": "市舶司稅額爭議",
+      "when": {
+        "months": [
+          4
+        ],
+        "commerce_gt": 150,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "增設市舶分司",
+          "effects": {
+            "treasury": 50,
+            "commerce": 4,
+            "prestige": 1
+          }
+        },
+        {
+          "key": "B",
+          "label": "減稅懷遠",
+          "effects": {
+            "commerce": 6,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "C",
+          "label": "併歸地方官署",
+          "effects": {
+            "treasury": -10,
+            "commerce": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E101",
+      "name": "鈔法壅滯",
+      "when": {
+        "treasury_lt": 350,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "收回舊鈔",
+          "effects": {
+            "treasury": 40,
+            "commerce": -4
+          }
+        },
+        {
+          "key": "B",
+          "label": "續印新鈔",
+          "effects": {
+            "treasury": 90,
+            "commerce": -6,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "停用不理",
+          "effects": {
+            "commerce": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E102",
+      "name": "巡按御史出巡",
+      "when": {
+        "every_years": 2,
+        "months": [
+          3
+        ],
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遣使巡按",
+          "effects": {
+            "investigate_lowest": true,
+            "prestige": 1
+          }
+        },
+        {
+          "key": "B",
+          "label": "授權地方自察",
+          "effects": {
+            "official_loyalty_add": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "暫不遣使",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E103",
+      "name": "親策進士",
+      "when": {
+        "every_years": 2,
+        "months": [
+          4,
+          5
+        ],
+        "literature_gt": 110
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "親自策問",
+          "effects": {
+            "recruit": 2,
+            "literature": 3,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "照例取用",
+          "effects": {
+            "recruit": 1,
+            "treasury": -5
+          }
+        },
+        {
+          "key": "C",
+          "label": "改行武舉",
+          "effects": {
+            "military": 2,
+            "recruit": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E104",
+      "name": "內閣票擬之權",
+      "when": {
+        "official_loyalty_lt": 65,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允其專擬",
+          "effects": {
+            "power": -3,
+            "official_loyalty_add": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "收回大權",
+          "effects": {
+            "power": 4,
+            "official_loyalty_add": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E105",
+      "name": "太倉積粟",
+      "when": {
+        "treasury_gt": 450,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "修繕城池",
+          "effects": {
+            "armament": 20,
+            "treasury": -120
+          }
+        },
+        {
+          "key": "B",
+          "label": "減免今年賦稅",
+          "effects": {
+            "treasury": -60,
+            "people": 8
+          }
+        },
+        {
+          "key": "C",
+          "label": "留為他日之用",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E106",
+      "name": "大修城垣",
+      "when": {
+        "armament_lt": 300,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "大修城垣",
+          "effects": {
+            "treasury": -100,
+            "armament": 30
+          }
+        },
+        {
+          "key": "B",
+          "label": "只加固門樓",
+          "effects": {
+            "treasury": -30,
+            "armament": 10
+          }
+        },
+        {
+          "key": "C",
+          "label": "不予理會",
+          "effects": {
+            "armament": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E107",
+      "name": "民間義倉",
+      "when": {
+        "people_gt": 55,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "官府褒獎勸行",
+          "effects": {
+            "benevolence": 3,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "收歸官倉",
+          "effects": {
+            "treasury": 40,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "無所作為",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E108",
+      "name": "豪強兼併",
+      "when": {
+        "people_lt": 55,
+        "agriculture_gt": 250,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "限田以抑兼併",
+          "effects": {
+            "people": 6,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "容其兼併",
+          "effects": {
+            "treasury": 30,
+            "people": -6
+          }
+        },
+        {
+          "key": "C",
+          "label": "派官監督田契",
+          "effects": {
+            "treasury": -10,
+            "people": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E109",
+      "name": "內府修宮",
+      "when": {
+        "months": [
+          3,
+          4
+        ],
+        "treasury_gt": 350,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "準奏興工",
+          "effects": {
+            "treasury": -150,
+            "charm": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "減省工料",
+          "effects": {
+            "treasury": -60,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "擱置",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E110",
+      "name": "佃農抗租",
+      "when": {
+        "agriculture_gt": 200,
+        "people_lt": 60,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "官府判令減租",
+          "effects": {
+            "people": 6,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "責令業主照舊",
+          "effects": {
+            "people": -5,
+            "treasury": 10
+          }
+        },
+        {
+          "key": "C",
+          "label": "派兵彈壓",
+          "effects": {
+            "armament": -10,
+            "people": -8
+          }
+        }
+      ]
+    },
+    {
+      "id": "E111",
+      "name": "行會之爭",
+      "when": {
+        "commerce_gt": 250,
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "承認行會",
+          "effects": {
+            "commerce": 5,
+            "treasury": 20
+          }
+        },
+        {
+          "key": "B",
+          "label": "解散行會",
+          "effects": {
+            "commerce": -4,
+            "people": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "設官督導",
+          "effects": {
+            "treasury": -20,
+            "commerce": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E112",
+      "name": "常平倉增糴",
+      "when": {
+        "months": [
+          9,
+          10,
+          11
+        ],
+        "treasury_gt": 300,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "增糴積穀",
+          "effects": {
+            "treasury": -80,
+            "people": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "暫停入糴",
+          "effects": {
+            "treasury": 30
+          }
+        },
+        {
+          "key": "C",
+          "label": "以舊糧平糶",
+          "effects": {
+            "treasury": -20,
+            "people": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E113",
+      "name": "奏章積壓",
+      "when": {
+        "literature_lt": 200,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設置票房代批",
+          "effects": {
+            "literature": 3,
+            "treasury": -15
+          }
+        },
+        {
+          "key": "B",
+          "label": "命內閣代批",
+          "effects": {
+            "power": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "不予理會",
+          "effects": {
+            "benevolence": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E114",
+      "name": "百官朝參失禮",
+      "when": {
+        "prestige_lt": 70,
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "重罰失儀者",
+          "effects": {
+            "prestige": 3,
+            "official_loyalty_add": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "寬宥不究",
+          "effects": {
+            "benevolence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E115",
+      "name": "度支奏報入不敷出",
+      "when": {
+        "treasury_lt": 350,
+        "months": [
+          12
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "削減用度",
+          "effects": {
+            "treasury": 40,
+            "charm": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "增稅以補",
+          "effects": {
+            "treasury": 70,
+            "people": -6
+          }
+        }
+      ]
+    },
+    {
+      "id": "E116",
+      "name": "修撰實錄",
+      "when": {
+        "every_years": 5,
+        "months": [
+          6
+        ],
+        "literature_lt": 160
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准開館修撰",
+          "effects": {
+            "literature": 6,
+            "treasury": -25
+          }
+        },
+        {
+          "key": "B",
+          "label": "從簡纂修",
+          "effects": {
+            "literature": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E117",
+      "name": "貴戚侵佔官田",
+      "when": {
+        "people_lt": 60,
+        "official_loyalty_lt": 70,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "追奪入官",
+          "effects": {
+            "treasury": 60,
+            "people": 4,
+            "official_loyalty_add": -4
+          }
+        },
+        {
+          "key": "B",
+          "label": "免予追究",
+          "effects": {
+            "people": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E118",
+      "name": "漕運衙門舞弊",
+      "when": {
+        "months": [
+          10,
+          11
+        ],
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "查辦經手官吏",
+          "effects": {
+            "investigate_lowest": true,
+            "treasury": 20
+          }
+        },
+        {
+          "key": "B",
+          "label": "罰沒其資以充國用",
+          "effects": {
+            "treasury": 50,
+            "people": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E119",
+      "name": "倉廩鼠耗",
+      "when": {
+        "agriculture_gt": 250,
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "換糧更倉",
+          "effects": {
+            "treasury": -40,
+            "agriculture": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "置之不理",
+          "effects": {
+            "agriculture": -8
+          }
+        }
+      ]
+    },
+    {
+      "id": "E120",
+      "name": "宗學設課",
+      "when": {
+        "months": [
+          2,
+          3
+        ],
+        "charm_gt": 120,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設宗學課讀",
+          "effects": {
+            "literature": 3,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "延請名儒講授",
+          "effects": {
+            "literature": 2,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "任其嬉戲",
+          "effects": {
+            "health": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E121",
+      "name": "公主下嫁",
+      "when": {
+        "charm_gt": 150,
+        "every_years": 2,
+        "months": [
+          5,
+          6
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "厚嫁以示恩寵",
+          "effects": {
+            "treasury": -60,
+            "charm": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "薄嫁節用",
+          "effects": {
+            "treasury": -20,
+            "prestige": -1
+          }
+        },
+        {
+          "key": "C",
+          "label": "許其自擇夫婿",
+          "effects": {
+            "benevolence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E122",
+      "name": "嬪御爭寵",
+      "when": {
+        "charm_gt": 200,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "厚加賞賚",
+          "effects": {
+            "charm": 3,
+            "treasury": -30
+          }
+        },
+        {
+          "key": "B",
+          "label": "一視同仁",
+          "effects": {
+            "benevolence": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "寵一抑一",
+          "effects": {
+            "charm": -4,
+            "official_loyalty_add": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E123",
+      "name": "乳母進讒",
+      "when": {
+        "charm_gt": 180,
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "逐出宮禁",
+          "effects": {
+            "charm": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "加以恩賞",
+          "effects": {
+            "treasury": -15,
+            "charm": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不問",
+          "effects": {
+            "benevolence": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E124",
+      "name": "皇嗣出痘",
+      "when": {
+        "charm_gt": 150,
+        "months": [
+          11,
+          12,
+          1
+        ],
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "延醫悉心救治",
+          "effects": {
+            "treasury": -30,
+            "health": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "移居別宮避染",
+          "effects": {
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "聽天由命",
+          "effects": {
+            "benevolence": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E125",
+      "name": "冊立東宮",
+      "when": {
+        "heirs_gt": 0,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "早定國本",
+          "effects": {
+            "power": 2,
+            "prestige": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "再候數年",
+          "effects": {}
+        },
+        {
+          "key": "C",
+          "label": "立長不立賢",
+          "effects": {
+            "benevolence": -2,
+            "prestige": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E126",
+      "name": "皇后家族請爵",
+      "when": {
+        "consorts_gt": 0,
+        "every_years": 3,
+        "months": [
+          9
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允其封爵",
+          "effects": {
+            "treasury": -50,
+            "charm": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "降恩不許",
+          "effects": {
+            "charm": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "賜田宅以安",
+          "effects": {
+            "treasury": -30,
+            "people": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E127",
+      "name": "後宮節儉",
+      "when": {
+        "charm_gt": 150,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "減省用度",
+          "effects": {
+            "treasury": 40,
+            "charm": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "照例奢用",
+          "effects": {
+            "treasury": -40,
+            "charm": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E128",
+      "name": "宮女暴斃",
+      "when": {
+        "charm_gt": 200,
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "厚葬以安人心",
+          "effects": {
+            "treasury": -10,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "封口不言",
+          "effects": {
+            "prestige": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E129",
+      "name": "嬪妃禮佛",
+      "when": {
+        "charm_gt": 150,
+        "months": [
+          4
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其修建佛寺",
+          "effects": {
+            "treasury": -40,
+            "heaven": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "準其隨喜",
+          "effects": {
+            "heaven": 1
+          }
+        },
+        {
+          "key": "C",
+          "label": "勒令回宮",
+          "effects": {
+            "charm": -2,
+            "benevolence": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E130",
+      "name": "太子妃擇選",
+      "when": {
+        "charm_gt": 150,
+        "every_years": 2,
+        "months": [
+          7,
+          8
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "廣選名門淑女",
+          "effects": {
+            "add_consort": 2,
+            "treasury": -40
+          }
+        },
+        {
+          "key": "B",
+          "label": "以門第為先",
+          "effects": {
+            "add_consort": 1,
+            "official_loyalty_add": 4
+          }
+        },
+        {
+          "key": "C",
+          "label": "暫停選拔",
+          "effects": {
+            "charm": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E131",
+      "name": "宮人誕育",
+      "when": {
+        "consorts_gt": 0,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "賜名封爵",
+          "effects": {
+            "birth": "male",
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "撫為皇女",
+          "effects": {
+            "birth": "female"
+          }
+        },
+        {
+          "key": "C",
+          "label": "不予承認",
+          "effects": {
+            "benevolence": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E132",
+      "name": "皇子生母之爭",
+      "when": {
+        "charm_gt": 250,
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "依嫡立儲",
+          "effects": {
+            "prestige": 2,
+            "benevolence": 1
+          }
+        },
+        {
+          "key": "B",
+          "label": "依賢立儲",
+          "effects": {
+            "benevolence": 3,
+            "power": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "兩皆不許",
+          "effects": {
+            "official_loyalty_add": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E133",
+      "name": "後宮用度超支",
+      "when": {
+        "treasury_lt": 450,
+        "charm_gt": 150,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "裁撤浮費",
+          "effects": {
+            "treasury": 50,
+            "charm": -4
+          }
+        },
+        {
+          "key": "B",
+          "label": "另行撥款",
+          "effects": {
+            "treasury": -50,
+            "charm": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E134",
+      "name": "宮廷畫師入宮",
+      "when": {
+        "charm_gt": 120,
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "留於內廷供奉",
+          "effects": {
+            "treasury": -20,
+            "charm": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "賞以金帛遣還",
+          "effects": {
+            "treasury": -30,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "斥其媚上",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E135",
+      "name": "皇子讀書過勞",
+      "when": {
+        "literature_gt": 105,
+        "months": [
+          7,
+          8
+        ],
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "日課不減",
+          "effects": {
+            "tutor_teach": 2,
+            "health": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "酌減課業",
+          "effects": {
+            "health": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "延請良醫調養",
+          "effects": {
+            "treasury": -20,
+            "health": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E136",
+      "name": "寵妃薦人入朝",
+      "when": {
+        "charm_gt": 250,
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴詞拒絕",
+          "effects": {
+            "power": 2,
+            "charm": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "准其所薦",
+          "effects": {
+            "recruit": 1,
+            "charm": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "薦者授以閒職",
+          "effects": {
+            "treasury": -20,
+            "official_loyalty_add": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E137",
+      "name": "太后懿旨",
+      "when": {
+        "charm_gt": 150,
+        "every_years": 3,
+        "months": [
+          10
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "尊奉懿旨",
+          "effects": {
+            "benevolence": 2,
+            "power": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "恭謹如常",
+          "effects": {}
+        },
+        {
+          "key": "C",
+          "label": "拒而不從",
+          "effects": {
+            "power": 3,
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E138",
+      "name": "宮中女學",
+      "when": {
+        "charm_gt": 120,
+        "months": [
+          6
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設女學授書",
+          "effects": {
+            "literature": 3,
+            "treasury": -15
+          }
+        },
+        {
+          "key": "B",
+          "label": "免去",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E139",
+      "name": "兩宮不睦",
+      "when": {
+        "charm_gt": 200,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "從中調停",
+          "effects": {
+            "charm": 2,
+            "benevolence": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "偏袒一方",
+          "effects": {
+            "charm": 4,
+            "benevolence": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "各居別宮",
+          "effects": {
+            "treasury": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E140",
+      "name": "外戚請婚",
+      "when": {
+        "charm_gt": 150,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允婚",
+          "effects": {
+            "charm": -2,
+            "official_loyalty_add": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "辭之不受",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E141",
+      "name": "皇子請求就藩",
+      "when": {
+        "charm_gt": 150,
+        "months": [
+          5,
+          6,
+          7
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "準其就藩",
+          "effects": {
+            "treasury": -40,
+            "power": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "留居京師",
+          "effects": {
+            "charm": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E142",
+      "name": "內廷選女官",
+      "when": {
+        "literature_gt": 110,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "選才入宮",
+          "effects": {
+            "literature": 4,
+            "add_consort": 1
+          }
+        },
+        {
+          "key": "B",
+          "label": "不必另選",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E143",
+      "name": "嬪妃病倒",
+      "when": {
+        "charm_gt": 150,
+        "health_lt": 75,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "延醫診治",
+          "effects": {
+            "treasury": -20,
+            "charm": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "聽其自愈",
+          "effects": {
+            "charm": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E144",
+      "name": "皇后問安",
+      "when": {
+        "consorts_gt": 0,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "循禮問安",
+          "effects": {
+            "charm": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "免去問安之禮",
+          "effects": {
+            "benevolence": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E145",
+      "name": "門生故吏結黨",
+      "when": {
+        "official_loyalty_lt": 60,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "分化其黨",
+          "effects": {
+            "investigate_lowest": true,
+            "power": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "容其結黨",
+          "effects": {
+            "official_loyalty_add": 4,
+            "power": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "召入調和",
+          "effects": {
+            "official_loyalty_add": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E146",
+      "name": "清流諫阻廠衛",
+      "when": {
+        "official_loyalty_lt": 65,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "撤去廠衛",
+          "effects": {
+            "power": -4,
+            "benevolence": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "增其權柄",
+          "effects": {
+            "power": 4,
+            "benevolence": -4
+          }
+        },
+        {
+          "key": "C",
+          "label": "折衷行之",
+          "effects": {
+            "official_loyalty_add": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E147",
+      "name": "首輔求退",
+      "when": {
+        "official_loyalty_lt": 55,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "挽留",
+          "effects": {
+            "official_loyalty_add": 8,
+            "treasury": -10
+          }
+        },
+        {
+          "key": "B",
+          "label": "准其致仕",
+          "effects": {
+            "removeOfficial": true
+          }
+        },
+        {
+          "key": "C",
+          "label": "舉薦其門生",
+          "effects": {
+            "recruit": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E148",
+      "name": "東廠密報",
+      "when": {
+        "every_years": 2,
+        "months": [
+          3
+        ],
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "交東廠查辦",
+          "effects": {
+            "investigate_lowest": true
+          }
+        },
+        {
+          "key": "B",
+          "label": "留中不發",
+          "effects": {}
+        },
+        {
+          "key": "C",
+          "label": "焚毀密報",
+          "effects": {
+            "benevolence": 3,
+            "power": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E149",
+      "name": "寒門士子求進",
+      "when": {
+        "official_loyalty_lt": 60,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "擢用寒門",
+          "effects": {
+            "recruit": 1,
+            "official_loyalty_add": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "壓制其進",
+          "effects": {
+            "official_loyalty_add": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E150",
+      "name": "勳貴請恩蔭",
+      "when": {
+        "every_years": 2,
+        "months": [
+          2
+        ],
+        "official_loyalty_lt": 70,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其恩蔭",
+          "effects": {
+            "treasury": -40,
+            "official_loyalty_add": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "裁抑恩蔭",
+          "effects": {
+            "official_loyalty_add": -5,
+            "power": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "以爵代之",
+          "effects": {
+            "treasury": -15,
+            "official_loyalty_add": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E151",
+      "name": "廠衛濫刑",
+      "when": {
+        "official_loyalty_lt": 70,
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴懲濫刑者",
+          "effects": {
+            "investigate_lowest": true,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "縱之以立威",
+          "effects": {
+            "power": 3,
+            "benevolence": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E152",
+      "name": "太監請掌兵",
+      "when": {
+        "charm_gt": 220,
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允其督軍",
+          "effects": {
+            "military": 4,
+            "power": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "不許",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E153",
+      "name": "派系互攻",
+      "when": {
+        "official_loyalty_lt": 60,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "兩黜其一",
+          "effects": {
+            "removeOfficial": true,
+            "official_loyalty_add": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "各打五十大板",
+          "effects": {
+            "official_loyalty_add": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "立案查核",
+          "effects": {
+            "investigate_lowest": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "E154",
+      "name": "督撫爭權",
+      "when": {
+        "official_loyalty_lt": 55,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "分設兩地各掌",
+          "effects": {
+            "power": 2,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "令其和衷共濟",
+          "effects": {
+            "official_loyalty_add": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E155",
+      "name": "內閣與司禮監之爭",
+      "when": {
+        "official_loyalty_lt": 70,
+        "charm_gt": 180,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "以內閣為主",
+          "effects": {
+            "official_loyalty_add": 4,
+            "power": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "以司禮為主",
+          "effects": {
+            "power": 3,
+            "official_loyalty_add": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E156",
+      "name": "佞幸求寵",
+      "when": {
+        "charm_gt": 180,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "疏遠之",
+          "effects": {
+            "charm": -4,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "優容之",
+          "effects": {
+            "charm": 3,
+            "power": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E157",
+      "name": "受賄案發",
+      "when": {
+        "treasury_lt": 350,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "查抄家產",
+          "effects": {
+            "investigate_lowest": true,
+            "treasury": 40
+          }
+        },
+        {
+          "key": "B",
+          "label": "罰俸充庫",
+          "effects": {
+            "treasury": 20,
+            "official_loyalty_add": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E158",
+      "name": "同年互保",
+      "when": {
+        "every_years": 3,
+        "months": [
+          8
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴查結保",
+          "effects": {
+            "investigate_lowest": true
+          }
+        },
+        {
+          "key": "B",
+          "label": "默許其例",
+          "effects": {
+            "official_loyalty_add": 3,
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E159",
+      "name": "罷黜不稱職之官",
+      "when": {
+        "official_loyalty_lt": 50,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "盡數罷免",
+          "effects": {
+            "removeOfficial": true,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "留用察看",
+          "effects": {
+            "official_loyalty_add": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E160",
+      "name": "官員家眷不法",
+      "when": {
+        "official_loyalty_lt": 60,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "責成其家族賠補",
+          "effects": {
+            "official_loyalty_add": -3,
+            "treasury": 20
+          }
+        },
+        {
+          "key": "B",
+          "label": "寬宥不究",
+          "effects": {
+            "official_loyalty_add": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E161",
+      "name": "御史中丞被誣",
+      "when": {
+        "official_loyalty_lt": 60,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "為其辯白",
+          "effects": {
+            "official_loyalty_add": 5,
+            "prestige": 1
+          }
+        },
+        {
+          "key": "B",
+          "label": "順其劾奏",
+          "effects": {
+            "removeOfficial": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "E162",
+      "name": "鄉黨請託",
+      "when": {
+        "official_loyalty_lt": 65,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "一律拒絕",
+          "effects": {
+            "official_loyalty_add": -2,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "酌情照顧",
+          "effects": {
+            "official_loyalty_add": 4,
+            "treasury": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E163",
+      "name": "內廷宦者薦舉",
+      "when": {
+        "charm_gt": 200,
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允其所薦",
+          "effects": {
+            "recruit": 1,
+            "power": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "不許",
+          "effects": {
+            "power": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E164",
+      "name": "南詔邊衅",
+      "when": {
+        "every_years": 3,
+        "months": [
+          9
+        ],
+        "chance": 0.7
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "發兵征討",
+          "effects": {
+            "war": {
+              "strength": 328,
+              "reward": {
+                "prestige": 5,
+                "treasury": 40
+              },
+              "loss": {
+                "armament": -60,
+                "people": -5
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣使安撫",
+          "effects": {
+            "treasury": -30,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "閉關自守",
+          "effects": {
+            "military": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E165",
+      "name": "倭寇犯邊",
+      "when": {
+        "months": [
+          4,
+          5,
+          6
+        ],
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "水師迎擊",
+          "effects": {
+            "war": {
+              "strength": 285,
+              "reward": {
+                "treasury": 30,
+                "prestige": 3
+              },
+              "loss": {
+                "armament": -50,
+                "people": -4
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "築城設防",
+          "effects": {
+            "treasury": -60,
+            "armament": 20
+          }
+        },
+        {
+          "key": "C",
+          "label": "厚賞沿海守將",
+          "effects": {
+            "treasury": -20,
+            "official_loyalty_add": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E166",
+      "name": "鄰國借道",
+      "when": {
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允其借道",
+          "effects": {
+            "commerce": 5,
+            "prestige": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "拒之",
+          "effects": {
+            "military": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "遣使談判",
+          "effects": {
+            "treasury": -10,
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E167",
+      "name": "戰馬不足",
+      "when": {
+        "military_lt": 100,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "出資購馬",
+          "effects": {
+            "treasury": -60,
+            "military": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "軍中自畜",
+          "effects": {
+            "military": 3,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "暫不理會",
+          "effects": {
+            "military": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E168",
+      "name": "軍中時疫",
+      "when": {
+        "military_lt": 120,
+        "months": [
+          7,
+          8
+        ],
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遣醫施藥",
+          "effects": {
+            "treasury": -30,
+            "health": 2,
+            "military": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "隔離染病者",
+          "effects": {
+            "military": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "祈禳",
+          "effects": {
+            "heaven": 2,
+            "military": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E169",
+      "name": "西北羌亂",
+      "when": {
+        "every_years": 2,
+        "months": [
+          5,
+          6
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "招撫羌酋",
+          "effects": {
+            "treasury": -40,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "調兵征剿",
+          "effects": {
+            "war": {
+              "strength": 361,
+              "reward": {
+                "military": 4,
+                "prestige": 4
+              },
+              "loss": {
+                "armament": -70,
+                "people": -5
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "E170",
+      "name": "外邦遣使朝貢",
+      "when": {
+        "charm_gt": 150,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遣使報聘",
+          "effects": {
+            "treasury": -20,
+            "prestige": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "派員答禮",
+          "effects": {
+            "treasury": -10,
+            "prestige": 1
+          }
+        },
+        {
+          "key": "C",
+          "label": "不遣",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E171",
+      "name": "邊將請增兵",
+      "when": {
+        "military_lt": 150,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其增兵",
+          "effects": {
+            "treasury": -60,
+            "military": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "小幅增編",
+          "effects": {
+            "treasury": -20,
+            "military": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "不准",
+          "effects": {
+            "military": -2,
+            "official_loyalty_add": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E172",
+      "name": "番將投誠",
+      "when": {
+        "official_loyalty_lt": 60,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "收納其部",
+          "effects": {
+            "military": 4,
+            "official_loyalty_add": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "拒納",
+          "effects": {
+            "prestige": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E173",
+      "name": "新式火器研製",
+      "when": {
+        "armament_lt": 350,
+        "every_years": 2,
+        "months": [
+          10
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "全力研製",
+          "effects": {
+            "treasury": -100,
+            "armament": 50
+          }
+        },
+        {
+          "key": "B",
+          "label": "試造數具",
+          "effects": {
+            "treasury": -40,
+            "armament": 20
+          }
+        },
+        {
+          "key": "C",
+          "label": "不必急求",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E174",
+      "name": "遼東戰事",
+      "when": {
+        "every_years": 2,
+        "months": [
+          6
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "派大軍出關",
+          "effects": {
+            "war": {
+              "strength": 390,
+              "reward": {
+                "prestige": 6,
+                "treasury": 50
+              },
+              "loss": {
+                "armament": -100,
+                "military": -5
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣使議和",
+          "effects": {
+            "treasury": -40,
+            "benevolence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E175",
+      "name": "蠻族求貢",
+      "when": {
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允其納貢",
+          "effects": {
+            "treasury": 30,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "不允",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E176",
+      "name": "貢使獻象",
+      "when": {
+        "commerce_gt": 100,
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "收入園囿",
+          "effects": {
+            "treasury": -20,
+            "charm": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "還其本國",
+          "effects": {
+            "prestige": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E177",
+      "name": "水師兵變",
+      "when": {
+        "official_loyalty_lt": 55,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "招撫",
+          "effects": {
+            "official_loyalty_add": 10,
+            "treasury": -30
+          }
+        },
+        {
+          "key": "B",
+          "label": "剿平",
+          "effects": {
+            "war": {
+              "strength": 275,
+              "reward": {
+                "prestige": 3
+              },
+              "loss": {
+                "armament": -60,
+                "military": -4
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "E178",
+      "name": "兵部請設武舉",
+      "when": {
+        "literature_gt": 110,
+        "months": [
+          8,
+          9
+        ],
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設武舉取士",
+          "effects": {
+            "recruit": 2,
+            "military": 2,
+            "treasury": -30
+          }
+        },
+        {
+          "key": "B",
+          "label": "暫緩",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E179",
+      "name": "出使西洋",
+      "when": {
+        "every_years": 4,
+        "months": [
+          5
+        ],
+        "commerce_gt": 200
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遣寶船出海",
+          "effects": {
+            "treasury": -100,
+            "prestige": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "停遣",
+          "effects": {
+            "treasury": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E180",
+      "name": "戍卒逃亡",
+      "when": {
+        "military_lt": 110,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "重懲首惡",
+          "effects": {
+            "military": 2,
+            "people": -4
+          }
+        },
+        {
+          "key": "B",
+          "label": "赦歸為農",
+          "effects": {
+            "people": 5,
+            "military": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "補充新兵",
+          "effects": {
+            "treasury": -30,
+            "military": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E181",
+      "name": "大月氏遣使",
+      "when": {
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "厚待來使",
+          "effects": {
+            "treasury": -40,
+            "prestige": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "薄待",
+          "effects": {
+            "prestige": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E182",
+      "name": "霜降傷稼",
+      "when": {
+        "months": [
+          9,
+          10
+        ],
+        "agriculture_lt": 400,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開倉發粟",
+          "effects": {
+            "treasury": -50,
+            "people": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "減免田賦",
+          "effects": {
+            "treasury": -30,
+            "agriculture": 5
+          }
+        },
+        {
+          "key": "C",
+          "label": "祈禳天地",
+          "effects": {
+            "heaven": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E183",
+      "name": "流星墜地",
+      "when": {
+        "every_years": 3,
+        "months": [
+          8
+        ],
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "下罪己詔",
+          "effects": {
+            "benevolence": 4,
+            "heaven": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "祭告太廟",
+          "effects": {
+            "treasury": -20,
+            "heaven": 4
+          }
+        },
+        {
+          "key": "C",
+          "label": "斥為偶然",
+          "effects": {
+            "heaven": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E184",
+      "name": "地震",
+      "when": {
+        "chance": 0.08
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開倉賑濟",
+          "effects": {
+            "treasury": -100,
+            "people": 12
+          }
+        },
+        {
+          "key": "B",
+          "label": "修葺民居",
+          "effects": {
+            "treasury": -60,
+            "people": 6
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不理",
+          "effects": {
+            "people": -12,
+            "heaven": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E185",
+      "name": "蝗災",
+      "when": {
+        "months": [
+          5,
+          6,
+          7
+        ],
+        "agriculture_lt": 380,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "組織捕蝗",
+          "effects": {
+            "treasury": -40,
+            "agriculture": 5,
+            "people": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "焚燒蝗蟲於田間",
+          "effects": {
+            "agriculture": -5,
+            "people": -4
+          }
+        },
+        {
+          "key": "C",
+          "label": "聽之任之",
+          "effects": {
+            "agriculture": -20,
+            "people": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E186",
+      "name": "夏旱",
+      "when": {
+        "months": [
+          6,
+          7,
+          8
+        ],
+        "people_lt": 70,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "減膳祈雨",
+          "effects": {
+            "benevolence": 3,
+            "heaven": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "大開渠堰",
+          "effects": {
+            "treasury": -80,
+            "agriculture": 20
+          }
+        },
+        {
+          "key": "C",
+          "label": "推諉天意",
+          "effects": {
+            "people": -8
+          }
+        }
+      ]
+    },
+    {
+      "id": "E187",
+      "name": "風調雨順",
+      "when": {
+        "months": [
+          9,
+          10
+        ],
+        "agriculture_gt": 350,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "普天同慶",
+          "effects": {
+            "treasury": -20,
+            "people": 5,
+            "heaven": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "獎賞地方官",
+          "effects": {
+            "treasury": 20,
+            "prestige": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E188",
+      "name": "蠶桑豐收",
+      "when": {
+        "months": [
+          4,
+          5
+        ],
+        "commerce_gt": 200,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設織造局",
+          "effects": {
+            "commerce": 6,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "頒發桑種於民",
+          "effects": {
+            "agriculture": 8,
+            "people": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E189",
+      "name": "京城饑民",
+      "when": {
+        "people_lt": 55,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設粥廠施賑",
+          "effects": {
+            "treasury": -60,
+            "people": 8
+          }
+        },
+        {
+          "key": "B",
+          "label": "驅逐出城",
+          "effects": {
+            "people": -8,
+            "prestige": -1
+          }
+        },
+        {
+          "key": "C",
+          "label": "令富戶輸粟",
+          "effects": {
+            "treasury": 20,
+            "people": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E190",
+      "name": "海嘯襲岸",
+      "when": {
+        "months": [
+          8,
+          9
+        ],
+        "commerce_gt": 150,
+        "chance": 0.08
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "撫卹瀕海災民",
+          "effects": {
+            "treasury": -80,
+            "people": 8
+          }
+        },
+        {
+          "key": "B",
+          "label": "修築海塘",
+          "effects": {
+            "treasury": -120,
+            "agriculture": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E191",
+      "name": "日食示警",
+      "when": {
+        "every_years": 2,
+        "months": [
+          6
+        ],
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "減膳修德",
+          "effects": {
+            "benevolence": 4,
+            "heaven": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "召欽天監推算",
+          "effects": {
+            "literature": 2,
+            "heaven": -1
+          }
+        },
+        {
+          "key": "C",
+          "label": "不予理會",
+          "effects": {
+            "heaven": -3,
+            "prestige": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E192",
+      "name": "山洪暴發",
+      "when": {
+        "months": [
+          7
+        ],
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "召工築壩",
+          "effects": {
+            "treasury": -70,
+            "agriculture": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "遷村避險",
+          "effects": {
+            "people": -6,
+            "agriculture": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E193",
+      "name": "童謠四起",
+      "when": {
+        "people_lt": 50,
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "查禁傳唱",
+          "effects": {
+            "prestige": -2,
+            "people": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "順應民意",
+          "effects": {
+            "benevolence": 3,
+            "people": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E194",
+      "name": "上元燈會",
+      "when": {
+        "months": [
+          1
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "大張燈火與民同樂",
+          "effects": {
+            "treasury": -40,
+            "charm": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "減省用度",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E195",
+      "name": "清明祭陵",
+      "when": {
+        "months": [
+          3
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遣使祭陵",
+          "effects": {
+            "heaven": 3,
+            "treasury": -15
+          }
+        },
+        {
+          "key": "B",
+          "label": "準民間自行祭掃",
+          "effects": {
+            "people": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E196",
+      "name": "端午競渡",
+      "when": {
+        "months": [
+          5
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "親臨觀看",
+          "effects": {
+            "health": -2,
+            "charm": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "賜粽於臣工",
+          "effects": {
+            "official_loyalty_add": 3,
+            "treasury": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E197",
+      "name": "中秋賞月",
+      "when": {
+        "months": [
+          8
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設宴宮中",
+          "effects": {
+            "treasury": -30,
+            "charm": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "賜宴百官",
+          "effects": {
+            "official_loyalty_add": 2,
+            "treasury": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E198",
+      "name": "酷暑避署",
+      "when": {
+        "months": [
+          7
+        ],
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "罷朝避暑",
+          "effects": {
+            "health": 3,
+            "power": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "照常視朝",
+          "effects": {
+            "health": -3,
+            "prestige": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E199",
+      "name": "臘八施粥",
+      "when": {
+        "months": [
+          12
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "施粥濟貧",
+          "effects": {
+            "treasury": -40,
+            "people": 4,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "循例免施",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E200",
+      "name": "親耕籍田",
+      "when": {
+        "months": [
+          2
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "親耕籍田",
+          "effects": {
+            "agriculture": 5,
+            "prestige": 3,
+            "health": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣官代耕",
+          "effects": {
+            "agriculture": 2
           }
         }
       ]

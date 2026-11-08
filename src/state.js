@@ -73,7 +73,7 @@ export function createInitialState(seed, opts = {}) {
     consorts: [],
     heirs: [],
     emperor: { name: '皇帝', abilities: null },
-    dynasty: { generation: 1, nextHeirId: 1, nextConsortId: 1, ended: false },
+    dynasty: { generation: 1, nextHeirId: 1, nextConsortId: 1, ended: false, rivalry: false },
     chronicle: [],
     dongchang: { cases: [], nextId: 1 },
     flags: {},

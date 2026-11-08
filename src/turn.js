@@ -7,7 +7,7 @@ import { generateOfficial } from './officials.js';
 import { openInvestigationOnLowest, tickDongchang } from './dongchang.js';
 import { POLICIES } from './policy.js';
 import { resolveWar } from './war.js';
-import { createHeir, advanceHeirs } from './succession.js';
+import { createHeir, advanceHeirs, tickHeirs } from './succession.js';
 
 const MAX_OFFICIALS = 12;
 
@@ -128,6 +128,7 @@ export function monthlyTick(state, rng) {
   }
 
   tickDongchang(state, r);
+  tickHeirs(state);
 
   // 太傅到任後，皇子教育事件才會出現
   if (officeHolder(state, 'tutor')) state.flags.tutor_appointed = true;
