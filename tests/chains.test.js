@@ -48,8 +48,17 @@ test('applyOption skips chain and shared_event keys instead of throwing as unkno
   assert.equal(JSON.stringify(s.stats), before);
 });
 
+// 連鎖為機率觸發（CHAIN_CHANCE），此處取固定序列中第一個會觸發的種子，保持確定性。
+function firingRun(prefix) {
+  for (let i = 0; i < 200; i++) {
+    const r = runSimulation({ seed: prefix + i, months: 3, events: EVENTS });
+    if (r.log.some((l) => l.event === 'B')) return r;
+  }
+  throw new Error('no firing seed found');
+}
+
 test('a chained event fires the next month, bypassing its when condition', () => {
-  const r = runSimulation({ seed: 'chain-fire', months: 3, events: EVENTS });
+  const r = firingRun('chain-fire-');
   const fired = r.log.filter((l) => l.event === 'B');
   assert.equal(fired.length, 1);
   assert.equal(fired[0].month, 2);
@@ -65,6 +74,6 @@ test('without a chain the when-locked event never fires', () => {
 });
 
 test('a chained event is not fired twice when the queue is empty afterwards', () => {
-  const r = runSimulation({ seed: 'once', months: 6, events: EVENTS });
+  const r = firingRun('once-');
   assert.equal(r.log.filter((l) => l.event === 'B').length, 1);
 });

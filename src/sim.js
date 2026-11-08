@@ -56,8 +56,16 @@ export function eventWeight(e) {
   return ('every_years' in w || 'months' in w) ? 3 : 1;
 }
 
+// 被連鎖指向的事件只能經由連鎖觸發，不進入一般隨機抽選。
+function chainTargetIds(events) {
+  const ids = new Set();
+  for (const e of events) for (const o of e.options || []) if (o.effects && o.effects.chain) ids.add(o.effects.chain);
+  return ids;
+}
+
 export function pickEvent(state, events, rng) {
-  const eligible = events.filter((e) => isAvailable(e) && eventAllowed(state, e.id) && isEligible(state, e, rng));
+  const targets = chainTargetIds(events);
+  const eligible = events.filter((e) => !targets.has(e.id) && isAvailable(e) && eventAllowed(state, e.id) && isEligible(state, e, rng));
   if (eligible.length === 0) return null;
   const total = eligible.reduce((sum, e) => sum + eventWeight(e), 0);
   let r = rng() * total;

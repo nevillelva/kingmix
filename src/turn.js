@@ -52,9 +52,14 @@ export function applyOption(state, option, rng = makeRng(['option', state.turn])
 
 // 選項套用後的後處理：chain（排定下一月連鎖事件）與 shared_event（君臣共歷，記在忠誠最低的官員上）。
 // sim.js 與介面在 applyOption 之後都必須呼叫此函式。
+export const CHAIN_CHANCE = 0.25;
+
 export function afterOption(state, event, option) {
   const effects = option.effects || {};
-  if (effects.chain) scheduleChain(state, effects.chain);
+  // 連鎖以機率觸發（種子決定）：每次選中皆必定排程會使後續事件過多，平衡會偏移。
+  if (effects.chain && makeRng([state.seed, state.year, state.month, 'chain', event.id])() < CHAIN_CHANCE) {
+    scheduleChain(state, effects.chain);
+  }
   if (effects.shared_event) {
     const target = lowestLoyaltyOfficial(state.officials);
     if (target) recordSharedEvent(state, target.id, event.id);
