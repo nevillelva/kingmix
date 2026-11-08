@@ -48,3 +48,9 @@ npm run sim -- demo 10   # 以種子 demo 模擬 10 年，輸出 JSON 摘要
 - `src/offices.js`：官職需求與任命
 - `src/dongchang.js`：東廠調查、把柄、處置
 - 規格與延後項目見 [docs/specs/phase2-court.md](docs/specs/phase2-court.md)
+
+## Phase 3：國策、外交與戰爭
+
+- `src/policy.js`：四種施政流派與每月修正
+- `src/war.js`：決策制戰爭
+- 規格與延後項目見 [docs/specs/phase3-economy-war.md](docs/specs/phase3-economy-war.md)

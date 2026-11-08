@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "source": "docs/specs/events-batch1.md",
   "events": [
     {
@@ -317,6 +317,126 @@
           "effects": {
             "people": -15,
             "power": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E011",
+      "name": "南方諸國使節",
+      "when": {
+        "every_years": 2,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "聯姻修好",
+          "effects": {
+            "charm": 5,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "朝貢互市",
+          "effects": {
+            "commerce": 20,
+            "treasury": 40
+          }
+        },
+        {
+          "key": "C",
+          "label": "結盟",
+          "effects": {
+            "armament": -20,
+            "prestige": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E012",
+      "name": "沿海海寇",
+      "when": {
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "水師剿滅",
+          "effects": {
+            "war": {
+              "strength": 170,
+              "reward": {
+                "treasury": 30,
+                "prestige": 4
+              },
+              "loss": {
+                "armament": -40,
+                "people": -3
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "招撫",
+          "effects": {
+            "treasury": -30,
+            "people": 5
+          }
+        },
+        {
+          "key": "C",
+          "label": "不予理會",
+          "effects": {
+            "commerce": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E013",
+      "name": "北境遊牧來犯",
+      "when": {
+        "every_years": 2,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "出兵迎擊",
+          "effects": {
+            "war": {
+              "strength": 300,
+              "reward": {
+                "prestige": 6,
+                "treasury": 60,
+                "armament": 20
+              },
+              "loss": {
+                "armament": -120,
+                "people": -8,
+                "benevolence": -5
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣使議和",
+          "effects": {
+            "treasury": -50,
+            "benevolence": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "堅壁清野",
+          "effects": {
+            "agriculture": -40,
+            "people": -4
           }
         }
       ]
