@@ -44,7 +44,7 @@ export function createInitialState(seed, opts = {}) {
       charm: 150,
       treasury: 500,
       people: 60,
-      agriculture: 400,
+      agriculture: 330, // 先帝遺留的凋敝，使農業低迷事件有機會發生
       commerce: 400,
       armament: 300,
       heaven: 50,
@@ -63,26 +63,37 @@ export function createInitialState(seed, opts = {}) {
         id: 'o3', name: '知府', loyalty: 55, ambition: 45, faction: 'hanmen', office: null,
         abilities: { intellect: 60, politics: 55, martial: 35, command: 30, virtue: 40 },
       },
+      {
+        // 飽學老臣：太傅的初始人選，待吏部最適任建議任命
+        id: 'o4', name: '翰林學士', loyalty: 80, ambition: 10, faction: 'qingliu', office: null,
+        abilities: { intellect: 75, politics: 50, martial: 45, command: 30, virtue: 75 },
+      },
     ],
     factions: { qingliu: 34, xunggui: 33, hanmen: 33 },
+    consorts: [],
+    heirs: [],
+    emperor: { name: '皇帝', abilities: null },
+    dynasty: { generation: 1, nextHeirId: 1, nextConsortId: 1, ended: false },
+    chronicle: [],
     dongchang: { cases: [], nextId: 1 },
     flags: {},
     warnings: [],
   };
 }
 
-export function setStat(state, key, value) {
+export function setStat(state, key, value, opts = {}) {
   const bounds = BOUNDS[key];
   if (!bounds) throw new Error(`unknown stat: ${key}`);
   if (!Number.isFinite(value) && value !== Infinity && value !== -Infinity) {
     throw new Error(`non-finite value for ${key}: ${value}`);
   }
   let v = value;
+  // silent：月結的自然漂移撞到上下限屬正常狀態，不記錄警告；事件效果越界才是設計問題
   if (v < bounds[0]) {
-    state.warnings.push({ turn: state.turn, key, reason: 'floor', attempted: round2(v) });
+    if (!opts.silent) state.warnings.push({ turn: state.turn, key, reason: 'floor', attempted: round2(v) });
     v = bounds[0];
   } else if (v > bounds[1]) {
-    state.warnings.push({ turn: state.turn, key, reason: 'ceiling', attempted: round2(v) });
+    if (!opts.silent) state.warnings.push({ turn: state.turn, key, reason: 'ceiling', attempted: round2(v) });
     v = bounds[1];
   }
   state.stats[key] = round2(v);

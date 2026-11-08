@@ -7,8 +7,12 @@ import { generateOfficial } from './officials.js';
 import { openInvestigationOnLowest, tickDongchang } from './dongchang.js';
 import { POLICIES } from './policy.js';
 import { resolveWar } from './war.js';
+import { createHeir, advanceHeirs } from './succession.js';
 
 const MAX_OFFICIALS = 12;
+
+// 月結與政策的自然變化：越界時靜默截斷
+const drift = (state, key, value) => setStat(state, key, value, { silent: true });
 
 function lowestLoyaltyOfficial(officials) {
   let best = null;
@@ -50,6 +54,18 @@ function applyEffectsOnly(state, effects, rng) {
       setStat(state, 'population', state.stats.population * (1 + val / 100));
     } else if (key === 'setFlag') {
       state.flags[val] = true;
+    } else if (key === 'add_consort') {
+      for (let i = 0; i < val && state.consorts.length < 8; i++) {
+        state.dynasty.nextConsortId += 1;
+        state.consorts.push({ id: `c${state.dynasty.nextConsortId}`, family: 'qingliu' });
+      }
+    } else if (key === 'birth') {
+      const mother = state.consorts[0]?.id ?? null;
+      if (mother && val) createHeir(state, rng, { gender: val, mother });
+    } else if (key === 'tutor_teach') {
+      for (const h of state.heirs) {
+        for (const k of Object.keys(h.abilities)) h.abilities[k] = Math.min(100, h.abilities[k] + val);
+      }
     } else if (key === 'war') {
       resolveWar(state, val, rng, (st, eff) => applyEffectsOnly(st, eff, rng));
     } else if (key === 'investigate_lowest') {
@@ -72,7 +88,7 @@ function applyPolicyEffects(state) {
   const policy = POLICIES[state.policy];
   if (!policy) return;
   for (const [key, val] of Object.entries(policy.monthly)) {
-    setStat(state, key, state.stats[key] + val);
+    drift(state, key, state.stats[key] + val);
   }
 }
 
@@ -80,12 +96,12 @@ function applyOfficeEffects(state) {
   const g = (k) => state.stats[k];
   const revenue = officeHolder(state, 'revenue');
   if (revenue) {
-    setStat(state, 'treasury', g('treasury') + revenue.abilities.politics / 40);
+    drift(state, 'treasury', g('treasury') + revenue.abilities.politics / 40);
   } else {
-    setStat(state, 'treasury', g('treasury') - 3); // 戶部空缺：每月效率損失
+    drift(state, 'treasury', g('treasury') - 3); // 戶部空缺：每月效率損失
   }
   const works = officeHolder(state, 'works');
-  if (works) setStat(state, 'armament', g('armament') + works.abilities.intellect / 200);
+  if (works) drift(state, 'armament', g('armament') + works.abilities.intellect / 200);
 }
 
 // 每月結算（Phase 2 暫定公式，待無頭模擬校準）
@@ -93,23 +109,28 @@ export function monthlyTick(state, rng) {
   const r = rng ?? makeRng(['tick', state.turn]);
   const g = (k) => state.stats[k];
 
-  setStat(state, 'treasury', g('treasury') + Math.round((g('agriculture') + g('commerce')) / 60) - 12);
-  setStat(state, 'people', g('people') + (g('benevolence') - 150) / 300);
-  setStat(state, 'agriculture', g('agriculture') + (g('people') > 50 ? 0.5 : -0.5));
-  setStat(state, 'population', g('population') * (1 + 0.001 * (g('people') / 60 - 1)));
-  setStat(state, 'health', g('health') - 0.1);
-  setStat(state, 'charm', g('charm') + (g('health') >= 50 ? 1.5 : 0)); // 後宮成長（暫定）
+  drift(state, 'treasury', g('treasury') + Math.round((g('agriculture') + g('commerce')) / 60) - 12);
+  drift(state, 'people', g('people') + (g('benevolence') - 150) / 300);
+  drift(state, 'agriculture', g('agriculture') + (g('people') > 50 ? 0.5 : -0.5));
+  drift(state, 'population', g('population') * (1 + 0.001 * (g('people') / 60 - 1)));
+  drift(state, 'health', g('health') - 0.1);
+  drift(state, 'charm', g('charm') + (g('health') >= 50 ? 1.5 : 0)); // 後宮成長（暫定）
 
   applyOfficeEffects(state);
   applyPolicyEffects(state);
 
   // 派系勢力影響官員忠誠：勢力高於中性則忠誠微升，低於則微降
+  // 野心越高，忠誠每月流失越快（野心/200）；派系勢力則加減忠誠
   for (const o of state.officials) {
     const influence = state.factions[o.faction];
-    o.loyalty = Math.min(100, Math.max(0, o.loyalty + (influence - FACTION_BASE) / 100));
+    const drift = (influence - FACTION_BASE) / 100 - o.ambition / 200;
+    o.loyalty = Math.min(100, Math.max(0, o.loyalty + drift));
   }
 
   tickDongchang(state, r);
+
+  // 太傅到任後，皇子教育事件才會出現
+  if (officeHolder(state, 'tutor')) state.flags.tutor_appointed = true;
 
   if (g('health') <= 0) {
     state.alive = false;
@@ -125,6 +146,7 @@ export function advanceMonth(state) {
     state.month = 1;
     state.year += 1;
     state.age += 1;
+    advanceHeirs(state);
   }
   if (state.alive && state.age >= 62) {
     state.alive = false;
