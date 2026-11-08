@@ -480,7 +480,7 @@
       "name": "後宮誕育",
       "when": {
         "consorts_gt": 0,
-        "chance": 0.2
+        "chance": 0.3
       },
       "options": [
         {
@@ -4405,7 +4405,7 @@
       "name": "宮人誕育",
       "when": {
         "consorts_gt": 0,
-        "chance": 0.12
+        "chance": 0.2
       },
       "options": [
         {
