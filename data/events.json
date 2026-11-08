@@ -397,7 +397,8 @@
           "effects": {
             "commerce": 20,
             "treasury": 40
-          }
+          },
+          "chain": "E201"
         },
         {
           "key": "C",
@@ -867,7 +868,8 @@
           "tone": "強硬",
           "effects": {
             "investigate_lowest": true
-          }
+          },
+          "shared_event": true
         },
         {
           "key": "B",
@@ -1648,7 +1650,9 @@
           "effects": {
             "investigate_lowest": true,
             "benevolence": 2
-          }
+          },
+          "chain": "E206",
+          "shared_event": true
         },
         {
           "key": "B",
@@ -1772,7 +1776,8 @@
           "effects": {
             "official_loyalty_add": -5,
             "power": -2
-          }
+          },
+          "shared_event": true
         },
         {
           "key": "C",
@@ -1806,7 +1811,8 @@
             "prestige": -2,
             "treasury": 20,
             "benevolence": 2
-          }
+          },
+          "chain": "E204"
         },
         {
           "key": "B",
@@ -1854,7 +1860,8 @@
           "effects": {
             "prestige": -3,
             "official_loyalty_add": 3
-          }
+          },
+          "shared_event": true
         },
         {
           "key": "C",
@@ -1964,7 +1971,8 @@
           "effects": {
             "treasury": -120,
             "agriculture": 30
-          }
+          },
+          "chain": "E202"
         },
         {
           "key": "B",
@@ -2003,7 +2011,8 @@
           "effects": {
             "literature": 8,
             "treasury": -20
-          }
+          },
+          "shared_event": true
         },
         {
           "key": "B",
@@ -2042,7 +2051,8 @@
           "effects": {
             "official_loyalty_add": -6,
             "investigate_lowest": true
-          }
+          },
+          "shared_event": true
         },
         {
           "key": "B",
@@ -2090,7 +2100,8 @@
           "effects": {
             "treasury": -50,
             "people": 10
-          }
+          },
+          "chain": "E207"
         },
         {
           "key": "C",
@@ -2435,7 +2446,8 @@
             "military": -5,
             "armament": 4,
             "treasury": -60
-          }
+          },
+          "chain": "E205"
         },
         {
           "key": "B",
@@ -2567,7 +2579,8 @@
           "tone": "穩妥",
           "effects": {
             "heaven": 1
-          }
+          },
+          "shared_event": true
         },
         {
           "key": "C",
@@ -2639,7 +2652,8 @@
           "effects": {
             "investigate_lowest": true,
             "treasury": 30
-          }
+          },
+          "shared_event": true
         },
         {
           "key": "B",
@@ -2693,7 +2707,8 @@
           "tone": "穩妥",
           "effects": {
             "official_loyalty_add": 2
-          }
+          },
+          "shared_event": true
         }
       ]
     },
@@ -2715,7 +2730,8 @@
             "military": -4,
             "official_loyalty_add": -5,
             "power": 2
-          }
+          },
+          "shared_event": true
         },
         {
           "key": "B",
@@ -2873,7 +2889,8 @@
           "effects": {
             "treasury": -90,
             "armament": 8
-          }
+          },
+          "shared_event": true
         },
         {
           "key": "B",
@@ -3023,7 +3040,8 @@
           "effects": {
             "military": 5,
             "treasury": -50
-          }
+          },
+          "shared_event": true
         },
         {
           "key": "B",
@@ -3067,7 +3085,8 @@
             "military": -3,
             "armament": 5,
             "treasury": -40
-          }
+          },
+          "chain": "E208"
         },
         {
           "key": "B",
@@ -3109,7 +3128,8 @@
           "effects": {
             "treasury": -70,
             "charm": 4
-          }
+          },
+          "chain": "E203"
         },
         {
           "key": "B",
@@ -7480,6 +7500,314 @@
           }
         }
       ]
+    },
+    {
+      "id": "E201",
+      "name": "使節回報",
+      "speaker": "太常寺卿",
+      "narrative": "南方使團已返京覆命，正使奏稱各國所求不一，一國願開商路，另一國則索要邊地糧米。禮部請陛下示下如何回覆。",
+      "options": [
+        {
+          "key": "A",
+          "label": "厚賜回國",
+          "tone": "仁厚",
+          "effects": {
+            "charm": 4,
+            "treasury": -30
+          }
+        },
+        {
+          "key": "B",
+          "label": "許其通商",
+          "tone": "穩妥",
+          "effects": {
+            "commerce": 12,
+            "treasury": 20
+          }
+        },
+        {
+          "key": "C",
+          "label": "拒其所求",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 2,
+            "charm": -3
+          }
+        }
+      ],
+      "when": {
+        "chance": 0.5
+      }
+    },
+    {
+      "id": "E202",
+      "name": "工程完工或決堤",
+      "speaker": "地方知府",
+      "narrative": "黃河河工已近完工，然汛期將至，水勢洶湧，有人擔心新築堤身未固。工部請示是加固險段，還是開閘泄洪，請陛下定奪。",
+      "options": [
+        {
+          "key": "A",
+          "label": "加固險段",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -40,
+            "agriculture": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "開閘泄洪",
+          "tone": "冒險",
+          "effects": {
+            "agriculture": -15,
+            "people": -6
+          }
+        },
+        {
+          "key": "C",
+          "label": "論功行賞",
+          "tone": "仁厚",
+          "effects": {
+            "official_loyalty_add": 3,
+            "treasury": -20
+          }
+        }
+      ],
+      "when": {
+        "chance": 0.5
+      }
+    },
+    {
+      "id": "E203",
+      "name": "壽宴後續",
+      "speaker": "太常寺卿",
+      "narrative": "壽宴已畢，賓客與百官陸續離宮，禮部統計此次典儀所費不貲。有大臣進言，請陛下酌定壽宴後的賞賜與回禮。",
+      "options": [
+        {
+          "key": "A",
+          "label": "普施恩賞",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3,
+            "treasury": -30
+          }
+        },
+        {
+          "key": "B",
+          "label": "量加節制",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": 15
+          }
+        },
+        {
+          "key": "C",
+          "label": "藉宴加徵",
+          "tone": "奸巧",
+          "effects": {
+            "people": -5,
+            "treasury": 25
+          }
+        }
+      ],
+      "when": {
+        "chance": 0.5
+      }
+    },
+    {
+      "id": "E204",
+      "name": "和約履行或背盟",
+      "speaker": "兵部侍郎",
+      "narrative": "北狄依和約遣使送來歲幣，按約當開放邊市。然邊將探報其部眾集結於草原深處，似有異動，朝廷須決定踐約或戒備。",
+      "options": [
+        {
+          "key": "A",
+          "label": "踐約通市",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": 30,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "加強戒備",
+          "tone": "穩妥",
+          "effects": {
+            "military": 2,
+            "treasury": -15
+          }
+        },
+        {
+          "key": "C",
+          "label": "先發制人",
+          "tone": "冒險",
+          "effects": {
+            "military": -3,
+            "armament": 10,
+            "prestige": 3
+          }
+        }
+      ],
+      "when": {
+        "chance": 0.5
+      }
+    },
+    {
+      "id": "E205",
+      "name": "平亂後撫恤",
+      "speaker": "地方知府",
+      "narrative": "西南土司之亂已平，寨堡多遭焚毀，陣亡將士之家與被難百姓無以為生，地方官懇請朝廷撫恤。",
+      "options": [
+        {
+          "key": "A",
+          "label": "厚加撫恤",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -50,
+            "benevolence": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "酌量給予",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -20,
+            "people": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "撫恤從簡",
+          "tone": "奸巧",
+          "effects": {
+            "people": -4,
+            "treasury": 10
+          }
+        }
+      ],
+      "when": {
+        "chance": 0.5
+      }
+    },
+    {
+      "id": "E206",
+      "name": "案件追查",
+      "speaker": "御史",
+      "narrative": "科舉舞弊案已交有司追查，然牽涉之人愈來愈多，亦有人藉機排擠異己。是徹查到底，還是只辦首惡，懇請陛下明斷。",
+      "options": [
+        {
+          "key": "A",
+          "label": "徹查到底",
+          "tone": "強硬",
+          "effects": {
+            "investigate_lowest": true,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "只辦首惡",
+          "tone": "穩妥",
+          "effects": {
+            "official_loyalty_add": 2,
+            "people": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "借案清洗",
+          "tone": "奸巧",
+          "effects": {
+            "removeOfficial": true,
+            "prestige": -3
+          }
+        }
+      ],
+      "when": {
+        "chance": 0.5
+      }
+    },
+    {
+      "id": "E207",
+      "name": "安撫後續",
+      "speaker": "地方知府",
+      "narrative": "開倉安撫之後，流民大多已歸鄉復業，然仍有數處頭目不肯散去，暗中串連，州縣憂其再起。是設法招撫其眾，還是加派兵力。",
+      "options": [
+        {
+          "key": "A",
+          "label": "設屯安置",
+          "tone": "穩妥",
+          "effects": {
+            "agriculture": 12,
+            "treasury": -20,
+            "people": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "加派官兵",
+          "tone": "強硬",
+          "effects": {
+            "military": -2,
+            "armament": 3,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "赦其頭目",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3,
+            "people": 3,
+            "prestige": -1
+          }
+        }
+      ],
+      "when": {
+        "chance": 0.5
+      }
+    },
+    {
+      "id": "E208",
+      "name": "水師凱旋或失利",
+      "speaker": "兵部侍郎",
+      "narrative": "東南水師出擊海盜已有結果，部分戰船載獲盜首歸來，另有數艘在海上遭風浪所阻，損失不輕。朝廷應如何論功懲處，還望陛下示下。",
+      "options": [
+        {
+          "key": "A",
+          "label": "論功行賞",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -30,
+            "prestige": 4,
+            "armament": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "懲處失利將官",
+          "tone": "強硬",
+          "effects": {
+            "official_loyalty_add": -4,
+            "armament": -8
+          }
+        },
+        {
+          "key": "C",
+          "label": "重整水師",
+          "tone": "穩妥",
+          "effects": {
+            "armament": 10,
+            "treasury": -40
+          }
+        }
+      ],
+      "when": {
+        "chance": 0.5
+      }
     }
   ]
 }
