@@ -233,9 +233,10 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 
 <script type="module">
 import { createInitialState, setStat } from './src/state.js';
-import { isAvailable, recordEvent } from './src/events.js';
+import { isAvailable, recordEvent, EVENT_MAX_PER_RUN } from './src/events.js';
 import { makeRng } from './src/rng.js';
-import { applyOption, monthlyTick, advanceMonth } from './src/turn.js';
+import { applyOption, afterOption, monthlyTick, advanceMonth, AFTER_OPTION_KEYS } from './src/turn.js';
+import { takeChain } from './src/chains.js';
 import { applyDongchangAction, DC_ACTIONS, openInvestigation } from './src/dongchang.js';
 import { assignOffice, OFFICES } from './src/offices.js';
 import { POLICIES, POLICY_KEYS } from './src/policy.js';
@@ -247,12 +248,12 @@ import { taihouOpposes, WAIJIA_THRESHOLD, TAIHOU_OPPOSE } from './src/harem.js';
 import { factionsBalanced, forcingFaction, strongFactionCount, FORCE_MONTHS, FACTION_FORCE_THRESHOLD, FACTION_POLICY, BALANCED_EFFICIENCY } from './src/factions.js';
 import { describeConsort, describeTraits } from './src/people.js';
 import { SCENARIOS, createScenarioState, evaluateScenario } from './src/scenarios.js';
-import { isBonded, sharedCount, remonstrate, recordSharedEvent, BOND_THRESHOLD } from './src/bonds.js';
+import { isBonded, sharedCount, remonstrate, BOND_THRESHOLD } from './src/bonds.js';
 import { COLLECTIONS, collectionProgress } from './src/collections.js';
 import { buildScroll } from './src/posthumous.js';
 import { startCampaign, reconnoiter, pickTactic, offerPeace, MAX_ROUNDS, WINS_NEEDED, RECON_GRAIN_COST } from './src/campaign.js';
 import { TACTICS } from './src/war.js';
-import { NEIGHBORS, arrangeMarriage, acceptTribute, formAlliance, diplomacyOf, monthlyDrift, neighborById, MARRIAGE_COST, TRIBUTE_MIN_ATTITUDE, TRIBUTE_GAIN, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES } from './src/diplomacy.js';
+import { DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, NEIGHBORS, arrangeMarriage, acceptTribute, formAlliance, diplomacyOf, monthlyDrift, neighborById, MARRIAGE_COST, TRIBUTE_MIN_ATTITUDE, TRIBUTE_GAIN, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES } from './src/diplomacy.js';
 
 const SAVE_KEY = 'kingmix-save-v1';
 const SOUND_KEY = 'kingmix-sound';
@@ -285,7 +286,6 @@ const SCEN_LABEL = { age:'年歲', power:'權勢', people:'民心', treasury:'�
 const END_WORD = { death:'駕崩', abdicated:'高年致仕', '禪位':'禪位' };
 const SCEN_STATUS = { ongoing:'進行中', won:'已成功', failed:'已失敗' };
 const REASON = { busy:'已有戰事在進行', unknown:'無此鄰國', treasury:'國庫不足', attitude:'好感未達門檻', limit:'盟國已滿', already:'已是盟國', allied:'盟國不可宣戰', timing:'時機未到', inactive:'戰事未開', tactic:'戰術不明' };
-const WAR_SPEC = n => ({ strength: n.strength, reward: { treasury: 40, prestige: 3 }, loss: { armament: -40, people: -4 } });
 
 let state = null, seed = '', tab = 'court', events = [];
 let panel = null, pick1 = null, feedback = '', resignArmed = false, reviewedCount = 0;
@@ -386,14 +386,26 @@ function newGame(s, scenId){
     state = scenId ? createScenarioState(seed, scenId, { policy:'agrarian' }) : createInitialState(seed, { policy:'agrarian' });
   } catch (e) {
     state = createInitialState(seed, { policy:'agrarian' });
+    feedback = '本紀劇本載入失敗，已改為一般開局。';
   }
   reviewedCount = 0;
   save(); tab = 'court'; render();
 }
 function pendingCase(){ return (state.dongchang?.cases || []).find(c => c.status === 'leverage'); }
 function campaignActive(){ return !!(state.campaign && state.campaign.status === 'active'); }
+// 連鎖事件與 sim.js 相同：每月開始時取出一則（takeChain），同月重繪沿用同一結果，故記在 state.monthChain。
+function chainEvent(id){
+  const e = id ? events.find(x => x.id === id) : null;
+  if (!e || !isAvailable(e)) return null;
+  if ((state.eventHistory?.counts?.[id] || 0) >= EVENT_MAX_PER_RUN) return null;
+  return e.options.some(isAvailable) ? e : null;
+}
 function currentEvent(){
+  const key = `${state.year}-${state.month}`;
+  if (!state.monthChain || state.monthChain.key !== key) state.monthChain = { key, id: takeChain(state) };
   if (!state.alive || pendingCase()) return null;
+  const chained = chainEvent(state.monthChain.id);
+  if (chained) return chained;
   return pickEvent(state, events, rng('events', state.year, state.month));
 }
 function finishMonth(keepFeedback){
@@ -419,14 +431,12 @@ function finishMonth(keepFeedback){
   save(); render();
 }
 function chooseDC(action){ applyDongchangAction(state, pendingCase().id, action); finishMonth(); }
-function lowestLoyalty(){ return state.officials.reduce((best, o) => (!best || o.loyalty < best.loyalty ? o : best), null); }
-function chooseOption(opt, evId){
+function chooseOption(opt, ev){
   const before = { ...state.stats };
-  // 共歷事件：選項若影響忠誠最低之臣，計入君臣相得的進度（見 bonds.js）
-  const target = opt.effects && 'official_loyalty_add' in opt.effects ? lowestLoyalty() : null;
-  if (evId) recordEvent(state, evId);
-  if (target && evId) { try { recordSharedEvent(state, target.id, evId); } catch(e) {} }
+  recordEvent(state, ev.id);
   applyOption(state, opt, rng('recruit', state.year, state.month));
+  // 連鎖排程與君臣共歷（shared_event）皆由引擎 afterOption 處理，頁面不另行記錄。
+  afterOption(state, ev, opt);
   const parts = Object.keys(STAT).map(k => {
     const d = Math.round(state.stats[k] - before[k]);
     return d ? `${STAT[k].l}${d > 0 ? '+' : ''}${d}` : null;
@@ -446,6 +456,7 @@ function startEventCampaign(opt, ev){
   if (!war) return render();
   recordEvent(state, ev.id);
   applyOption(state, { ...opt, effects: rest }, rng('recruit', state.year, state.month));
+  afterOption(state, ev, opt);
   const r = startCampaign(state, war);
   if (!r.ok) { feedback = '此役無法出征。'; save(); return render(); }
   state.campaign.tick = true;
@@ -570,7 +581,7 @@ function memorialCard(vt, inner){
   return `<section class="memorial"><div class="vtitle">${vt}</div><div class="mbody">${inner}</div></section>`;
 }
 function effChips(o){
-  return Object.entries(o.effects||{}).map(([k,v]) => typeof v === 'boolean'
+  return Object.entries(o.effects||{}).filter(([k]) => !AFTER_OPTION_KEYS.includes(k)).map(([k,v]) => typeof v === 'boolean'
     ? `<span class="chip">${EFFECT[k]||k}</span>`
     : (k === 'war' ? `<span class="chip">${EFFECT[k]}</span>` : `<span class="chip ${v>0?'up':v<0?'down':''}">${EFFECT[k]||k} ${v>0?'+':''}${v}</span>`)).join('') || '<span class="chip">無直接效果</span>';
 }
@@ -696,7 +707,7 @@ function renderCourt(){
         <span class="otxt"><span class="label">${esc(o.label)}・親征</span>
         <span class="hint">三回合戰役：可偵察、選戰術、遣使議和（上一項為速決）</span></span></button>` : ''}`).join('')}
       </div>`) + actionsSection();
-  app.querySelectorAll('[data-i]').forEach(b => b.onclick = () => chooseOption(opts[+b.dataset.i], ev.id));
+  app.querySelectorAll('[data-i]').forEach(b => b.onclick = () => chooseOption(opts[+b.dataset.i], ev));
   app.querySelectorAll('[data-camp]').forEach(b => b.onclick = () => startEventCampaign(opts[+b.dataset.camp], ev));
 }
 
@@ -1046,7 +1057,7 @@ function onAgency(e){
     if (v === 'marry') { r = arrangeMarriage(state, n.id); msg = `與${n.name}聯姻，兩國停戰二年。`; }
     else if (v === 'tribute') { r = acceptTribute(state, n.id); msg = `${n.name}遣使朝貢，國庫增益。`; }
     else if (v === 'ally') { r = formAlliance(state, n.id); msg = `與${n.name}結盟。`; }
-    else { r = startCampaign(state, WAR_SPEC(n), { neighborId: n.id }); msg = `宣戰${n.name}，親征出兵。`; if (r.ok) { state.campaign.title = `征討${n.name}`; } }
+    else { r = startCampaign(state, { strength: n.strength, reward: { ...DECLARE_WAR_REWARD }, loss: { ...DECLARE_WAR_LOSS } }, { neighborId: n.id }); msg = `宣戰${n.name}，親征出兵。`; if (r.ok) { state.campaign.title = `征討${n.name}`; } }
     if (!r.ok) { feedback = `此舉未成：${REASON[r.reason] || '條件未符'}。`; return render(); }
     if (v === 'war') { sfx('pick'); }
     return useAction(msg);
