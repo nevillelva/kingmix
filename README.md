@@ -54,3 +54,10 @@ npm run sim -- demo 10   # 以種子 demo 模擬 10 年，輸出 JSON 摘要
 - `src/policy.js`：四種施政流派與每月修正
 - `src/war.js`：決策制戰爭
 - 規格與延後項目見 [docs/specs/phase3-economy-war.md](docs/specs/phase3-economy-war.md)
+
+## Phase 4 & 5：後宮、傳承、結局與內容
+
+- `src/succession.js`：皇子繼位、先帝遺產衰減、王朝結束
+- `src/ending.js`：多軸結局評價
+- 40 條事件（`data/events.json`）
+- 規格與校準紀錄見 [docs/specs/phase4-5-dynasty.md](docs/specs/phase4-5-dynasty.md)

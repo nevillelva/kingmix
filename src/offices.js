@@ -9,6 +9,7 @@ export const OFFICES = {
   works: { name: '工部尚書', requires: { intellect: 60 } },
   war: { name: '兵部尚書', requires: { intellect: 60 } },
   prefect: { name: '知府', requires: { intellect: 60, politics: 60, virtue: 60 } },
+  tutor: { name: '太傅', requires: { intellect: 60, martial: 40, virtue: 60 } },
 };
 
 export function officeHolder(state, key) {
@@ -32,4 +33,24 @@ export function assignOffice(state, officialId, officeKey) {
     state.warnings.push({ turn: state.turn, key: officeKey, reason: 'unfit_office', gaps });
   }
   return gaps;
+}
+
+// 最適任建議：回傳在能力總和上最符合該職需求的未任官員（忠誠不足者不列入）
+export function suggestCandidate(state, officeKey) {
+  const office = OFFICES[officeKey];
+  if (!office) return null;
+  let best = null;
+  let bestScore = -Infinity;
+  for (const o of state.officials) {
+    if (o.office) continue;
+    const score = Object.entries(office.requires)
+      .filter(([k]) => k !== 'loyalty')
+      .reduce((sum, [k, need]) => sum + Math.min(0, o.abilities[k] - need) + o.abilities[k] / 100, 0)
+      + (o.loyalty >= 60 ? 0 : -100);
+    if (score > bestScore || (score === bestScore && best && o.id < best.id)) {
+      best = o;
+      bestScore = score;
+    }
+  }
+  return best;
 }

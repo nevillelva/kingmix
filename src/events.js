@@ -14,11 +14,22 @@ export function isEligible(state, event, rng) {
         break;
       case 'months': if (!val.includes(state.month)) return false; break;
       case 'every_years':
-        if (state.month !== 1 || (state.year - 1) % val !== 0) return false;
+        // 未指定 months 時，預設只在 1 月結算；指定 months 時由 months 決定月份
+        if (!when.months && state.month !== 1) return false;
+        if ((state.year - 1) % val !== 0) return false;
         break;
       case 'chance': if (!(rng() < val)) return false; break;
       case 'flag': if (!state.flags[val]) return false; break;
-      default: throw new Error(`unknown condition in ${event.id}: ${key}`);
+      case 'consorts_gt': if (!(state.consorts.length > val)) return false; break;
+      case 'heirs_gt': if (!(state.heirs.length > val)) return false; break;
+      default: {
+        // 通用數值條件：<stat>_lt / <stat>_gt，例如 prestige_lt、commerce_gt
+        const m = key.match(/^([a-z]+)_(lt|gt)$/);
+        if (!m || !(m[1] in state.stats)) throw new Error(`unknown condition in ${event.id}: ${key}`);
+        const v = state.stats[m[1]];
+        if (m[2] === 'lt' ? !(v < val) : !(v > val)) return false;
+        break;
+      }
     }
   }
   return true;

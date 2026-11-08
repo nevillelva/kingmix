@@ -6,13 +6,31 @@ import { isEligible, isAvailable } from './events.js';
 import { makeRng } from './rng.js';
 import { applyOption, monthlyTick, advanceMonth } from './turn.js';
 import { applyDongchangAction, DC_ACTIONS } from './dongchang.js';
+import { assignOffice, suggestCandidate } from './offices.js';
+import { tryAccession } from './succession.js';
+import { evaluateDynasty } from './ending.js';
+import { unmetRequirements } from './officials.js';
+import { OFFICES } from './offices.js';
 
-export function pickEvent(state, events, rng) {
-  for (const event of events) {
-    if (!isAvailable(event)) continue;
-    if (isEligible(state, event, rng)) return event;
+const AUTO_OFFICES = ['chancellor', 'revenue', 'works', 'war', 'tutor'];
+
+// 吏部最適任建議：僅在候選人完全達標時自動任命，避免強迫不合格者上任。
+export function autoAppoint(state) {
+  for (const key of AUTO_OFFICES) {
+    const holder = state.officials.find((o) => o.office === key);
+    if (holder) continue;
+    const candidate = suggestCandidate(state, key);
+    if (candidate && unmetRequirements(candidate, OFFICES[key].requires).length === 0) {
+      assignOffice(state, candidate.id, key);
+    }
   }
-  return null;
+}
+
+// 從所有符合條件的事件中，以種子隨機挑一則；避免清單前段事件長期壟斷。
+export function pickEvent(state, events, rng) {
+  const eligible = events.filter((e) => isAvailable(e) && isEligible(state, e, rng));
+  if (eligible.length === 0) return null;
+  return eligible[Math.floor(rng() * eligible.length)];
 }
 
 export function runSimulation({ seed, months, events, policy = 'agrarian' }) {
@@ -21,8 +39,12 @@ export function runSimulation({ seed, months, events, policy = 'agrarian' }) {
   const log = [];
   const bump = (id) => { triggered[id] = (triggered[id] || 0) + 1; };
 
-  for (let i = 0; i < months && state.alive; i++) {
+  for (let i = 0; i < months; i++) {
+    if (!state.alive) {
+      if (!tryAccession(state)) break;
+    }
     const { year, month } = state;
+    autoAppoint(state);
     const pending = state.dongchang.cases.find((c) => c.status === 'leverage');
 
     if (pending) {
@@ -61,8 +83,15 @@ export function runSimulation({ seed, months, events, policy = 'agrarian' }) {
     dongchang: { open: state.dongchang.cases.filter((c) => c.status !== 'closed').length, total: state.dongchang.cases.length },
     triggered,
     policy: state.policy,
+    generation: state.dynasty.generation,
+    dynastyEnded: state.dynasty.ended,
+    consorts: state.consorts.length,
+    heirs: state.heirs.map((h) => ({ id: h.id, gender: h.gender, age: h.age })),
+    chronicle: state.chronicle,
+    ending: evaluateDynasty(state),
     wars: state.wars,
     warningCount: state.warnings.length,
+    warningBreakdown: state.warnings.reduce((acc, w) => { const k = `${w.key}:${w.reason}`; acc[k] = (acc[k] || 0) + 1; return acc; }, {}),
     log,
   };
 }

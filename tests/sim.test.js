@@ -32,7 +32,7 @@ test('10-year runs keep every stat finite and within bounds', () => {
   }
 });
 
-test('every Phase 1 event fires at least once across seeds 1-20 over 10 years', () => {
+test('every active event fires at least once across seeds 1-20 over 10 years', () => {
   const seen = new Set();
   for (let seed = 1; seed <= 20; seed++) {
     const r = runSimulation({ seed: String(seed), months: TEN_YEARS, events });
