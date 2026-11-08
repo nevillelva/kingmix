@@ -2,9 +2,11 @@
 // 東廠有待處置的把柄時，該月的奏摺改為「東廠密報」。
 
 import { createInitialState } from './state.js';
-import { isEligible, isAvailable, eventAllowed, recordEvent } from './events.js';
+import { isEligible, isAvailable, eventAllowed, recordEvent, EVENT_MAX_PER_RUN } from './events.js';
 import { makeRng } from './rng.js';
-import { applyOption, monthlyTick, advanceMonth } from './turn.js';
+import { applyOption, afterOption, monthlyTick, advanceMonth } from './turn.js';
+import { takeChain } from './chains.js';
+import { createScenarioState, evaluateScenario, SCENARIOS } from './scenarios.js';
 import { applyDongchangAction, DC_ACTIONS } from './dongchang.js';
 import { assignOffice, suggestCandidate } from './offices.js';
 import { tryAccession } from './succession.js';
@@ -13,6 +15,27 @@ import { unmetRequirements } from './officials.js';
 import { OFFICES } from './offices.js';
 
 const AUTO_OFFICES = ['chancellor', 'revenue', 'works', 'war', 'tutor'];
+
+// 劇本對外 id（與 scenarios.js 的內部 id 對應）；內部 id 亦接受。
+export const SCENARIO_ALIASES = Object.freeze({
+  youzhu: 'youth_regency',
+  zhongxing: 'restoration',
+  shouchengzhi: 'steady',
+});
+
+export function resolveScenarioId(id) {
+  const internal = SCENARIO_ALIASES[id] ?? id;
+  if (!SCENARIOS[internal]) throw new Error(`unknown scenario: ${id}`);
+  return internal;
+}
+
+// 連鎖事件：不看 when 與冷卻，但仍需可用、未達每局上限。
+const findChained = (events, id, state) => {
+  const e = events.find((x) => x.id === id);
+  if (!e || !isAvailable(e)) return null;
+  if ((state.eventHistory?.counts?.[id] || 0) >= EVENT_MAX_PER_RUN) return null;
+  return e.options.some(isAvailable) ? e : null;
+};
 
 // 吏部最適任建議：僅在候選人完全達標時自動任命，避免強迫不合格者上任。
 export function autoAppoint(state) {
@@ -45,8 +68,11 @@ export function pickEvent(state, events, rng) {
   return eligible[eligible.length - 1];
 }
 
-export function runSimulation({ seed, months, events, policy = 'agrarian' }) {
-  const state = createInitialState(seed, { policy });
+// scenario 為選用：省略時行為與原本相同（標準開局、回傳不含 scenario 欄位）。
+export function runSimulation({ seed, months, events, policy = 'agrarian', scenario }) {
+  const state = scenario
+    ? createScenarioState(seed, resolveScenarioId(scenario), { policy })
+    : createInitialState(seed, { policy });
   const triggered = {};
   const log = [];
   const bump = (id) => { triggered[id] = (triggered[id] || 0) + 1; };
@@ -58,6 +84,8 @@ export function runSimulation({ seed, months, events, policy = 'agrarian' }) {
     const { year, month } = state;
     autoAppoint(state);
     const pending = state.dongchang.cases.find((c) => c.status === 'leverage');
+    // 連鎖事件先取出（每月至多一則）；東廠有把柄時該月略過，不補發。
+    const chainId = takeChain(state);
 
     if (pending) {
       const pick = makeRng([seed, year, month, 'dongchang'])();
@@ -66,16 +94,18 @@ export function runSimulation({ seed, months, events, policy = 'agrarian' }) {
       bump('DC');
       log.push({ year, month, event: 'DC', case: pending.id, option: action });
     } else {
+      const chained = chainId ? findChained(events, chainId, state) : null;
       const rng = makeRng([seed, year, month, 'events']);
-      const event = pickEvent(state, events, rng);
+      const event = chained ?? pickEvent(state, events, rng);
       if (event) {
         const options = event.options.filter(isAvailable);
         const pick = makeRng([seed, year, month, 'choice'])();
         const option = options[Math.floor(pick * options.length)];
         applyOption(state, option, makeRng([seed, year, month, 'recruit']));
+        afterOption(state, event, option);
         bump(event.id);
         recordEvent(state, event.id);
-        log.push({ year, month, event: event.id, option: option.key });
+        log.push({ year, month, event: event.id, option: option.key, ...(chained ? { chained: true } : {}) });
       }
     }
 
@@ -84,6 +114,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian' }) {
   }
 
   return {
+    ...(scenario ? { scenario: evaluateScenario(state) } : {}),
     seed,
     year: state.year,
     month: state.month,

@@ -21,6 +21,10 @@ export const PREFECTURE_DEFS = [
   { id: 'denglai', name: '登萊府', character: 'trade' },
 ];
 
+// 州府產出：每月依 yield（知府政績）換算入庫與民生。yield 1.0 為中性（政治 40）。
+export const YIELD_TREASURY = 0.05; // 每單位 yield 每月入庫
+export const YIELD_PEOPLE = 0.01; // 每單位 yield 高於 1 的部分，每月民心
+
 const SURNAMES = ['周', '吳', '鄭', '王', '李', '趙', '沈', '陸', '顧', '魏'];
 const GIVEN = ['文昭', '景明', '守仁', '敬之', '元禮', '子安', '允中', '茂才', '廷芳', '彥博'];
 
@@ -73,6 +77,16 @@ export function tickEconomy(state) {
 
   for (const pref of state.prefectures) {
     pref.yield = Math.round((pref.governor.abilities.politics / 40) * 100) / 100;
+  }
+  return state;
+}
+
+// 州府產出結算（與 tickEconomy 分開，tickEconomy 本身不改動數值）。
+export function applyPrefectureYield(state) {
+  ensureEconomy(state);
+  for (const pref of state.prefectures) {
+    setStat(state, 'treasury', state.stats.treasury + pref.yield * YIELD_TREASURY, { silent: true });
+    setStat(state, 'people', state.stats.people + (pref.yield - 1) * YIELD_PEOPLE, { silent: true });
   }
   return state;
 }

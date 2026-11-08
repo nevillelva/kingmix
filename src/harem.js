@@ -15,6 +15,14 @@ export const TAIHOU_GAIN = 0.2;
 export const TAIHOU_DECAY = 0.1;
 const MAX_DEMANDS = 30;
 
+// 外戚坐大回寫派系勢力（耦合）：僅在某家族 外戚坐大期間，該家族派系勢力每月 +0.02，並止於上限。
+// 上限低於 FACTION_FORCE_THRESHOLD（50），確保耦合本身不會單獨逼迫國策。
+export const WAIJIA_FACTION_COUPLING = 0.02;
+export const WAIJIA_FACTION_CAP = 40;
+
+// 太后反對時的月度懲罰（只作用於皇帝權勢），且僅在有外戚坐大時生效。
+export const TAIHOU_PENALTY = -0.3;
+
 function ensureHarem(state) {
   if (!state.harem) {
     state.harem = { demands: [], nextDemandId: 1, waijia: {}, dominant: null, taihou: { power: 0 } };
@@ -76,6 +84,22 @@ function updateTaihou(h) {
 export function taihouOpposes(state, kind) {
   if (!['heir', 'harem'].includes(kind)) throw new Error(`unknown decision kind: ${kind}`);
   return (state.harem?.taihou.power ?? 0) >= TAIHOU_OPPOSE;
+}
+
+// 外戚坐大時，其家族派系勢力微升（上限 WAIJIA_FACTION_CAP）。無外戚坐大時不改動任何數值。
+export function applyWaijiaCoupling(state) {
+  const dom = state.harem?.dominant;
+  if (!dom || !(dom.family in state.factions)) return state;
+  const cur = state.factions[dom.family];
+  if (cur >= WAIJIA_FACTION_CAP) return state;
+  state.factions[dom.family] = Math.min(WAIJIA_FACTION_CAP, cur + WAIJIA_FACTION_COUPLING);
+  return state;
+}
+
+// 太后月度懲罰（負值表示權勢減少）。只有外戚坐大且太后反對時才非零；預設狀態恆為 0。
+export function taihouPenalty(state) {
+  if (!state.harem?.dominant) return 0;
+  return taihouOpposes(state, 'harem') ? TAIHOU_PENALTY : 0;
 }
 
 // 每月結算：無妃嬪時不做任何事，主線行為不變。
