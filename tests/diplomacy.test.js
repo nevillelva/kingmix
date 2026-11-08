@@ -5,8 +5,15 @@ import { makeRng } from '../src/rng.js';
 import {
   NEIGHBORS, diplomacyOf, arrangeMarriage, acceptTribute, formAlliance, declareWar,
   warPressure, pickWarTarget, enemyStrengthOf, alliedReinforcement, monthlyDrift,
-  MARRIAGE_COST, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES,
+  MARRIAGE_COST, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES, DECLARE_WAR_REWARD, DECLARE_WAR_LOSS,
 } from '../src/diplomacy.js';
+
+test('declaration of war rewards and losses are exported with the UI defaults', () => {
+  assert.deepEqual({ ...DECLARE_WAR_REWARD }, { treasury: 40, prestige: 3 });
+  assert.deepEqual({ ...DECLARE_WAR_LOSS }, { armament: -40, people: -4 });
+  assert.ok(Object.isFrozen(DECLARE_WAR_REWARD));
+  assert.ok(Object.isFrozen(DECLARE_WAR_LOSS));
+});
 
 test('four neighbors with unique ids and valid attitudes', () => {
   assert.equal(NEIGHBORS.length, 4);
