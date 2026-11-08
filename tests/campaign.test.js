@@ -144,3 +144,28 @@ test('calibration: even strength lands 55 to 70 percent for an unskilled player,
   assert.ok(evenRate >= 0.55 && evenRate <= 0.7, `even win rate ${evenRate}`);
   assert.ok(strongRate < 0.4, `strong win rate ${strongRate}`);
 });
+
+test('calibration: fixed tactics and the best hybrid stay within 55 to 70 percent at even strength', () => {
+  const even = evenStrength();
+  const N = 200;
+  const tactics = ['assault', 'hold', 'ambush'];
+  const rateOf = (seq, strength) => {
+    let wins = 0;
+    for (let i = 0; i < N; i++) if (playOut(i, strength, (_rng, k) => seq[k]).won) wins++;
+    return wins / N;
+  };
+  for (const t of tactics) {
+    const r = rateOf([t, t, t], even);
+    assert.ok(r >= 0.55 && r <= 0.7, `fixed ${t} win rate ${r}`);
+  }
+  let best = 0;
+  let bestStrong = 0;
+  for (const a of tactics) for (const b of tactics) for (const c of tactics) {
+    const seq = [a, b, c];
+    if (a === b && b === c) continue;
+    const r = rateOf(seq, even);
+    if (r > best) { best = r; bestStrong = rateOf(seq, even * 1.25); }
+  }
+  assert.ok(best >= 0.55 && best <= 0.7, `best hybrid win rate ${best}`);
+  assert.ok(bestStrong < 0.4, `best hybrid strong win rate ${bestStrong}`);
+});
