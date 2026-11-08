@@ -24,3 +24,20 @@ npm run sim -- demo 10   # 以種子 demo 模擬 10 年，輸出 JSON 摘要
 - 外戚坐大（E010）：需要聲色成長機制（後宮系統），Phase 2 啟用
 - 每回合三個時段（晨/午/夜）：Phase 1 目前一個月只處理一則奏摺
 - 數值公式與上限為暫定，待模擬校準
+
+## 開發工具
+
+### Claude Code skills（來自 obra/superpowers）
+
+`.claude/skills/` 內含 [obra/superpowers](https://github.com/obra/superpowers) 的 15 個 skill，
+來源 commit `22f0b46`（v7.0.2），MIT 授權，見 `.claude/skills/ATTRIBUTION.md`。
+**未引入**該外掛的 SessionStart hook；skill 依需要載入。
+
+### CodeGraph（程式碼知識圖）
+
+`@colbymchenry/codegraph@1.6.2` 以 devDependency 鎖定版本。`.mcp.json` 設定 MCP 伺服器，
+並以 `--no-telemetry`、`DO_NOT_TRACK=1`、`CODEGRAPH_NO_UPDATE_CHECK=1` 關閉遙測與更新檢查。
+
+- 首次使用：`npm install` 後執行 `./node_modules/.bin/codegraph init -y` 建立本地索引
+- 索引存於 `.codegraph/`，已列入 `.gitignore`，不會被提交
+- 重新索引：`./node_modules/.bin/codegraph status` 可查看狀態
