@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>提案 A 工筆宮廷 · 朝堂</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #EFE6D2;
+  --paper: #F8F1E0;
+  --ink: #1F1A17;
+  --ink-soft: #5a4f45;
+  --vermilion: #B03A2E;
+  --azure: #2E5E7E;
+  --green: #4E7D5B;
+  --gold: #B48A3C;
+  --line: #B9A77F;
+  --shadow: rgba(60, 40, 20, .18);
+  --serif: "Noto Serif TC", "LXGW WenKai TC", "PingFang TC", serif;
+  --kai: "LXGW WenKai TC", "Noto Serif TC", "PingFang TC", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1A1512;
+    --paper: #26201B;
+    --ink: #EDE3CC;
+    --ink-soft: #bfb29a;
+    --vermilion: #D8604F;
+    --azure: #6FA3C4;
+    --green: #86B894;
+    --gold: #D4A95A;
+    --line: #5d5140;
+    --shadow: rgba(0, 0, 0, .5);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1A1512;
+  --paper: #26201B;
+  --ink: #EDE3CC;
+  --ink-soft: #bfb29a;
+  --vermilion: #D8604F;
+  --azure: #6FA3C4;
+  --green: #86B894;
+  --gold: #D4A95A;
+  --line: #5d5140;
+  --shadow: rgba(0, 0, 0, .5);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: hidden; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--kai);
+  min-height: 100vh;
+  padding: 16px;
+}
+.wrap { max-width: 420px; margin: 0 auto; }
+header {
+  display: flex; align-items: baseline; justify-content: space-between;
+  border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 14px;
+}
+header h1 { font-family: var(--serif); font-size: 20px; margin: 0; letter-spacing: .2em; }
+header .date { font-size: 13px; color: var(--ink-soft); }
+.tabs { display: flex; gap: 6px; font-size: 13px; color: var(--ink-soft); margin-bottom: 14px; flex-wrap: wrap; }
+.tabs span { padding: 3px 10px; border: 1px solid var(--line); border-radius: 14px; }
+.tabs span.on { color: var(--azure); border-color: var(--azure); }
+
+/* card stack */
+.stack { position: relative; padding-bottom: 8px; touch-action: pan-y; }
+.stack .back {
+  position: absolute; inset: 0; background: var(--paper);
+  border: 1px solid var(--line); border-radius: 6px; opacity: .6;
+}
+.stack .back.b1 { transform: translate(6px, 8px) rotate(1.2deg); }
+.stack .back.b2 { transform: translate(-4px, 14px) rotate(-.8deg); opacity: .4; }
+
+/* 摺本 memorial card */
+.memorial {
+  position: relative; background: var(--paper);
+  border: 1px solid var(--line); border-radius: 6px;
+  box-shadow: 0 6px 18px var(--shadow);
+  padding: 18px 16px 18px 14px;
+  display: grid; grid-template-columns: 56px 1fr; gap: 14px;
+  transition: transform .25s ease;
+  will-change: transform;
+}
+.memorial.dragging { transition: none; }
+.memorial::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 72px; width: 1px;
+  background: repeating-linear-gradient(to bottom, var(--line) 0 6px, transparent 6px 10px);
+  opacity: .8; pointer-events: none;
+}
+.memorial::after {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px;
+  border-bottom: 1px dashed var(--line); opacity: .6; pointer-events: none;
+}
+.vtitle {
+  writing-mode: vertical-rl; font-family: var(--serif); font-weight: 700;
+  font-size: 18px; letter-spacing: .3em; color: var(--ink);
+  border-right: 2px solid var(--vermilion); padding-right: 8px; height: 100%;
+  min-height: 210px;
+}
+.body { min-width: 0; }
+.from { font-size: 13px; color: var(--azure); margin: 0 0 6px; }
+.from b { font-weight: 500; color: var(--ink); }
+.narr { font-size: 16px; line-height: 1.85; margin: 0 0 14px; text-align: justify; }
+.opts { display: grid; gap: 8px; }
+.opt {
+  font: inherit; text-align: left; color: var(--ink);
+  background: transparent; border: 1px solid var(--line); border-radius: 4px;
+  padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px;
+  align-items: center; min-height: 44px;
+}
+.opt:active { background: rgba(78, 125, 91, .12); }
+.opt .txt { font-size: 15px; line-height: 1.5; }
+.hint { flex: none; font-size: 12px; white-space: nowrap; }
+.hint .tick { display: inline-flex; gap: 2px; vertical-align: middle; margin-left: 4px; }
+.hint .tick i { width: 6px; height: 10px; background: var(--line); display: inline-block; border-radius: 1px; }
+.hint .tick i.f { background: var(--green); }
+.hint.dn .tick i.f { background: var(--vermilion); }
+.hint.up { color: var(--green); }
+.hint.dn { color: var(--vermilion); }
+.opt.neutral .hint { color: var(--gold); }
+
+.seal-row { display: flex; justify-content: flex-end; margin-top: 14px; align-items: center; gap: 10px; }
+.seal-row .note { font-size: 12px; color: var(--ink-soft); margin-right: auto; }
+.seal {
+  width: 48px; height: 48px; border-radius: 4px; display: grid; place-items: center;
+  background: var(--vermilion); color: var(--paper); font-family: var(--serif);
+  font-size: 22px; font-weight: 700; border: 0; box-shadow: inset 0 0 0 2px rgba(255,255,255,.15);
+}
+.seal:disabled { opacity: .4; }
+
+.gauges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 18px; font-size: 12px; }
+.gauges .bar { display: block; height: 4px; background: var(--line); margin-top: 4px; border-radius: 2px; overflow: hidden; }
+.gauges div { background: var(--paper); border: 1px solid var(--line); border-radius: 4px; padding: 6px 4px; text-align: center; }
+.gauges b { display: block; font-size: 13px; font-weight: 500; }
+
+.gauges .bar i { display: block; height: 100%; background: var(--azure); }
+.legend { font-size: 12px; color: var(--ink-soft); margin-top: 12px; line-height: 1.6; }
+.toast {
+  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+  background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 4px;
+  font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: calc(100% - 32px);
+}
+.toast.show { opacity: 1; }
+@media (max-width: 360px) {
+  .memorial { grid-template-columns: 44px 1fr; }
+  .vtitle { font-size: 16px; min-height: 180px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>朝堂</h1>
+    <span class="date">景和元年 三月初六</span>
+  </header>
+
+  <nav class="tabs" aria-label="主選單">
+    <span class="on">朝堂</span><span>朝臣</span><span>後宮</span><span>東廠</span><span>帝王</span>
+  </nav>
+
+  <section class="stack" id="stack" aria-label="摺本">
+    <div class="back b2"></div>
+    <div class="back b1"></div>
+
+    <article class="memorial" id="card">
+      <div class="vtitle">請陛下御覽・治河之策</div>
+      <div class="body">
+        <p class="from">奏報人：<b>都水司郎中 沈廷之</b></p>
+        <p class="narr">臣奉命巡視下游堤防，今春雨水早至，堤下村落已有數處渗漏。工部所請之款已由戶部撥下大半，然料石短缺，役夫多有怨言。臣以為，若陛下肯另撥一批糧餉以安民心，則可趁農閒徵發丁壯加固堤身；若一味節省，恐秋汛一至，前功盡棄。伏請聖裁。</p>
+        <div class="opts">
+          <button class="opt" data-k="a"><span class="txt">A. 另撥糧餉，趁農閒加固堤防</span><span class="hint up">國庫 小↓ 民心 大↑</span></button>
+          <button class="opt" data-k="b"><span class="txt">B. 以現有錢糧先修急段，餘待明年</span><span class="hint neutral">國庫 中↑ 民心 小↓</span></button>
+          <button class="opt" data-k="c"><span class="txt">C. 擇地遷村，另築新堤</span><span class="hint dn">國庫 大↓ 民心 中↑</span></button>
+        </div>
+        <div class="seal-row">
+          <span class="note" id="note">請選定一策，再行御批</span>
+          <button class="seal" id="seal" disabled aria-label="御批">御</button>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <div class="gauges" aria-label="四項指標（示意）">
+    <div>國庫<span class="bar"><i style="width:55%"></i></span></div>
+    <div>民心<span class="bar"><i style="width:40%"></i></span></div>
+    <div>軍備<span class="bar"><i style="width:70%"></i></span></div>
+    <div>天命<span class="bar"><i style="width:62%"></i></span></div>
+  </div>
+  <p class="legend">提示：影響僅以 大／中／小 表示，實際數值以正式版為準。左右滑動可切換下一份摺本（本提案僅示意）。</p>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  var card = document.getElementById('card');
+  var seal = document.getElementById('seal');
+  var note = document.getElementById('note');
+  var toast = document.getElementById('toast');
+  var opts = card.querySelectorAll('.opt');
+  var chosen = null;
+  var sx = 0, dx = 0, dragging = false;
+
+  function say(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(say.t);
+    say.t = setTimeout(function () { toast.classList.remove('show'); }, 1600);
+  }
+
+  opts.forEach(function (b) {
+    b.addEventListener('click', function () {
+      opts.forEach(function (o) { o.style.borderColor = ''; o.style.background = ''; });
+      b.style.borderColor = 'var(--green)';
+      b.style.background = 'rgba(78,125,91,.10)';
+      chosen = b.dataset.k;
+      seal.disabled = false;
+      note.textContent = '已擇第 ' + chosen.toUpperCase() + ' 策，待御批';
+    });
+  });
+
+  seal.addEventListener('click', function () {
+    say('御批已下（提案示意，未實際結算）');
+    seal.disabled = true;
+  });
+
+  // swipe to dismiss (demo)
+  card.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('button')) return;
+    dragging = true; sx = e.clientX; dx = 0;
+    card.classList.add('dragging');
+    card.setPointerCapture(e.pointerId);
+  });
+  card.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    dx = e.clientX - sx;
+    card.style.transform = 'translateX(' + dx + 'px) rotate(' + (dx / 40) + 'deg)';
+  });
+  function end() {
+    if (!dragging) return;
+    dragging = false;
+    card.classList.remove('dragging');
+    if (Math.abs(dx) > 90) {
+      card.style.transform = 'translateX(' + (dx > 0 ? 120 : -120) + '%) rotate(' + (dx / 20) + 'deg)';
+      card.style.opacity = '0';
+      say('下一份摺本（示意）');
+      setTimeout(function () { card.style.transform = ''; card.style.opacity = ''; }, 500);
+    } else {
+      card.style.transform = '';
+    }
+  }
+  card.addEventListener('pointerup', end);
+  card.addEventListener('pointercancel', end);
+})();
+</script>
+</body>
+</html>
