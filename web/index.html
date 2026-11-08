@@ -2,49 +2,134 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>皇帝養成綜合版</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
-:root{--bg:#f6f1e7;--paper:#fffdf7;--ink:#2b2118;--muted:#7a6a58;--line:#e2d6c2;--vermilion:#b23a2b;--gold:#b8891e;--ok:#3d7a4a;--warn:#b23a2b;}
-:root:not([data-theme="light"]) { }
-@media (prefers-color-scheme: dark){
- :root:not([data-theme="light"]){--bg:#1a1612;--paper:#241e18;--ink:#eee4d2;--muted:#a79783;--line:#3b3228;--vermilion:#e0604e;--gold:#e0b44e;--ok:#7fc08f;--warn:#e0604e;}
+/* 設計方向：宮廷奏摺。宣紙底色、硃砂印、金線與墨色，數值以墨色橫條呈現。 */
+:root{
+  --paper:#f3ead8; --paper-2:#fbf6ea; --ink:#2a211a; --ink-2:#6b5b48; --line:#dccdb2;
+  --vermilion:#b33a2a; --gold:#a9802a; --jade:#3e6b58; --seal-fg:#fbf6ea;
+  --display:"Noto Serif TC","Songti TC","STSong",serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  color-scheme:light;
 }
-:root[data-theme="dark"]{--bg:#1a1612;--paper:#241e18;--ink:#eee4d2;--muted:#a79783;--line:#3b3228;--vermilion:#e0604e;--gold:#e0b44e;--ok:#7fc08f;--warn:#e0604e;}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#1d1812; --paper-2:#26201a; --ink:#eee3cd; --ink-2:#a89a84; --line:#3d3328;
+    --vermilion:#e0644f; --gold:#d9ae55; --jade:#7fb79c; --seal-fg:#1d1812; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1d1812; --paper-2:#26201a; --ink:#eee3cd; --ink-2:#a89a84; --line:#3d3328;
+  --vermilion:#e0644f; --gold:#d9ae55; --jade:#7fb79c; --seal-fg:#1d1812; color-scheme:dark;
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Serif TC","PingFang TC","Microsoft JhengHei",serif;font-size:16px;line-height:1.6;padding-bottom:76px}
-header{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;justify-content:space-between;align-items:baseline;z-index:5}
-header h1{font-size:18px;margin:0;color:var(--vermilion)}
-header .date{color:var(--muted);font-size:14px}
-main{padding:16px;max-width:640px;margin:0 auto}
-.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
-.card h2{font-size:16px;margin:0 0 8px;color:var(--gold)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:14px}
-.grid div span{color:var(--muted)}
-button{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;width:100%;text-align:left;margin-top:8px}
-button:hover{border-color:var(--gold)}
-button.primary{background:var(--vermilion);color:#fff;border-color:var(--vermilion);text-align:center}
-button:disabled{opacity:.4;cursor:default}
-nav{position:fixed;bottom:0;left:0;right:0;background:var(--paper);border-top:1px solid var(--line);display:flex;z-index:5}
-nav button{flex:1;margin:0;border:0;border-radius:0;padding:12px 0;text-align:center;font-size:14px;background:transparent}
-nav button.active{color:var(--vermilion);font-weight:bold}
-.muted{color:var(--muted);font-size:14px}
-.tag{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:4px;padding:0 6px;margin-left:4px;color:var(--muted)}
-.bad{color:var(--warn)} .good{color:var(--ok)}
-ul{padding-left:18px;margin:6px 0}
-li{margin:4px 0}
-input{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);width:100%}
-.row{display:flex;gap:8px}
-.row>*{flex:1}
+html,body{margin:0}
+body{
+  background:var(--paper); color:var(--ink); font:15px/1.6 var(--body);
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-block:0 96px; min-height:100vh; overflow-x:hidden;
+  background-image:radial-gradient(circle at 50% -10%, var(--paper-2), transparent 60%);
+}
+.wrap{max-width:560px;margin:0 auto}
+/* 頂欄：年號與世次 */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding:14px 0 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.seal{flex:none;width:40px;height:40px;border-radius:6px;background:var(--vermilion);color:var(--seal-fg);display:grid;place-items:center;font:900 20px/1 var(--display);box-shadow:inset 0 0 0 2px var(--seal-fg)33}
+.top h1{font:900 18px/1.2 var(--display);margin:0;letter-spacing:.08em}
+.top .when{font-size:13px;color:var(--ink-2);margin-top:2px}
+/* 卷面：奏摺 */
+.card{background:var(--paper-2);border:1px solid var(--line);border-radius:4px;padding:16px;margin:14px 0;position:relative}
+.card::after{content:"";position:absolute;inset:4px;border:1px dashed var(--line);border-radius:2px;pointer-events:none;opacity:.6}
+.card h2{font:700 16px/1.3 var(--display);margin:0 0 10px;color:var(--ink);letter-spacing:.06em;display:flex;align-items:center;gap:8px}
+.card h2::before{content:"";width:4px;height:16px;background:var(--gold);border-radius:1px}
+.kicker{font-size:12px;letter-spacing:.2em;color:var(--vermilion);margin-bottom:4px}
+/* 數值橫條 */
+.meters{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
+.meter .row1{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-2)}
+.meter .row1 b{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:500}
+.track{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:4px}
+.fill{height:100%;background:var(--jade);border-radius:3px;transition:width .5s ease}
+.fill.warn{background:var(--vermilion)} .fill.gold{background:var(--gold)}
+/* 奏摺事件 */
+.memorial h3{font:900 22px/1.3 var(--display);margin:0 0 4px;text-wrap:balance}
+.memorial .sub{color:var(--ink-2);font-size:14px;margin-bottom:12px}
+.opts{display:grid;gap:10px}
+.opt{all:unset;cursor:pointer;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:4px;background:var(--paper);transition:border-color .15s, transform .15s}
+.opt:hover,.opt:focus-visible{border-color:var(--vermilion);transform:translateX(2px)}
+.opt:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.opt .mark{flex:none;width:28px;height:28px;border:1.5px solid var(--vermilion);color:var(--vermilion);border-radius:50%;display:grid;place-items:center;font:700 13px/1 var(--display)}
+.opt .label{font-weight:500}
+.opt .eff{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:12px;padding:1px 8px;border-radius:99px;background:var(--line);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.chip.up{background:color-mix(in srgb,var(--jade) 22%,transparent);color:var(--jade)}
+.chip.down{background:color-mix(in srgb,var(--vermilion) 18%,transparent);color:var(--vermilion)}
+/* 按鈕 */
+.btn{all:unset;cursor:pointer;display:block;text-align:center;padding:12px;background:var(--vermilion);color:var(--seal-fg);border-radius:4px;font-weight:700;letter-spacing:.1em;width:100%;box-sizing:border-box}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn+.btn{margin-top:10px}
+/* 朝臣：人物卡 */
+.officials{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.person{background:var(--paper-2);border:1px solid var(--line);border-radius:4px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.person .head{display:flex;gap:10px;align-items:center}
+.portrait{flex:none;width:44px;height:52px;border-radius:4px 4px 22px 22px;display:grid;place-items:center;font:900 18px/1 var(--display);color:var(--seal-fg)}
+.person .name{font:700 15px/1.2 var(--display);min-width:0}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.tag{font-size:11px;padding:0 6px;border-radius:3px;border:1px solid var(--line);color:var(--ink-2)}
+.abil{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;text-align:center;font-size:11px;color:var(--ink-2)}
+.abil b{display:block;font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums;font-weight:500}
+.loy{font-size:12px;color:var(--ink-2)}
+/* 勢力 */
+.factions{display:flex;height:14px;border-radius:3px;overflow:hidden;margin:6px 0 10px;border:1px solid var(--line)}
+.factions div{transition:width .5s}
+.legend{display:flex;gap:14px;font-size:13px;color:var(--ink-2);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+/* 東廠 */
+.case{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.case:last-child{border-bottom:0}
+.lvl{display:inline-flex;gap:3px}
+.lvl span{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.lvl span.on{background:var(--vermilion)}
+.empty{color:var(--ink-2);font-size:14px;margin:4px 0}
+/* 後宮與子嗣 */
+.list{list-style:none;padding:0;margin:0}
+.list li{padding:8px 0;border-bottom:1px dashed var(--line);display:flex;justify-content:space-between;gap:8px}
+.list li:last-child{border-bottom:0}
+/* 底部分頁 */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--paper);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:6}
+nav.tabs .in{display:flex;width:100%;max-width:560px;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+nav.tabs button{all:unset;flex:1;text-align:center;padding:10px 0 12px;font-size:13px;color:var(--ink-2);cursor:pointer;position:relative;letter-spacing:.06em}
+nav.tabs button.active{color:var(--vermilion);font-weight:700}
+nav.tabs button.active::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;background:var(--vermilion)}
+nav.tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:-4px}
+/* 開局 */
+.hero{text-align:center;padding:28px 0 8px}
+.hero .seal-big{width:76px;height:76px;margin:0 auto 14px;border-radius:10px;background:var(--vermilion);color:var(--seal-fg);display:grid;place-items:center;font:900 40px/1 var(--display);box-shadow:0 0 0 4px var(--paper),0 0 0 5px var(--gold)}
+.hero h2{font:900 26px/1.25 var(--display);margin:0 0 8px;letter-spacing:.1em}
+.hero p{color:var(--ink-2);margin:0 auto;max-width:34ch}
+label.lbl{display:block;font-size:13px;color:var(--ink-2);margin:12px 0 6px}
+input.seed{font:inherit;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink)}
+input.seed:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.ending .score{font:900 40px/1 var(--display);color:var(--vermilion);margin:8px 0 14px;letter-spacing:.04em}
+.axes{display:grid;gap:10px}
+@media (max-width:360px){ .meters,.officials{grid-template-columns:1fr} }
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
 </head>
 <body>
-<header><h1>皇帝養成綜合版</h1><span class="date" id="date"></span></header>
-<main id="app"></main>
-<nav id="nav"></nav>
+<div class="wrap">
+  <header class="top" id="top">
+    <div class="seal" aria-hidden="true">帝</div>
+    <div><h1>皇帝養成綜合版</h1><div class="when" id="when"></div></div>
+  </header>
+  <main id="app"></main>
+</div>
+<nav class="tabs" id="nav" aria-label="分頁"><div class="in" id="tabs"></div></nav>
 
 <script type="module">
-import { createInitialState, setStat } from './src/state.js';
+import { createInitialState } from './src/state.js';
 import { isAvailable } from './src/events.js';
 import { makeRng } from './src/rng.js';
 import { applyOption, monthlyTick, advanceMonth } from './src/turn.js';
@@ -54,40 +139,46 @@ import { tryAccession } from './src/succession.js';
 import { evaluateDynasty } from './src/ending.js';
 
 const SAVE_KEY = 'kingmix-save-v1';
-const LABELS = {
-  health:'健康', literature:'文學', military:'兵力', power:'權勢', benevolence:'仁德', prestige:'威儀',
-  charm:'聲色', treasury:'國庫', people:'民心', agriculture:'農業', commerce:'商業', armament:'軍備',
-  heaven:'天命', population:'人口'
+const STAT = {
+  health:{l:'健康',ref:100}, literature:{l:'文學',ref:200}, military:{l:'兵力',ref:200}, power:{l:'權勢',ref:200},
+  benevolence:{l:'仁德',ref:200}, prestige:{l:'威儀',ref:100}, charm:{l:'聲色',ref:200}, treasury:{l:'國庫',ref:1000},
+  people:{l:'民心',ref:100}, agriculture:{l:'農業',ref:500}, commerce:{l:'商業',ref:600}, armament:{l:'軍備',ref:500},
+  heaven:{l:'天命',ref:100}
 };
-const FACTION = { qingliu:'清流', xunggui:'勳貴', hanmen:'寒門' };
+const FACTION = { qingliu:{l:'清流',c:'#3e6b58'}, xunggui:{l:'勳貴',c:'#a9802a'}, hanmen:{l:'寒門',c:'#8a4b6b'} };
 const ABIL = { intellect:'智', politics:'政', martial:'武', command:'統', virtue:'德' };
-const ABIL_KEYS = Object.keys(ABIL);
 const TABS = [['court','朝堂'],['officials','朝臣'],['harem','後宮'],['dc','東廠'],['throne','帝王']];
 const DC_LABEL = { warn:'告誡', punish:'責罰', prison:'下獄' };
-const OFFICE_LABEL = { chancellor:'丞相', revenue:'戶部', works:'工部', war:'兵部', prefect:'知府', tutor:'太傅' };
+const DC_HINT = { warn:'口頭告誡，收其野心，回其忠誠', punish:'降職罷黜，震懾同僚', prison:'下獄審訊，或可得其供詞' };
+const OFFICE = { chancellor:'丞相', revenue:'戶部', works:'工部', war:'兵部', prefect:'知府', tutor:'太傅' };
+const EFFECT = { treasury:'國庫', agriculture:'農業', people:'民心', benevolence:'仁德', prestige:'威儀', charm:'聲色', literature:'文學', military:'兵力', power:'權勢', commerce:'商業', armament:'軍備', heaven:'天命', health:'健康' };
+const TAB_ICON = {
+  court:'<path d="M3 20h18M5 20V10l7-5 7 5v10M9 20v-6h6v6"/>',
+  officials:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+  harem:'<path d="M12 3l7 8-7 10-7-10z"/>',
+  dc:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+  throne:'<path d="M4 20h16M6 20V9l6-5 6 5v11M9 20v-5h6v5"/>'
+};
 
 let state = null, seed = '', tab = 'court', events = [];
 const app = document.getElementById('app');
-const nav = document.getElementById('nav');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rng = (...parts) => makeRng([seed, ...parts]);
 
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({seed, state})); }catch(e){} }
 function load(){ try{ const r = localStorage.getItem(SAVE_KEY); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
 function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
-const rng = (...parts) => makeRng([seed, ...parts]);
 
 function newGame(s){
   seed = s || String(Math.floor(Math.random()*1e9));
   state = createInitialState(seed, { policy:'agrarian' });
   save(); tab = 'court'; render();
 }
-
-// 目前月份等待玩家處置的內容：東廠把柄 > 事件 > 直接結算
 function pendingCase(){ return state.dongchang.cases.find(c => c.status === 'leverage'); }
 function currentEvent(){
   if (!state.alive || pendingCase()) return null;
   return pickEvent(state, events, rng('events', state.year, state.month));
 }
-
 function finishMonth(){
   monthlyTick(state, rng('tick', state.year, state.month));
   advanceMonth(state);
@@ -95,41 +186,52 @@ function finishMonth(){
   if (!state.alive) tryAccession(state);
   save(); render();
 }
+function chooseDC(action){ applyDongchangAction(state, pendingCase().id, action); finishMonth(); }
+function chooseOption(opt){ applyOption(state, opt, rng('recruit', state.year, state.month)); finishMonth(); }
 
-function chooseDC(action){
-  const c = pendingCase();
-  applyDongchangAction(state, c.id, action);
-  finishMonth();
+function fmt(k, v){
+  if (k === 'population') return v >= 10000 ? (v/10000).toFixed(0)+'萬' : Math.round(v);
+  return Math.round(v);
 }
-function chooseOption(ev, opt){
-  applyOption(state, opt, rng('recruit', state.year, state.month));
-  finishMonth();
+function meter(k){
+  const s = STAT[k], v = state.stats[k];
+  const pct = k === 'population' ? 100 : Math.max(0, Math.min(100, v / s.ref * 100));
+  const cls = pct < 25 ? 'warn' : pct > 70 ? 'gold' : '';
+  return `<div class="meter"><div class="row1"><span>${s.l}</span><b>${fmt(k,v)}</b></div>
+    <div class="track"><div class="fill ${cls}" style="width:${pct.toFixed(1)}%"></div></div></div>`;
 }
-function skipMonth(){ finishMonth(); }
-
-function statGrid(){
-  return '<div class="grid">' + Object.entries(LABELS).map(([k,l]) =>
-    `<div>${l} <span>${Math.round(state.stats[k])}</span></div>`).join('') + '</div>';
+function statsCard(){
+  const keys = Object.keys(STAT);
+  return `<section class="card"><h2>國勢</h2><div class="meters">${keys.map(meter).join('')}</div></section>`;
 }
-function header(){
-  document.getElementById('date').textContent = `第${state.dynasty.generation}世 · ${state.year}年${state.month}月 · ${state.age}歲`;
+function calendar(){
+  document.getElementById('when').textContent = `第${state.dynasty.generation}世 · ${state.year}年${state.month}月 · ${state.age}歲`;
 }
+function hue(name){ let h=0; for (const c of String(name)) h = (h*31 + c.charCodeAt(0)) % 360; return h; }
+function portraitStyle(o){ return `background:linear-gradient(160deg,hsl(${hue(o.name)} 30% 38%),hsl(${hue(o.name)} 30% 22%))`; }
 
 function renderNav(){
-  nav.innerHTML = TABS.map(([k,l]) => `<button data-tab="${k}" class="${tab===k?'active':''}">${l}</button>`).join('');
-  nav.querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
+  document.getElementById('tabs').innerHTML = TABS.map(([k,l]) =>
+    `<button data-tab="${k}" class="${tab===k?'active':''}" aria-current="${tab===k}">
+       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" style="display:block;margin:0 auto 2px">${TAB_ICON[k]}</svg>${l}</button>`).join('');
+  document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
 }
 
 function renderStart(){
   const saved = load();
   app.innerHTML = `
-    <div class="card"><h2>即位</h2>
-      <p class="muted">以一位新君登基，治理國家。每月奏摺由你裁決，朝政的走向皆由選擇累積而成。</p>
-      <label class="muted">種子（相同種子、相同選擇，結果一致）</label>
-      <input id="seed" placeholder="留空即隨機">
-      <button class="primary" id="start">開始新局</button>
-      ${saved && saved.state ? '<button id="cont">繼續上次進度</button>' : ''}
-    </div>`;
+    <section class="hero">
+      <div class="seal-big" aria-hidden="true">帝</div>
+      <h2>即位登基</h2>
+      <p>以一位新君治理國家。每月奏摺由你裁決，朝政、後宮與東廠的走向，皆由選擇累積而成。</p>
+    </section>
+    <section class="card">
+      <h2>開啟新局</h2>
+      <label class="lbl" for="seed">種子（相同種子與相同選擇，結果一致）</label>
+      <input class="seed" id="seed" placeholder="留空即隨機">
+      <div style="margin-top:14px"><button class="btn" id="start">開始新局</button>
+      ${saved && saved.state ? '<button class="btn ghost" id="cont">繼續上次進度</button>' : ''}</div>
+    </section>`;
   document.getElementById('start').onclick = () => newGame(document.getElementById('seed').value.trim());
   const c = document.getElementById('cont');
   if (c) c.onclick = () => { seed = saved.seed; state = saved.state; render(); };
@@ -137,13 +239,18 @@ function renderStart(){
 
 function renderEnding(){
   const e = evaluateDynasty(state);
-  const chron = state.chronicle.map(c => `<li>第${c.generation}世 · ${c.endedInYear}年 · ${c.age}歲 · ${c.endReason || '駕崩'} · 勝戰 ${c.wars} 次</li>`).join('');
+  const names = { military:'武功', civil:'文治', benevolence:'仁德', legacy:'傳承' };
+  const chron = state.chronicle.map(c => `<li><span>第${c.generation}世 · ${c.endedInYear}年 · ${c.age}歲</span><span class="muted">${esc(c.endReason || '駕崩')}</span></li>`).join('');
   app.innerHTML = `
-    <div class="card"><h2>王朝落幕：${e.title}</h2>
-      <div class="grid">${Object.entries(e.axes).map(([k,v]) => `<div>${({military:'武功',civil:'文治',benevolence:'仁德',legacy:'傳承'})[k]} <span>${v}</span></div>`).join('')}</div>
-    </div>
-    <div class="card"><h2>史記</h2><ul>${chron || '<li class="muted">無紀錄</li>'}</ul></div>
-    <button class="primary" id="again">重新開局</button>`;
+    <section class="card ending">
+      <div class="kicker">王朝落幕</div>
+      <h2 style="font-size:20px">${esc(e.title)}</h2>
+      <div class="axes">${Object.entries(e.axes).map(([k,v]) => `
+        <div class="meter"><div class="row1"><span>${names[k]}</span><b>${v}</b></div>
+        <div class="track"><div class="fill ${k==='military'?'warn':''}" style="width:${v}%"></div></div></div>`).join('')}</div>
+    </section>
+    <section class="card"><h2>史記</h2><ul class="list">${chron || '<li><span class="empty">無紀錄</span></li>'}</ul></section>
+    <button class="btn" id="again">重新開局</button>`;
   document.getElementById('again').onclick = () => { clearSave(); state = null; render(); };
 }
 
@@ -152,92 +259,112 @@ function renderCourt(){
   if (dc) {
     const off = state.officials.find(o => o.id === dc.officialId);
     app.innerHTML = `
-      <div class="card"><h2>東廠密報</h2>
-        <p>東廠查得 <b>${off ? off.name : '某官'}</b> 有把柄（level ${dc.level}）。請裁決：</p>
-        ${DC_ACTIONS.map(a => `<button data-dc="${a}">${DC_LABEL[a]}</button>`).join('')}
-      </div>`;
+      <section class="card memorial">
+        <div class="kicker">東廠密報</div>
+        <h3>${off ? esc(off.name) : '某官'} 查有把柄</h3>
+        <div class="sub">把柄等級 ${dc.level}。請裁決如何處置：</div>
+        <div class="opts">${DC_ACTIONS.map((a,i) => `
+          <button class="opt" data-dc="${a}"><span class="mark">${i+1}</span>
+          <span><span class="label">${DC_LABEL[a]}</span><br><span class="sub" style="margin:0">${DC_HINT[a]}</span></span></button>`).join('')}
+        </div>
+      </section>` + statsCard();
     app.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => chooseDC(b.dataset.dc));
     return;
   }
   const ev = currentEvent();
-  const stats = `<div class="card"><h2>國勢</h2>${statGrid()}</div>`;
   if (!ev) {
-    app.innerHTML = stats + `<div class="card"><p class="muted">本月無事。</p><button class="primary" id="next">進入下月</button></div>`;
-    document.getElementById('next').onclick = skipMonth;
+    app.innerHTML = `<section class="card memorial"><div class="kicker">本月</div><h3>風平浪靜</h3><div class="sub">此月無奏摺上呈。</div>
+      <button class="btn" id="next">進入下月</button></section>` + statsCard();
+    document.getElementById('next').onclick = finishMonth;
     return;
   }
   const opts = ev.options.filter(isAvailable);
-  app.innerHTML = stats + `
-    <div class="card"><h2>奏摺：${ev.name}</h2>
-      ${opts.map((o,i) => `<button data-i="${i}">${o.label}<br><span class="muted">${Object.entries(o.effects||{}).map(([k,v]) => `${LABELS[k]||k} ${v>0?'+':''}${v}`).join('、') || '無直接效果'}</span></button>`).join('')}
-    </div>`;
-  app.querySelectorAll('[data-i]').forEach(b => b.onclick = () => chooseOption(ev, opts[+b.dataset.i]));
+  app.innerHTML = `
+    <section class="card memorial">
+      <div class="kicker">奏摺</div>
+      <h3>${esc(ev.name)}</h3>
+      <div class="sub">${opts.length} 項處置可選</div>
+      <div class="opts">${opts.map((o,i) => `
+        <button class="opt" data-i="${i}"><span class="mark">${esc(o.key)}</span>
+        <span style="min-width:0"><span class="label">${esc(o.label)}</span>
+        <span class="eff">${Object.entries(o.effects||{}).map(([k,v]) => `<span class="chip ${v>0?'up':v<0?'down':''}">${EFFECT[k]||k} ${v>0?'+':''}${v}</span>`).join('') || '<span class="chip">無直接效果</span>'}</span></span></button>`).join('')}
+      </div>
+    </section>` + statsCard();
+  app.querySelectorAll('[data-i]').forEach(b => b.onclick = () => chooseOption(opts[+b.dataset.i]));
 }
 
 function renderOfficials(){
-  const rows = state.officials.map(o => `
-    <div class="card">
-      <b>${o.name}</b> <span class="tag">${FACTION[o.faction]}</span>
-      ${o.office ? `<span class="tag">${OFFICE_LABEL[o.office]||o.office}</span>` : '<span class="tag">閒置</span>'}
-      <div class="muted">忠誠 <span class="${o.loyalty<40?'bad':'good'}">${Math.round(o.loyalty)}</span> · 野心 ${Math.round(o.ambition)}</div>
-      <div class="grid">${ABIL_KEYS.map(k => `<div>${ABIL[k]} <span>${o.abilities[k]}</span></div>`).join('')}</div>
-    </div>`).join('');
-  const fac = Object.entries(state.factions).map(([k,v]) => `${FACTION[k]} ${Math.round(v)}`).join('　');
-  app.innerHTML = `<div class="card"><h2>朝局</h2><p class="muted">${fac}</p></div>${rows || '<p class="muted">朝中無人。</p>'}`;
+  const total = Object.values(state.factions).reduce((a,b)=>a+b,0) || 1;
+  const bar = Object.entries(state.factions).map(([k,v]) => `<div style="width:${v/total*100}%;background:${FACTION[k].c}" title="${FACTION[k].l} ${Math.round(v)}"></div>`).join('');
+  const legend = Object.entries(state.factions).map(([k,v]) => `<span><i style="background:${FACTION[k].c}"></i>${FACTION[k].l} ${Math.round(v)}</span>`).join('');
+  const cards = state.officials.map(o => `
+    <article class="person">
+      <div class="head">
+        <div class="portrait" style="${portraitStyle(o)}" aria-hidden="true">${esc(o.name.slice(0,1))}</div>
+        <div style="min-width:0">
+          <div class="name">${esc(o.name)}</div>
+          <div class="tags"><span class="tag" style="color:${FACTION[o.faction].c};border-color:${FACTION[o.faction].c}">${FACTION[o.faction].l}</span>
+          <span class="tag">${o.office ? OFFICE[o.office] || o.office : '閒置'}</span></div>
+        </div>
+      </div>
+      <div class="loy">忠誠 <b style="color:${o.loyalty<40?'var(--vermilion)':'var(--jade)'}">${Math.round(o.loyalty)}</b> · 野心 ${Math.round(o.ambition)}</div>
+      <div class="abil">${Object.keys(ABIL).map(k => `<div>${ABIL[k]}<b>${o.abilities[k]}</b></div>`).join('')}</div>
+    </article>`).join('');
+  app.innerHTML = `
+    <section class="card"><h2>朝局</h2>
+      <div class="factions">${bar}</div><div class="legend">${legend}</div></section>
+    <div class="officials">${cards || '<p class="empty">朝中無人。</p>'}</div>`;
 }
 
 function renderHarem(){
-  const consorts = state.consorts.length
-    ? state.consorts.map(c => `<li>${c.name || '嬪妃 ' + c.id}</li>`).join('') : '<li class="muted">後宮空虛</li>';
-  const heirs = state.heirs.length
-    ? state.heirs.map(h => `<li>${h.gender==='m'?'皇子':'皇女'} · ${h.age}歲 · 能力 ${Object.values(h.abilities).reduce((a,b)=>a+b,0)}</li>`).join('')
-    : '<li class="muted">尚無子嗣</li>';
+  const consorts = state.consorts.map(c => `<li><span>${esc(c.name || '嬪妃 ' + c.id)}</span></li>`).join('');
+  const heirs = state.heirs.map(h => `<li><span>${h.gender==='m'?'皇子':'皇女'} · ${h.age} 歲</span><span class="chip">能力 ${Object.values(h.abilities).reduce((a,b)=>a+b,0)}</span></li>`).join('');
   app.innerHTML = `
-    <div class="card"><h2>嬪妃（${state.consorts.length}/8）</h2><ul>${consorts}</ul></div>
-    <div class="card"><h2>子嗣</h2><ul>${heirs}</ul></div>`;
+    <section class="card"><h2>嬪妃　${state.consorts.length} / 8</h2>
+      ${consorts ? `<ul class="list">${consorts}</ul>` : '<p class="empty">後宮空虛，待選秀入宮。</p>'}</section>
+    <section class="card"><h2>子嗣</h2>
+      ${heirs ? `<ul class="list">${heirs}</ul>` : '<p class="empty">尚無子嗣。</p>'}</section>`;
 }
 
 function renderDC(){
-  const cases = state.dongchang.cases.filter(c => c.status !== 'closed');
   const off = id => (state.officials.find(o => o.id === id) || {}).name || '（已去職）';
-  const rows = cases.map(c => `<li>${off(c.officialId)} · ${c.status} · level ${c.level}</li>`).join('');
-  const hist = state.dongchang.cases.filter(c => c.status === 'closed').slice(-8)
-    .map(c => `<li class="muted">${off(c.officialId)} · ${c.outcome || '結案'}</li>`).join('');
+  const open = state.dongchang.cases.filter(c => c.status !== 'closed');
+  const closed = state.dongchang.cases.filter(c => c.status === 'closed').slice(-8).reverse();
+  const row = c => `<div class="case"><div><b style="font-weight:500">${esc(off(c.officialId))}</b><div class="loy">${esc(c.status)}</div></div>
+    <div class="lvl" title="把柄等級 ${c.level}">${[1,2,3].map(i => `<span class="${i<=c.level?'on':''}"></span>`).join('')}</div></div>`;
   app.innerHTML = `
-    <div class="card"><h2>進行中</h2><ul>${rows || '<li class="muted">無案件</li>'}</ul></div>
-    <div class="card"><h2>近期結案</h2><ul>${hist || '<li class="muted">無</li>'}</ul></div>`;
+    <section class="card"><h2>進行中</h2>${open.map(row).join('') || '<p class="empty">目前無案件。</p>'}</section>
+    <section class="card"><h2>近期結案</h2>${closed.map(c => `<div class="case"><span>${esc(off(c.officialId))}</span><span class="loy">${esc(c.outcome || '結案')}</span></div>`).join('') || '<p class="empty">尚無結案。</p>'}</section>`;
 }
 
 function renderThrone(){
   const wins = state.wars.filter(w => w.won).length;
-  const chron = state.chronicle.map(c => `<li>第${c.generation}世 · ${c.endedInYear}年 · ${c.endReason||'駕崩'}</li>`).join('');
+  const chron = state.chronicle.map(c => `<li><span>第${c.generation}世 · ${c.endedInYear}年</span><span class="loy">${esc(c.endReason||'駕崩')}</span></li>`).join('');
   app.innerHTML = `
-    <div class="card"><h2>帝王</h2>
-      <p>第 ${state.dynasty.generation} 世　${state.year} 年　${state.age} 歲</p>
-      <div class="grid"><div>健康 <span>${Math.round(state.stats.health)}</span></div><div>聲色 <span>${Math.round(state.stats.charm)}</span></div>
-      <div>征戰 <span>${state.wars.length} 次（勝 ${wins}）</span></div><div>政策 <span>農本</span></div></div>
-      <button id="resign">禪位（退位並傳位於皇子）</button>
-    </div>
-    <div class="card"><h2>史記</h2><ul>${chron || '<li class="muted">本朝初立</li>'}</ul></div>`;
+    <section class="card"><h2>帝王</h2>
+      <div class="meters">
+        <div class="meter"><div class="row1"><span>年歲</span><b>${state.age}</b></div></div>
+        <div class="meter"><div class="row1"><span>征戰</span><b>${state.wars.length} 次 · 勝 ${wins}</b></div></div>
+      </div>
+      <div style="margin-top:16px"><button class="btn ghost" id="resign">禪位予皇子</button></div>
+    </section>
+    <section class="card"><h2>史記</h2><ul class="list">${chron || '<li><span class="empty">本朝初立，尚無史記。</span></li>'}</ul></section>`;
   document.getElementById('resign').onclick = () => {
-    if (!confirm('確定禪位？')) return;
+    if (!window.confirm('確定禪位？')) return;
     state.alive = false; state.endReason = '禪位'; finishMonth();
   };
 }
 
 function render(){
-  if (!state) { renderStart(); renderNav(); document.getElementById('date').textContent=''; return; }
-  if (!state.alive) { renderEnding(); nav.innerHTML=''; return; }
-  header(); renderNav();
+  if (!state) { document.getElementById('when').textContent = '未開局'; renderStart(); document.getElementById('nav').style.display='none'; return; }
+  document.getElementById('nav').style.display='';
+  calendar();
+  if (!state.alive) { renderEnding(); document.getElementById('nav').style.display='none'; return; }
+  renderNav();
   ({ court: renderCourt, officials: renderOfficials, harem: renderHarem, dc: renderDC, throne: renderThrone })[tab]();
 }
 
-try {
-  const r = await fetch('data/events.json');
-  events = (await r.json()).events;
-} catch(e) {
-  events = [];
-}
+try { events = (await (await fetch('data/events.json')).json()).events; } catch (e) { events = []; }
 render();
 </script>
 </body>
