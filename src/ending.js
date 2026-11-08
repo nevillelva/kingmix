@@ -6,7 +6,7 @@ export function evaluateDynasty(state) {
   const losses = state.wars.length - wins;
   const recruits = state.officials.filter((o) => String(o.id).startsWith('r')).length;
   const military = Math.max(0, Math.min(100, Math.round(wins * 5 - losses * 3)));
-  const civil = Math.max(0, Math.min(100, Math.round(state.stats.literature / 14 + recruits * 2)));
+  const civil = Math.max(0, Math.min(100, Math.round(state.stats.literature / 16 + recruits * 2)));
   const benevolence = Math.max(0, Math.min(100, Math.round(state.stats.benevolence / 5 + state.stats.people / 2) / 3.5));
   const legacy = Math.min(100, Math.min(30, (state.dynasty.generation - 1) * 9) + (state.dynasty.ended ? 0 : 10));
 
