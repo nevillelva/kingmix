@@ -19,6 +19,8 @@ export const BOUNDS = {
   population: [0, Infinity],
 };
 
+export const FACTION_BASE = 33; // 派系勢力中性值
+
 const round2 = (n) => Math.round(n * 100) / 100;
 
 export function createInitialState(seed) {
@@ -37,7 +39,7 @@ export function createInitialState(seed) {
       power: 80,
       benevolence: 150,
       prestige: 60,
-      charm: 60,
+      charm: 150,
       treasury: 500,
       people: 60,
       agriculture: 400,
@@ -47,10 +49,21 @@ export function createInitialState(seed) {
       population: 1000000,
     },
     officials: [
-      { id: 'o1', name: '丞相', loyalty: 85, ambition: 20 },
-      { id: 'o2', name: '戶部尚書', loyalty: 70, ambition: 30 },
-      { id: 'o3', name: '知府', loyalty: 55, ambition: 45 },
+      {
+        id: 'o1', name: '丞相', loyalty: 85, ambition: 20, faction: 'qingliu', office: 'chancellor',
+        abilities: { intellect: 80, politics: 80, martial: 40, command: 50, virtue: 70 },
+      },
+      {
+        id: 'o2', name: '戶部尚書', loyalty: 70, ambition: 30, faction: 'xunggui', office: 'revenue',
+        abilities: { intellect: 70, politics: 65, martial: 30, command: 40, virtue: 60 },
+      },
+      {
+        id: 'o3', name: '知府', loyalty: 55, ambition: 45, faction: 'hanmen', office: null,
+        abilities: { intellect: 60, politics: 55, martial: 35, command: 30, virtue: 40 },
+      },
     ],
+    factions: { qingliu: 34, xunggui: 33, hanmen: 33 },
+    dongchang: { cases: [], nextId: 1 },
     flags: {},
     warnings: [],
   };
