@@ -138,6 +138,7 @@ import { assignOffice, OFFICES } from './src/offices.js';
 import { POLICIES, POLICY_KEYS } from './src/policy.js';
 import { unmetRequirements } from './src/officials.js';
 import { pickEvent, autoAppoint } from './src/sim.js';
+import { recordEvent } from './src/events.js';
 import { tryAccession } from './src/succession.js';
 import { evaluateDynasty } from './src/ending.js';
 
@@ -230,8 +231,9 @@ function finishMonth(keepFeedback){
   save(); render();
 }
 function chooseDC(action){ applyDongchangAction(state, pendingCase().id, action); finishMonth(); }
-function chooseOption(opt){
+function chooseOption(opt, evId){
   const before = { ...state.stats };
+  if (evId) recordEvent(state, evId);
   applyOption(state, opt, rng('recruit', state.year, state.month));
   const parts = Object.keys(STAT).map(k => {
     const d = Math.round(state.stats[k] - before[k]);
@@ -347,7 +349,7 @@ function renderCourt(){
         <span class="eff">${Object.entries(o.effects||{}).map(([k,v]) => `${typeof v === 'boolean' ? `<span class="chip">${EFFECT[k]||k}</span>` : `<span class="chip ${v>0?'up':v<0?'down':''}">${EFFECT[k]||k} ${v>0?'+':''}${v}</span>`}`).join('') || '<span class="chip">無直接效果</span>'}</span></span></button>`).join('')}
       </div>
     </section>` + statsCard();
-  app.querySelectorAll('[data-i]').forEach(b => b.onclick = () => chooseOption(opts[+b.dataset.i]));
+  app.querySelectorAll('[data-i]').forEach(b => b.onclick = () => chooseOption(opts[+b.dataset.i], ev.id));
 }
 
 function renderOfficials(){
