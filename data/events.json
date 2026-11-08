@@ -1,0 +1,324 @@
+{
+  "version": 1,
+  "source": "docs/specs/events-batch1.md",
+  "events": [
+    {
+      "id": "E001",
+      "name": "農業低迷",
+      "when": {
+        "agriculture_lt": 300
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "撥款興修水利",
+          "effects": {
+            "treasury": -80,
+            "agriculture": 60
+          }
+        },
+        {
+          "key": "B",
+          "label": "下詔勸農",
+          "effects": {
+            "benevolence": 5,
+            "agriculture": 20
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不理",
+          "effects": {
+            "people": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E002",
+      "name": "國庫空虛",
+      "when": {
+        "treasury_lt": 100
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "加征賦稅",
+          "effects": {
+            "people": -15,
+            "treasury": 120
+          }
+        },
+        {
+          "key": "B",
+          "label": "削減用度",
+          "effects": {
+            "armament": -30,
+            "treasury": 60
+          }
+        },
+        {
+          "key": "C",
+          "label": "向富商借貸",
+          "effects": {
+            "treasury": 100,
+            "charm": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E003",
+      "name": "民心浮動",
+      "when": {
+        "people_lt": 40
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "巡遊撫民",
+          "effects": {
+            "health": -5,
+            "people": 20
+          }
+        },
+        {
+          "key": "B",
+          "label": "開倉賑濟",
+          "effects": {
+            "treasury": -60,
+            "people": 25
+          }
+        },
+        {
+          "key": "C",
+          "label": "嚴厲彈壓",
+          "effects": {
+            "military": 3,
+            "people": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E004",
+      "name": "官員不忠",
+      "when": {
+        "official_loyalty_lt": 60
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "召見安撫",
+          "effects": {
+            "benevolence": -3,
+            "official_loyalty_add": 15
+          }
+        },
+        {
+          "key": "B",
+          "label": "交由東廠調查",
+          "phase": 2,
+          "effects": {}
+        },
+        {
+          "key": "C",
+          "label": "罷官",
+          "effects": {
+            "removeOfficial": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "E005",
+      "name": "北方邊患",
+      "when": {
+        "every_years": 3,
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "出兵征討",
+          "effects": {
+            "armament": -100,
+            "military": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "和親",
+          "effects": {
+            "charm": 10,
+            "treasury": -40
+          }
+        },
+        {
+          "key": "C",
+          "label": "遣使議和",
+          "effects": {
+            "power": 3,
+            "benevolence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E006",
+      "name": "春季時令",
+      "when": {
+        "months": [
+          3,
+          4,
+          5
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "狩獵",
+          "effects": {
+            "health": 5,
+            "military": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "勸農祭祀",
+          "effects": {
+            "heaven": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "宮中宴飲",
+          "effects": {
+            "charm": 5,
+            "health": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E007",
+      "name": "水患",
+      "when": {
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開倉救災",
+          "effects": {
+            "treasury": -120,
+            "people": 20
+          }
+        },
+        {
+          "key": "B",
+          "label": "減免賦稅",
+          "effects": {
+            "treasury": -60,
+            "agriculture": -30
+          }
+        },
+        {
+          "key": "C",
+          "label": "不予理會",
+          "effects": {
+            "people": -35,
+            "population_pct": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E008",
+      "name": "太傅任命完成",
+      "phase": 2,
+      "when": {
+        "flag": "tutor_appointed"
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "授教皇子",
+          "phase": 2,
+          "effects": {}
+        },
+        {
+          "key": "B",
+          "label": "放任",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E009",
+      "name": "科舉年",
+      "when": {
+        "every_years": 3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "大開科舉",
+          "effects": {
+            "treasury": -30
+          }
+        },
+        {
+          "key": "B",
+          "label": "限額取士",
+          "effects": {
+            "treasury": -10
+          }
+        },
+        {
+          "key": "C",
+          "label": "停科舉",
+          "effects": {
+            "people": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E010",
+      "name": "外戚坐大",
+      "when": {
+        "charm_gt": 300
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "削權",
+          "effects": {
+            "charm": -20,
+            "power": 3,
+            "official_loyalty_add": -10
+          }
+        },
+        {
+          "key": "B",
+          "label": "容忍",
+          "effects": {
+            "heaven": -5
+          }
+        },
+        {
+          "key": "C",
+          "label": "誅殺",
+          "effects": {
+            "people": -15,
+            "power": 5
+          }
+        }
+      ],
+      "phase": 2,
+      "note": "需要聲色成長機制（後宮系統），Phase 2 啟用"
+    }
+  ]
+}

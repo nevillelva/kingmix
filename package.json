@@ -1,0 +1,13 @@
+{
+  "name": "kingmix",
+  "private": true,
+  "type": "module",
+  "description": "皇帝養成綜合版（Phase 1：核心骨架與無頭模擬）",
+  "scripts": {
+    "test": "node --test",
+    "sim": "node scripts/simulate.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
