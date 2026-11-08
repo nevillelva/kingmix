@@ -23,9 +23,11 @@ export const FACTION_BASE = 33; // 派系勢力中性值
 
 const round2 = (n) => Math.round(n * 100) / 100;
 
-export function createInitialState(seed) {
+export function createInitialState(seed, opts = {}) {
   return {
     seed,
+    policy: opts.policy ?? 'agrarian',
+    wars: [],
     year: 1,
     month: 1,
     age: 18,

@@ -5,6 +5,8 @@ import { makeRng } from './rng.js';
 import { officeHolder } from './offices.js';
 import { generateOfficial } from './officials.js';
 import { openInvestigationOnLowest, tickDongchang } from './dongchang.js';
+import { POLICIES } from './policy.js';
+import { resolveWar } from './war.js';
 
 const MAX_OFFICIALS = 12;
 
@@ -30,7 +32,12 @@ export function removeOfficial(state, official) {
 }
 
 export function applyOption(state, option, rng = makeRng(['option', state.turn])) {
-  for (const [key, val] of Object.entries(option.effects || {})) {
+  applyEffectsOnly(state, option.effects || {}, rng);
+  return state;
+}
+
+function applyEffectsOnly(state, effects, rng) {
+  for (const [key, val] of Object.entries(effects)) {
     if (key === 'removeOfficial') {
       if (val) {
         const target = lowestLoyaltyOfficial(state.officials);
@@ -43,6 +50,8 @@ export function applyOption(state, option, rng = makeRng(['option', state.turn])
       setStat(state, 'population', state.stats.population * (1 + val / 100));
     } else if (key === 'setFlag') {
       state.flags[val] = true;
+    } else if (key === 'war') {
+      resolveWar(state, val, rng, (st, eff) => applyEffectsOnly(st, eff, rng));
     } else if (key === 'investigate_lowest') {
       if (val) openInvestigationOnLowest(state);
     } else if (key === 'recruit') {
@@ -57,7 +66,14 @@ export function applyOption(state, option, rng = makeRng(['option', state.turn])
       setStat(state, key, state.stats[key] + val);
     }
   }
-  return state;
+}
+
+function applyPolicyEffects(state) {
+  const policy = POLICIES[state.policy];
+  if (!policy) return;
+  for (const [key, val] of Object.entries(policy.monthly)) {
+    setStat(state, key, state.stats[key] + val);
+  }
 }
 
 function applyOfficeEffects(state) {
@@ -85,6 +101,7 @@ export function monthlyTick(state, rng) {
   setStat(state, 'charm', g('charm') + (g('health') >= 50 ? 1.5 : 0)); // 後宮成長（暫定）
 
   applyOfficeEffects(state);
+  applyPolicyEffects(state);
 
   // 派系勢力影響官員忠誠：勢力高於中性則忠誠微升，低於則微降
   for (const o of state.officials) {

@@ -15,8 +15,8 @@ export function pickEvent(state, events, rng) {
   return null;
 }
 
-export function runSimulation({ seed, months, events }) {
-  const state = createInitialState(seed);
+export function runSimulation({ seed, months, events, policy = 'agrarian' }) {
+  const state = createInitialState(seed, { policy });
   const triggered = {};
   const log = [];
   const bump = (id) => { triggered[id] = (triggered[id] || 0) + 1; };
@@ -60,6 +60,8 @@ export function runSimulation({ seed, months, events }) {
     factions: state.factions,
     dongchang: { open: state.dongchang.cases.filter((c) => c.status !== 'closed').length, total: state.dongchang.cases.length },
     triggered,
+    policy: state.policy,
+    wars: state.wars,
     warningCount: state.warnings.length,
     log,
   };
