@@ -237,9 +237,9 @@
     },
     {
       "id": "E008",
-      "name": "太傅任命完成",
+      "name": "皇子課業",
       "when": {
-        "flag": "tutor_appointed",
+        "heirs_gt": 0,
         "chance": 0.3
       },
       "options": [
@@ -512,8 +512,8 @@
       "id": "E016",
       "name": "水利淤塞",
       "when": {
-        "agriculture_lt": 350,
-        "chance": 0.1
+        "agriculture_lt": 380,
+        "chance": 0.15
       },
       "options": [
         {
@@ -2357,7 +2357,7 @@
       "id": "E070",
       "name": "邊將擁兵自重",
       "when": {
-        "official_loyalty_lt": 50,
+        "official_loyalty_lt": 60,
         "chance": 0.3
       },
       "options": [
@@ -2426,6 +2426,7 @@
         "people_lt": 60,
         "chance": 0.25,
         "months": [
+          7,
           8
         ]
       },
@@ -3567,7 +3568,7 @@
       "id": "E105",
       "name": "太倉積粟",
       "when": {
-        "treasury_gt": 550,
+        "treasury_gt": 450,
         "chance": 0.2
       },
       "options": [
@@ -3598,7 +3599,7 @@
       "id": "E106",
       "name": "大修城垣",
       "when": {
-        "armament_lt": 250,
+        "armament_lt": 300,
         "chance": 0.2
       },
       "options": [
@@ -3698,10 +3699,11 @@
       "name": "內府修宮",
       "when": {
         "months": [
-          3
+          3,
+          4
         ],
-        "treasury_gt": 400,
-        "chance": 0.2
+        "treasury_gt": 350,
+        "chance": 0.25
       },
       "options": [
         {
@@ -5061,7 +5063,7 @@
       "id": "E153",
       "name": "派系互攻",
       "when": {
-        "official_loyalty_lt": 50,
+        "official_loyalty_lt": 60,
         "chance": 0.3
       },
       "options": [
@@ -5650,7 +5652,7 @@
       "id": "E172",
       "name": "番將投誠",
       "when": {
-        "official_loyalty_lt": 50,
+        "official_loyalty_lt": 60,
         "chance": 0.25
       },
       "options": [
@@ -5794,7 +5796,7 @@
       "id": "E177",
       "name": "水師兵變",
       "when": {
-        "official_loyalty_lt": 45,
+        "official_loyalty_lt": 55,
         "chance": 0.2
       },
       "options": [
@@ -6187,7 +6189,7 @@
       "id": "E189",
       "name": "京城饑民",
       "when": {
-        "people_lt": 45,
+        "people_lt": 55,
         "chance": 0.2
       },
       "options": [
