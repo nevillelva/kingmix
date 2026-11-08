@@ -184,8 +184,8 @@ function currentEvent(){
   if (!state.alive || pendingCase()) return null;
   return pickEvent(state, events, rng('events', state.year, state.month));
 }
-function finishMonth(){
-  feedback = '';
+function finishMonth(keepFeedback){
+  if (!keepFeedback) feedback = '';
   monthlyTick(state, rng('tick', state.year, state.month));
   advanceMonth(state);
   autoAppoint(state);
@@ -193,7 +193,16 @@ function finishMonth(){
   save(); render();
 }
 function chooseDC(action){ applyDongchangAction(state, pendingCase().id, action); finishMonth(); }
-function chooseOption(opt){ applyOption(state, opt, rng('recruit', state.year, state.month)); finishMonth(); }
+function chooseOption(opt){
+  const before = { ...state.stats };
+  applyOption(state, opt, rng('recruit', state.year, state.month));
+  const parts = Object.keys(STAT).map(k => {
+    const d = Math.round(state.stats[k] - before[k]);
+    return d ? `${STAT[k].l}${d > 0 ? '+' : ''}${d}` : null;
+  }).filter(Boolean);
+  feedback = `所選：${opt.label}。${parts.length ? '數值變化：' + parts.join('、') : '數值無明顯變化。'}`;
+  finishMonth(true);
+}
 
 function fmt(k, v){
   if (k === 'population') return v >= 10000 ? (v/10000).toFixed(0)+'萬' : Math.round(v);
