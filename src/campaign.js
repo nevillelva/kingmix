@@ -12,6 +12,11 @@ export const GRAIN_RATIO = 0.4; // 粮草 = 農業 * GRAIN_RATIO，於出征時�
 export const GRAIN_SHORT_MULT = 0.75; // 粮草不足時己方戰力倍率
 export const RECON_GRAIN_COST = 10;
 export const PEACE_THRESHOLD = 60;
+// 平衡校正（campaign 層，不動 war.js 的戰術數值）：
+// 換戰術（與上一回合不同）時己方戰力 × SWITCH_PENALTY，固定戰術不受影響，抑制混搭戰術的最佳解。
+// 堅守戰力 × 1.03：補足純堅守低於 55% 的下限。
+export const SWITCH_PENALTY = 0.92;
+export const TACTIC_POWER_TUNE = Object.freeze({ assault: 1, hold: 1.03, ambush: 1 });
 
 function defaultApply(state, effects) {
   for (const [k, v] of Object.entries(effects || {})) {
@@ -76,6 +81,8 @@ export function pickTactic(state, tactic, applyEffects = defaultApply) {
 
   const rng = rngFor(state, c, 'round');
   const short = c.grain < t.grain;
+  const prevTactic = c.rounds.at(-1)?.tactic;
+  const switched = prevTactic !== undefined && prevTactic !== tactic;
   c.grain = Math.max(0, c.grain - t.grain);
   const ourBase = ourStrength(state, rng) * alliedReinforcement(state);
   const res = resolveRound({
@@ -84,7 +91,7 @@ export function pickTactic(state, tactic, applyEffects = defaultApply) {
     tactic,
     spread: c.intel === 'scouted' ? SPREAD_SCOUTED : SPREAD_UNSCOUTED,
     rng,
-    multiplier: short ? GRAIN_SHORT_MULT : 1,
+    multiplier: (short ? GRAIN_SHORT_MULT : 1) * (TACTIC_POWER_TUNE[tactic] ?? 1) * (switched ? SWITCH_PENALTY : 1),
   });
 
   if (res.won) c.ourWins += 1;

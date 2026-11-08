@@ -18,6 +18,10 @@ export const TRIBUTE_GAIN = 20; // 國庫
 export const ALLIANCE_MIN_ATTITUDE = 70;
 export const MAX_ALLIANCES = 2;
 
+// 宣戰的獎懲數值（勝利獎勵 / 戰敗損失），預設與 web/index.html 的 WAR_SPEC 相同。
+export const DECLARE_WAR_REWARD = Object.freeze({ treasury: 40, prestige: 3 }); // 國庫、聲望
+export const DECLARE_WAR_LOSS = Object.freeze({ armament: -40, people: -4 }); // 軍備、民心
+
 export function neighborById(id) {
   return NEIGHBORS.find((n) => n.id === id) ?? null;
 }
