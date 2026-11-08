@@ -133,7 +133,10 @@ import { createInitialState } from './src/state.js';
 import { isAvailable } from './src/events.js';
 import { makeRng } from './src/rng.js';
 import { applyOption, monthlyTick, advanceMonth } from './src/turn.js';
-import { applyDongchangAction, DC_ACTIONS } from './src/dongchang.js';
+import { applyDongchangAction, DC_ACTIONS, openInvestigation } from './src/dongchang.js';
+import { assignOffice, OFFICES } from './src/offices.js';
+import { POLICIES, POLICY_KEYS } from './src/policy.js';
+import { unmetRequirements } from './src/officials.js';
 import { pickEvent, autoAppoint } from './src/sim.js';
 import { tryAccession } from './src/succession.js';
 import { evaluateDynasty } from './src/ending.js';
@@ -162,6 +165,7 @@ const TAB_ICON = {
 };
 
 let state = null, seed = '', tab = 'court', events = [];
+let panel = null, pick1 = null, feedback = '', resignArmed = false;
 const app = document.getElementById('app');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const rng = (...parts) => makeRng([seed, ...parts]);
@@ -181,6 +185,7 @@ function currentEvent(){
   return pickEvent(state, events, rng('events', state.year, state.month));
 }
 function finishMonth(){
+  feedback = '';
   monthlyTick(state, rng('tick', state.year, state.month));
   advanceMonth(state);
   autoAppoint(state);
@@ -203,7 +208,8 @@ function meter(k){
 }
 function statsCard(){
   const keys = Object.keys(STAT);
-  return `<section class="card"><h2>國勢</h2><div class="meters">${keys.map(meter).join('')}</div></section>`;
+  const act = (!pendingCase() && state.alive) ? actionsCard() : '';
+  return act + `<section class="card"><h2>國勢</h2><div class="meters">${keys.map(meter).join('')}</div></section>`;
 }
 function calendar(){
   document.getElementById('when').textContent = `第${state.dynasty.generation}世 · ${state.year}年${state.month}月 · ${state.age}歲`;
@@ -215,7 +221,7 @@ function renderNav(){
   document.getElementById('tabs').innerHTML = TABS.map(([k,l]) =>
     `<button data-tab="${k}" class="${tab===k?'active':''}" aria-current="${tab===k}">
        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" style="display:block;margin:0 auto 2px">${TAB_ICON[k]}</svg>${l}</button>`).join('');
-  document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
+  document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; resignArmed = false; render(); });
 }
 
 function renderStart(){
@@ -347,14 +353,102 @@ function renderThrone(){
         <div class="meter"><div class="row1"><span>年歲</span><b>${state.age}</b></div></div>
         <div class="meter"><div class="row1"><span>征戰</span><b>${state.wars.length} 次 · 勝 ${wins}</b></div></div>
       </div>
-      <div style="margin-top:16px"><button class="btn ghost" id="resign">禪位予皇子</button></div>
+      <div style="margin-top:16px"><button class="btn ghost" id="resign">${resignArmed ? "再按一次，確定禪位" : "禪位予皇子"}</button></div>
     </section>
     <section class="card"><h2>史記</h2><ul class="list">${chron || '<li><span class="empty">本朝初立，尚無史記。</span></li>'}</ul></section>`;
   document.getElementById('resign').onclick = () => {
-    if (!window.confirm('確定禪位？')) return;
+    if (!resignArmed) { resignArmed = true; render(); return; }
+    resignArmed = false;
     state.alive = false; state.endReason = '禪位'; finishMonth();
   };
 }
+
+// ── 主動決策（Phase 6）：每月兩次行動，不推進時間 ──
+const ACTION_LIMIT = 2;
+function agency(){
+  const k = `${state.year}-${state.month}`;
+  if (!state.agency || state.agency.key !== k) state.agency = { key: k, used: 0 };
+  return state.agency;
+}
+function actionsLeft(){ return ACTION_LIMIT - agency().used; }
+function useAction(msg){
+  agency().used += 1;
+  feedback = msg; panel = null; pick1 = null;
+  save(); render();
+}
+const clamp100 = v => Math.max(0, Math.min(100, v));
+function actionsCard(){
+  const left = actionsLeft();
+  const dis = left <= 0 ? 'disabled' : '';
+  let body = '';
+  if (!panel) {
+    body = `<div class="opts">` + [
+      ['appoint','任命官員','把閒置之臣派往空缺官職'],
+      ['dc','東廠開案','對一位官員展開調查，之後可在東廠頁處置'],
+      ['policy','變更國策','改變每月的施政修正'],
+      ['faction','拉攏派系','提升一派影響力，其他兩派會下降'],
+    ].map(([k,l,h]) => `<button class="opt" data-act="open" data-arg="${k}" ${dis}><span class="mark">＋</span><span><span class="label">${l}</span><br><span class="sub" style="margin:0">${h}</span></span></button>`).join('') + `</div>`;
+  } else if (panel === 'appoint') {
+    const empty = Object.keys(OFFICES).filter(k => !state.officials.some(o => o.office === k));
+    body = `<div class="sub">選擇要補任的官職</div><div class="opts">` + (empty.length
+      ? empty.map(k => `<button class="opt" data-act="office" data-arg="${k}"><span class="mark">${OFFICE[k]||k}</span><span class="label">${OFFICE[k]||k}</span></button>`).join('')
+      : '<p class="empty">目前沒有空缺官職。</p>') + `</div>`;
+  } else if (panel === 'appoint2') {
+    const idle = state.officials.filter(o => !o.office);
+    body = `<div class="sub">選擇人選補任${OFFICE[pick1]||pick1}</div><div class="opts">` + (idle.length
+      ? idle.map(o => `<button class="opt" data-act="assign" data-arg="${o.id}"><span class="mark">${esc(o.name.slice(0,1))}</span><span><span class="label">${esc(o.name)}</span><br><span class="sub" style="margin:0">${FACTION[o.faction].l}　忠誠 ${Math.round(o.loyalty)}</span></span></button>`).join('')
+      : '<p class="empty">朝中無閒置之臣。</p>') + `</div>`;
+  } else if (panel === 'dc') {
+    const busy = new Set(state.dongchang.cases.filter(c => c.status !== 'closed').map(c => c.officialId));
+    const pool = state.officials.filter(o => !busy.has(o.id));
+    body = `<div class="sub">選擇要調查的官員</div><div class="opts">` + (pool.length
+      ? pool.map(o => `<button class="opt" data-act="dcopen" data-arg="${o.id}" ${dis}><span class="mark">${esc(o.name.slice(0,1))}</span><span class="label">${esc(o.name)}</span></button>`).join('')
+      : '<p class="empty">所有官員都已在調查中。</p>') + `</div>`;
+  } else if (panel === 'policy') {
+    body = `<div class="sub">目前國策：${POLICIES[state.policy].name}</div><div class="opts">` + POLICY_KEYS.map(k =>
+      `<button class="opt" data-act="policy" data-arg="${k}" ${dis || (k===state.policy?'disabled':'')}><span class="mark">${POLICIES[k].name.slice(0,1)}</span><span class="label">${POLICIES[k].name}${k===state.policy?'（現行）':''}</span></button>`).join('') + `</div>`;
+  } else if (panel === 'faction') {
+    body = `<div class="sub">選擇要拉攏的一派</div><div class="opts">` + Object.keys(FACTION).map(k =>
+      `<button class="opt" data-act="faction" data-arg="${k}" ${dis}><span class="mark" style="color:${FACTION[k].c};border-color:${FACTION[k].c}">${FACTION[k].l.slice(0,1)}</span><span class="label">${FACTION[k].l}　<span class="sub">目前 ${Math.round(state.factions[k])}</span></span></button>`).join('') + `</div>`;
+  }
+  const fb = feedback ? `<div class="sub" style="color:var(--jade);margin:0 0 10px">${esc(feedback)}</div>` : '';
+  return `<section class="card"><h2>朝政行動</h2>
+    <div class="kicker">本月剩餘 ${left} / ${ACTION_LIMIT} 次</div>${fb}
+    ${body}
+    ${panel ? '<button class="btn ghost" data-act="close" style="margin-top:10px">取消</button>' : ''}
+  </section>`;
+}
+function onAgency(e){
+  const b = e.target.closest('[data-act]');
+  if (!b || b.disabled || !state) return;
+  const a = b.dataset.act, v = b.dataset.arg;
+  if (a === 'close') { panel = null; pick1 = null; return render(); }
+  if (a === 'open') { panel = v; pick1 = null; return render(); }
+  if (a === 'office') { pick1 = v; panel = 'appoint2'; return render(); }
+  if (a === 'assign') {
+    const off = state.officials.find(o => o.id === v);
+    const gaps = assignOffice(state, v, pick1);
+    const label = OFFICE[pick1] || pick1;
+    return useAction(`任命${off ? off.name : ''}為${label}${gaps.length ? '（能力未達標，效果打折）' : ''}。`);
+  }
+  if (a === 'dcopen') {
+    const off = state.officials.find(o => o.id === v);
+    const c = openInvestigation(state, v);
+    if (!c) return useAction('此官已有案件。');
+    return useAction(`東廠開案調查${off ? off.name : ''}。`);
+  }
+  if (a === 'policy') {
+    state.policy = v;
+    return useAction(`國策改為${POLICIES[v].name}。`);
+  }
+  if (a === 'faction') {
+    for (const k of Object.keys(state.factions)) {
+      state.factions[k] = clamp100(state.factions[k] + (k === v ? 10 : -5));
+    }
+    return useAction(`拉攏${FACTION[v].l}，其餘兩派下降。`);
+  }
+}
+app.addEventListener('click', onAgency);
 
 function render(){
   if (!state) { document.getElementById('when').textContent = '未開局'; renderStart(); document.getElementById('nav').style.display='none'; return; }
