@@ -9,6 +9,7 @@ import { openInvestigationOnLowest, tickDongchang } from './dongchang.js';
 import { POLICIES } from './policy.js';
 import { resolveWar } from './war.js';
 import { createHeir, advanceHeirs, tickHeirs } from './succession.js';
+import { isLoyaltyFrozen } from './bonds.js';
 
 const MAX_OFFICIALS = 12;
 
@@ -124,6 +125,7 @@ export function monthlyTick(state, rng) {
   // 派系勢力影響官員忠誠：勢力高於中性則忠誠微升，低於則微降
   // 野心越高，忠誠每月流失越快（野心/200）；派系勢力則加減忠誠
   for (const o of state.officials) {
+    if (isLoyaltyFrozen(state, o)) continue; // 君臣相得：忠誠不再月月流失（見 bonds.js）
     const influence = state.factions[o.faction];
     const drift = (influence - FACTION_BASE) / 100 - o.ambition / 200;
     o.loyalty = Math.min(100, Math.max(0, o.loyalty + drift));
