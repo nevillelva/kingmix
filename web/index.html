@@ -170,7 +170,32 @@ const app = document.getElementById('app');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const rng = (...parts) => makeRng([seed, ...parts]);
 
-function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({seed, state})); }catch(e){} }
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({seed, state})); }catch(e){} cloudPush(); }
+
+// ── 雲端存檔（Phase 6）：每位玩家的私有文件，跨裝置可用；無法連線時退回本機存檔 ──
+const useCap = n => (window.claude && window.claude.use) ? window.claude.use(n) : Promise.resolve(null);
+let cloud = { db: null, uid: null, snap: null, queue: Promise.resolve() };
+async function initCloud(){
+  try {
+    const [dbns, user] = await Promise.all([useCap('db'), useCap('user')]);
+    if (!dbns || !user) return;
+    const uid = await user.id();
+    if (!uid) return;
+    cloud.db = dbns; cloud.uid = uid;
+    cloud.snap = await dbns.collection('data/users/' + uid).doc('save').get();
+  } catch (e) { cloud.db = null; }
+  if (!state) render();
+}
+function cloudDoc(){ return cloud.db.collection('data/users/' + cloud.uid).doc('save'); }
+function cloudPush(){
+  if (!cloud.db || !cloud.uid || !state) return;
+  const body = { savedAt: Date.now(), seed, state: JSON.parse(JSON.stringify(state)) };
+  // 寫入依序排隊，同一文件同時只有一筆寫入
+  cloud.queue = cloud.queue.then(() => cloudDoc().set(body)).catch(() => {});
+}
+function cloudSave(){
+  return cloud.snap && cloud.snap.exists ? cloud.snap.data() : null;
+}
 function load(){ try{ const r = localStorage.getItem(SAVE_KEY); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
 function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
 
@@ -247,6 +272,7 @@ function renderNav(){
 
 function renderStart(){
   const saved = load();
+  const cs = cloudSave();
   app.innerHTML = `
     <section class="hero">
       <div class="seal-big" aria-hidden="true">帝</div>
@@ -258,11 +284,14 @@ function renderStart(){
       <label class="lbl" for="seed">種子（相同種子與相同選擇，結果一致）</label>
       <input class="seed" id="seed" placeholder="留空即隨機">
       <div style="margin-top:14px"><button class="btn" id="start">開始新局</button>
-      ${saved && saved.state ? '<button class="btn ghost" id="cont">繼續上次進度</button>' : ''}</div>
+      ${cs && cs.state ? `<button class="btn ghost" id="ccont">繼續雲端進度（${new Date(cs.savedAt).toLocaleString('zh-TW')}）</button>` : ''}
+      ${saved && saved.state ? '<button class="btn ghost" id="cont">繼續本機進度</button>' : ''}</div>
     </section>`;
   document.getElementById('start').onclick = () => newGame(document.getElementById('seed').value.trim());
   const c = document.getElementById('cont');
   if (c) c.onclick = () => { seed = saved.seed; state = saved.state; render(); };
+  const cc = document.getElementById('ccont');
+  if (cc) cc.onclick = () => { seed = cs.seed; state = cs.state; save(); render(); };
 }
 
 function renderEnding(){
@@ -485,6 +514,7 @@ function render(){
 
 try { events = (await (await fetch('data/events.json')).json()).events; } catch (e) { events = []; }
 render();
+initCloud();
 </script>
 </body>
 </html>
