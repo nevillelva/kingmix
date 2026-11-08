@@ -1,3 +1,5 @@
+import { attachPerson } from './people.js';
+
 // 遊戲狀態與數值邊界。所有數值寫入都必須經過 setStat，確保越界會被截斷並記錄。
 
 export const BOUNDS = {
@@ -24,7 +26,7 @@ export const FACTION_BASE = 33; // 派系勢力中性值
 const round2 = (n) => Math.round(n * 100) / 100;
 
 export function createInitialState(seed, opts = {}) {
-  return {
+  const state = {
     seed,
     policy: opts.policy ?? 'agrarian',
     wars: [],
@@ -79,6 +81,9 @@ export function createInitialState(seed, opts = {}) {
     flags: {},
     warnings: [],
   };
+  // 人物欄位（personName / age / traits）：決定性，不改動既有欄位
+  for (const o of state.officials) attachPerson(seed, o);
+  return state;
 }
 
 export function setStat(state, key, value, opts = {}) {
