@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "codegraph": {
+      "command": "./node_modules/.bin/codegraph",
+      "args": ["serve", "--mcp", "--no-telemetry"],
+      "env": {
+        "DO_NOT_TRACK": "1",
+        "CODEGRAPH_NO_UPDATE_CHECK": "1"
+      }
+    }
+  }
+}
