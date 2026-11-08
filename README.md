@@ -41,3 +41,10 @@ npm run sim -- demo 10   # 以種子 demo 模擬 10 年，輸出 JSON 摘要
 - 首次使用：`npm install` 後執行 `./node_modules/.bin/codegraph init -y` 建立本地索引
 - 索引存於 `.codegraph/`，已列入 `.gitignore`，不會被提交
 - 重新索引：`./node_modules/.bin/codegraph status` 可查看狀態
+
+## Phase 2：人事與權謀
+
+- `src/officials.js`：官員、能力、派系、需求檢查
+- `src/offices.js`：官職需求與任命
+- `src/dongchang.js`：東廠調查、把柄、處置
+- 規格與延後項目見 [docs/specs/phase2-court.md](docs/specs/phase2-court.md)

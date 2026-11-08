@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "source": "docs/specs/events-batch1.md",
   "events": [
     {
@@ -118,8 +118,9 @@
         {
           "key": "B",
           "label": "交由東廠調查",
-          "phase": 2,
-          "effects": {}
+          "effects": {
+            "investigate_lowest": true
+          }
         },
         {
           "key": "C",
@@ -266,14 +267,16 @@
           "key": "A",
           "label": "大開科舉",
           "effects": {
-            "treasury": -30
+            "treasury": -30,
+            "recruit": 2
           }
         },
         {
           "key": "B",
           "label": "限額取士",
           "effects": {
-            "treasury": -10
+            "treasury": -10,
+            "recruit": 1
           }
         },
         {
@@ -316,9 +319,7 @@
             "power": 5
           }
         }
-      ],
-      "phase": 2,
-      "note": "需要聲色成長機制（後宮系統），Phase 2 啟用"
+      ]
     }
   ]
 }
