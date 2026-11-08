@@ -368,7 +368,7 @@
           "label": "水師剿滅",
           "effects": {
             "war": {
-              "strength": 170,
+              "strength": 230,
               "reward": {
                 "treasury": 30,
                 "prestige": 4
@@ -410,7 +410,7 @@
           "label": "出兵迎擊",
           "effects": {
             "war": {
-              "strength": 300,
+              "strength": 380,
               "reward": {
                 "prestige": 6,
                 "treasury": 60,
