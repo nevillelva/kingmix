@@ -10,16 +10,21 @@ import { POLICIES } from './policy.js';
 import { resolveWar } from './war.js';
 import { createHeir, advanceHeirs, tickHeirs } from './succession.js';
 import { isLoyaltyFrozen } from './bonds.js';
-import { tickEconomy } from './economy.js';
-import { tickHarem } from './harem.js';
+import { tickEconomy, applyPrefectureYield } from './economy.js';
+import { tickHarem, applyWaijiaCoupling, taihouPenalty } from './harem.js';
 import { applyFactionPressure } from './factions.js';
+import { scheduleChain } from './chains.js';
+import { recordSharedEvent } from './bonds.js';
 
 const MAX_OFFICIALS = 12;
 
 // 月結與政策的自然變化：越界時靜默截斷
 const drift = (state, key, value) => setStat(state, key, value, { silent: true });
 
-function lowestLoyaltyOfficial(officials) {
+// 由 afterOption 處理、不屬於數值效果的鍵；applyOption 會略過它們。
+export const AFTER_OPTION_KEYS = Object.freeze(['chain', 'shared_event']);
+
+export function lowestLoyaltyOfficial(officials) {
   let best = null;
   for (const o of officials) if (!best || o.loyalty < best.loyalty) best = o;
   return best;
@@ -45,8 +50,21 @@ export function applyOption(state, option, rng = makeRng(['option', state.turn])
   return state;
 }
 
+// 選項套用後的後處理：chain（排定下一月連鎖事件）與 shared_event（君臣共歷，記在忠誠最低的官員上）。
+// sim.js 與介面在 applyOption 之後都必須呼叫此函式。
+export function afterOption(state, event, option) {
+  const effects = option.effects || {};
+  if (effects.chain) scheduleChain(state, effects.chain);
+  if (effects.shared_event) {
+    const target = lowestLoyaltyOfficial(state.officials);
+    if (target) recordSharedEvent(state, target.id, event.id);
+  }
+  return state;
+}
+
 function applyEffectsOnly(state, effects, rng) {
   for (const [key, val] of Object.entries(effects)) {
+    if (AFTER_OPTION_KEYS.includes(key)) continue;
     if (key === 'removeOfficial') {
       if (val) {
         const target = lowestLoyaltyOfficial(state.officials);
@@ -125,7 +143,11 @@ export function monthlyTick(state, rng) {
   applyOfficeEffects(state);
   applyPolicyEffects(state);
   tickEconomy(state);
+  applyPrefectureYield(state);
   tickHarem(state);
+  applyWaijiaCoupling(state);
+  const tp = taihouPenalty(state);
+  if (tp) drift(state, 'power', g('power') + tp);
   applyFactionPressure(state);
 
   // 派系勢力影響官員忠誠：勢力高於中性則忠誠微升，低於則微降
