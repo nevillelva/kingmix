@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>皇帝養成綜合版</title>
+<style>
+:root{--bg:#f6f1e7;--paper:#fffdf7;--ink:#2b2118;--muted:#7a6a58;--line:#e2d6c2;--vermilion:#b23a2b;--gold:#b8891e;--ok:#3d7a4a;--warn:#b23a2b;}
+:root:not([data-theme="light"]) { }
+@media (prefers-color-scheme: dark){
+ :root:not([data-theme="light"]){--bg:#1a1612;--paper:#241e18;--ink:#eee4d2;--muted:#a79783;--line:#3b3228;--vermilion:#e0604e;--gold:#e0b44e;--ok:#7fc08f;--warn:#e0604e;}
+}
+:root[data-theme="dark"]{--bg:#1a1612;--paper:#241e18;--ink:#eee4d2;--muted:#a79783;--line:#3b3228;--vermilion:#e0604e;--gold:#e0b44e;--ok:#7fc08f;--warn:#e0604e;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Serif TC","PingFang TC","Microsoft JhengHei",serif;font-size:16px;line-height:1.6;padding-bottom:76px}
+header{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;justify-content:space-between;align-items:baseline;z-index:5}
+header h1{font-size:18px;margin:0;color:var(--vermilion)}
+header .date{color:var(--muted);font-size:14px}
+main{padding:16px;max-width:640px;margin:0 auto}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.card h2{font-size:16px;margin:0 0 8px;color:var(--gold)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:14px}
+.grid div span{color:var(--muted)}
+button{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;width:100%;text-align:left;margin-top:8px}
+button:hover{border-color:var(--gold)}
+button.primary{background:var(--vermilion);color:#fff;border-color:var(--vermilion);text-align:center}
+button:disabled{opacity:.4;cursor:default}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--paper);border-top:1px solid var(--line);display:flex;z-index:5}
+nav button{flex:1;margin:0;border:0;border-radius:0;padding:12px 0;text-align:center;font-size:14px;background:transparent}
+nav button.active{color:var(--vermilion);font-weight:bold}
+.muted{color:var(--muted);font-size:14px}
+.tag{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:4px;padding:0 6px;margin-left:4px;color:var(--muted)}
+.bad{color:var(--warn)} .good{color:var(--ok)}
+ul{padding-left:18px;margin:6px 0}
+li{margin:4px 0}
+input{font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);width:100%}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+</style>
+</head>
+<body>
+<header><h1>皇帝養成綜合版</h1><span class="date" id="date"></span></header>
+<main id="app"></main>
+<nav id="nav"></nav>
+
+<script type="module">
+import { createInitialState, setStat } from './src/state.js';
+import { isAvailable } from './src/events.js';
+import { makeRng } from './src/rng.js';
+import { applyOption, monthlyTick, advanceMonth } from './src/turn.js';
+import { applyDongchangAction, DC_ACTIONS } from './src/dongchang.js';
+import { pickEvent, autoAppoint } from './src/sim.js';
+import { tryAccession } from './src/succession.js';
+import { evaluateDynasty } from './src/ending.js';
+
+const SAVE_KEY = 'kingmix-save-v1';
+const LABELS = {
+  health:'健康', literature:'文學', military:'兵力', power:'權勢', benevolence:'仁德', prestige:'威儀',
+  charm:'聲色', treasury:'國庫', people:'民心', agriculture:'農業', commerce:'商業', armament:'軍備',
+  heaven:'天命', population:'人口'
+};
+const FACTION = { qingliu:'清流', xunggui:'勳貴', hanmen:'寒門' };
+const ABIL = { intellect:'智', politics:'政', martial:'武', command:'統', virtue:'德' };
+const ABIL_KEYS = Object.keys(ABIL);
+const TABS = [['court','朝堂'],['officials','朝臣'],['harem','後宮'],['dc','東廠'],['throne','帝王']];
+const DC_LABEL = { warn:'告誡', punish:'責罰', prison:'下獄' };
+const OFFICE_LABEL = { chancellor:'丞相', revenue:'戶部', works:'工部', war:'兵部', prefect:'知府', tutor:'太傅' };
+
+let state = null, seed = '', tab = 'court', events = [];
+const app = document.getElementById('app');
+const nav = document.getElementById('nav');
+
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({seed, state})); }catch(e){} }
+function load(){ try{ const r = localStorage.getItem(SAVE_KEY); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+const rng = (...parts) => makeRng([seed, ...parts]);
+
+function newGame(s){
+  seed = s || String(Math.floor(Math.random()*1e9));
+  state = createInitialState(seed, { policy:'agrarian' });
+  save(); tab = 'court'; render();
+}
+
+// 目前月份等待玩家處置的內容：東廠把柄 > 事件 > 直接結算
+function pendingCase(){ return state.dongchang.cases.find(c => c.status === 'leverage'); }
+function currentEvent(){
+  if (!state.alive || pendingCase()) return null;
+  return pickEvent(state, events, rng('events', state.year, state.month));
+}
+
+function finishMonth(){
+  monthlyTick(state, rng('tick', state.year, state.month));
+  advanceMonth(state);
+  autoAppoint(state);
+  if (!state.alive) tryAccession(state);
+  save(); render();
+}
+
+function chooseDC(action){
+  const c = pendingCase();
+  applyDongchangAction(state, c.id, action);
+  finishMonth();
+}
+function chooseOption(ev, opt){
+  applyOption(state, opt, rng('recruit', state.year, state.month));
+  finishMonth();
+}
+function skipMonth(){ finishMonth(); }
+
+function statGrid(){
+  return '<div class="grid">' + Object.entries(LABELS).map(([k,l]) =>
+    `<div>${l} <span>${Math.round(state.stats[k])}</span></div>`).join('') + '</div>';
+}
+function header(){
+  document.getElementById('date').textContent = `第${state.dynasty.generation}世 · ${state.year}年${state.month}月 · ${state.age}歲`;
+}
+
+function renderNav(){
+  nav.innerHTML = TABS.map(([k,l]) => `<button data-tab="${k}" class="${tab===k?'active':''}">${l}</button>`).join('');
+  nav.querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
+}
+
+function renderStart(){
+  const saved = load();
+  app.innerHTML = `
+    <div class="card"><h2>即位</h2>
+      <p class="muted">以一位新君登基，治理國家。每月奏摺由你裁決，朝政的走向皆由選擇累積而成。</p>
+      <label class="muted">種子（相同種子、相同選擇，結果一致）</label>
+      <input id="seed" placeholder="留空即隨機">
+      <button class="primary" id="start">開始新局</button>
+      ${saved && saved.state ? '<button id="cont">繼續上次進度</button>' : ''}
+    </div>`;
+  document.getElementById('start').onclick = () => newGame(document.getElementById('seed').value.trim());
+  const c = document.getElementById('cont');
+  if (c) c.onclick = () => { seed = saved.seed; state = saved.state; render(); };
+}
+
+function renderEnding(){
+  const e = evaluateDynasty(state);
+  const chron = state.chronicle.map(c => `<li>第${c.generation}世 · ${c.endedInYear}年 · ${c.age}歲 · ${c.endReason || '駕崩'} · 勝戰 ${c.wars} 次</li>`).join('');
+  app.innerHTML = `
+    <div class="card"><h2>王朝落幕：${e.title}</h2>
+      <div class="grid">${Object.entries(e.axes).map(([k,v]) => `<div>${({military:'武功',civil:'文治',benevolence:'仁德',legacy:'傳承'})[k]} <span>${v}</span></div>`).join('')}</div>
+    </div>
+    <div class="card"><h2>史記</h2><ul>${chron || '<li class="muted">無紀錄</li>'}</ul></div>
+    <button class="primary" id="again">重新開局</button>`;
+  document.getElementById('again').onclick = () => { clearSave(); state = null; render(); };
+}
+
+function renderCourt(){
+  const dc = pendingCase();
+  if (dc) {
+    const off = state.officials.find(o => o.id === dc.officialId);
+    app.innerHTML = `
+      <div class="card"><h2>東廠密報</h2>
+        <p>東廠查得 <b>${off ? off.name : '某官'}</b> 有把柄（level ${dc.level}）。請裁決：</p>
+        ${DC_ACTIONS.map(a => `<button data-dc="${a}">${DC_LABEL[a]}</button>`).join('')}
+      </div>`;
+    app.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => chooseDC(b.dataset.dc));
+    return;
+  }
+  const ev = currentEvent();
+  const stats = `<div class="card"><h2>國勢</h2>${statGrid()}</div>`;
+  if (!ev) {
+    app.innerHTML = stats + `<div class="card"><p class="muted">本月無事。</p><button class="primary" id="next">進入下月</button></div>`;
+    document.getElementById('next').onclick = skipMonth;
+    return;
+  }
+  const opts = ev.options.filter(isAvailable);
+  app.innerHTML = stats + `
+    <div class="card"><h2>奏摺：${ev.name}</h2>
+      ${opts.map((o,i) => `<button data-i="${i}">${o.label}<br><span class="muted">${Object.entries(o.effects||{}).map(([k,v]) => `${LABELS[k]||k} ${v>0?'+':''}${v}`).join('、') || '無直接效果'}</span></button>`).join('')}
+    </div>`;
+  app.querySelectorAll('[data-i]').forEach(b => b.onclick = () => chooseOption(ev, opts[+b.dataset.i]));
+}
+
+function renderOfficials(){
+  const rows = state.officials.map(o => `
+    <div class="card">
+      <b>${o.name}</b> <span class="tag">${FACTION[o.faction]}</span>
+      ${o.office ? `<span class="tag">${OFFICE_LABEL[o.office]||o.office}</span>` : '<span class="tag">閒置</span>'}
+      <div class="muted">忠誠 <span class="${o.loyalty<40?'bad':'good'}">${Math.round(o.loyalty)}</span> · 野心 ${Math.round(o.ambition)}</div>
+      <div class="grid">${ABIL_KEYS.map(k => `<div>${ABIL[k]} <span>${o.abilities[k]}</span></div>`).join('')}</div>
+    </div>`).join('');
+  const fac = Object.entries(state.factions).map(([k,v]) => `${FACTION[k]} ${Math.round(v)}`).join('　');
+  app.innerHTML = `<div class="card"><h2>朝局</h2><p class="muted">${fac}</p></div>${rows || '<p class="muted">朝中無人。</p>'}`;
+}
+
+function renderHarem(){
+  const consorts = state.consorts.length
+    ? state.consorts.map(c => `<li>${c.name || '嬪妃 ' + c.id}</li>`).join('') : '<li class="muted">後宮空虛</li>';
+  const heirs = state.heirs.length
+    ? state.heirs.map(h => `<li>${h.gender==='m'?'皇子':'皇女'} · ${h.age}歲 · 能力 ${Object.values(h.abilities).reduce((a,b)=>a+b,0)}</li>`).join('')
+    : '<li class="muted">尚無子嗣</li>';
+  app.innerHTML = `
+    <div class="card"><h2>嬪妃（${state.consorts.length}/8）</h2><ul>${consorts}</ul></div>
+    <div class="card"><h2>子嗣</h2><ul>${heirs}</ul></div>`;
+}
+
+function renderDC(){
+  const cases = state.dongchang.cases.filter(c => c.status !== 'closed');
+  const off = id => (state.officials.find(o => o.id === id) || {}).name || '（已去職）';
+  const rows = cases.map(c => `<li>${off(c.officialId)} · ${c.status} · level ${c.level}</li>`).join('');
+  const hist = state.dongchang.cases.filter(c => c.status === 'closed').slice(-8)
+    .map(c => `<li class="muted">${off(c.officialId)} · ${c.outcome || '結案'}</li>`).join('');
+  app.innerHTML = `
+    <div class="card"><h2>進行中</h2><ul>${rows || '<li class="muted">無案件</li>'}</ul></div>
+    <div class="card"><h2>近期結案</h2><ul>${hist || '<li class="muted">無</li>'}</ul></div>`;
+}
+
+function renderThrone(){
+  const wins = state.wars.filter(w => w.won).length;
+  const chron = state.chronicle.map(c => `<li>第${c.generation}世 · ${c.endedInYear}年 · ${c.endReason||'駕崩'}</li>`).join('');
+  app.innerHTML = `
+    <div class="card"><h2>帝王</h2>
+      <p>第 ${state.dynasty.generation} 世　${state.year} 年　${state.age} 歲</p>
+      <div class="grid"><div>健康 <span>${Math.round(state.stats.health)}</span></div><div>聲色 <span>${Math.round(state.stats.charm)}</span></div>
+      <div>征戰 <span>${state.wars.length} 次（勝 ${wins}）</span></div><div>政策 <span>農本</span></div></div>
+      <button id="resign">禪位（退位並傳位於皇子）</button>
+    </div>
+    <div class="card"><h2>史記</h2><ul>${chron || '<li class="muted">本朝初立</li>'}</ul></div>`;
+  document.getElementById('resign').onclick = () => {
+    if (!confirm('確定禪位？')) return;
+    state.alive = false; state.endReason = '禪位'; finishMonth();
+  };
+}
+
+function render(){
+  if (!state) { renderStart(); renderNav(); document.getElementById('date').textContent=''; return; }
+  if (!state.alive) { renderEnding(); nav.innerHTML=''; return; }
+  header(); renderNav();
+  ({ court: renderCourt, officials: renderOfficials, harem: renderHarem, dc: renderDC, throne: renderThrone })[tab]();
+}
+
+try {
+  const r = await fetch('data/events.json');
+  events = (await r.json()).events;
+} catch(e) {
+  events = [];
+}
+render();
+</script>
+</body>
+</html>

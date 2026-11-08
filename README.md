@@ -61,3 +61,9 @@ npm run sim -- demo 10   # 以種子 demo 模擬 10 年，輸出 JSON 摘要
 - `src/ending.js`：多軸結局評價
 - 40 條事件（`data/events.json`）
 - 規格與校準紀錄見 [docs/specs/phase4-5-dynasty.md](docs/specs/phase4-5-dynasty.md)
+
+## 可玩介面（web/）
+
+- `web/index.html`：單頁、手機優先，分頁為朝堂、朝臣、後宮、東廠、帝王
+- 發布為 Artifact 時，`src/` 與 `data/` 需一併上傳到同層；本機預覽可在 `web/` 內建立指向 `../src`、`../data` 的符號連結後以靜態伺服器開啟
+- 進度存於 localStorage（僅限本瀏覽器），同一種子與同一月份會得到相同奏摺
