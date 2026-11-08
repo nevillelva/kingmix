@@ -5,6 +5,7 @@
 
 import { makeRng } from './rng.js';
 import { FACTIONS } from './officials.js';
+import { isLoyaltyFrozen } from './bonds.js';
 
 export const SURNAMES = [
   '趙', '錢', '孫', '李', '周', '吳', '鄭', '王', '馮', '陳',
@@ -148,7 +149,7 @@ export function applyTraitEffects(state) {
   let treasuryDelta = 0;
   for (const o of state.officials) {
     if (!o.traits || o.traits.length === 0) continue;
-    const loyalty = traitSum(o, 'loyalty');
+    const loyalty = isLoyaltyFrozen(state, o) ? 0 : traitSum(o, 'loyalty'); // 君臣相得者忠誠凍結
     if (loyalty) o.loyalty = Math.min(100, Math.max(0, o.loyalty + loyalty));
     if (o.office) {
       const leak = BASE_LEAKAGE * (1 + traitSum(o, 'corruption'));
