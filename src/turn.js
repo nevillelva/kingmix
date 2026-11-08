@@ -8,6 +8,9 @@ import { openInvestigationOnLowest, tickDongchang } from './dongchang.js';
 import { POLICIES } from './policy.js';
 import { resolveWar } from './war.js';
 import { createHeir, advanceHeirs, tickHeirs } from './succession.js';
+import { tickEconomy } from './economy.js';
+import { tickHarem } from './harem.js';
+import { applyFactionPressure } from './factions.js';
 
 const MAX_OFFICIALS = 12;
 
@@ -118,6 +121,9 @@ export function monthlyTick(state, rng) {
 
   applyOfficeEffects(state);
   applyPolicyEffects(state);
+  tickEconomy(state);
+  tickHarem(state);
+  applyFactionPressure(state);
 
   // 派系勢力影響官員忠誠：勢力高於中性則忠誠微升，低於則微降
   // 野心越高，忠誠每月流失越快（野心/200）；派系勢力則加減忠誠
