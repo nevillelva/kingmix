@@ -115,6 +115,6 @@ test('evaluateDynasty returns four axes and a title for the strongest', () => {
   s.wars.push({ won: true }, { won: true }, { won: true });
   const e = evaluateDynasty(s);
   assert.deepEqual(Object.keys(e.axes).sort(), ['benevolence', 'civil', 'legacy', 'military']);
-  assert.equal(e.axes.military, 4); // 3 勝 × 1.2，四捨五入
+  assert.equal(e.axes.military, 9); // 3 勝 × 3
   assert.ok(e.title.length > 0);
 });
