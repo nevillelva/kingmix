@@ -4,6 +4,7 @@ import { setStat, FACTION_BASE } from './state.js';
 import { makeRng } from './rng.js';
 import { officeHolder } from './offices.js';
 import { generateOfficial } from './officials.js';
+import { attachPerson, applyTraitEffects, generateConsort } from './people.js';
 import { openInvestigationOnLowest, tickDongchang } from './dongchang.js';
 import { POLICIES } from './policy.js';
 import { resolveWar } from './war.js';
@@ -57,11 +58,12 @@ function applyEffectsOnly(state, effects, rng) {
     } else if (key === 'add_consort') {
       for (let i = 0; i < val && state.consorts.length < 8; i++) {
         state.dynasty.nextConsortId += 1;
-        state.consorts.push({ id: `c${state.dynasty.nextConsortId}`, family: 'qingliu' });
+        const id = `c${state.dynasty.nextConsortId}`;
+        state.consorts.push({ id, ...generateConsort(state.seed, id) });
       }
     } else if (key === 'birth') {
       const mother = state.consorts[0]?.id ?? null;
-      if (mother && val) createHeir(state, rng, { gender: val, mother });
+      if (mother && val) attachPerson(state.seed, createHeir(state, rng, { gender: val, mother }), { withAge: false });
     } else if (key === 'tutor_teach') {
       for (const h of state.heirs) {
         for (const k of Object.keys(h.abilities)) h.abilities[k] = Math.min(100, h.abilities[k] + val);
@@ -75,7 +77,7 @@ function applyEffectsOnly(state, effects, rng) {
         const id = `r${state.turn}_${i}`;
         const base = 30 + Math.round(state.stats.literature / 10);
         state.officials.push(
-          generateOfficial(rng, id, { name: `進士${state.year}-${i + 1}`, base, span: 40 }),
+          attachPerson(state.seed, generateOfficial(rng, id, { name: `進士${state.year}-${i + 1}`, base, span: 40 })),
         );
       }
     } else {
@@ -126,6 +128,8 @@ export function monthlyTick(state, rng) {
     const drift = (influence - FACTION_BASE) / 100 - o.ambition / 200;
     o.loyalty = Math.min(100, Math.max(0, o.loyalty + drift));
   }
+
+  applyTraitEffects(state);
 
   tickDongchang(state, r);
   tickHeirs(state);
