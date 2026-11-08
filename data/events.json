@@ -4211,8 +4211,8 @@
       "id": "E125",
       "name": "冊立東宮",
       "when": {
-        "heirs_gt": 1,
-        "chance": 0.2
+        "heirs_gt": 0,
+        "chance": 0.3
       },
       "options": [
         {
@@ -5355,7 +5355,7 @@
         "months": [
           9
         ],
-        "chance": 0.4
+        "chance": 0.7
       },
       "options": [
         {
