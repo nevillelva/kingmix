@@ -368,7 +368,7 @@
           "label": "水師剿滅",
           "effects": {
             "war": {
-              "strength": 230,
+              "strength": 265,
               "reward": {
                 "treasury": 30,
                 "prestige": 4
@@ -410,7 +410,7 @@
           "label": "出兵迎擊",
           "effects": {
             "war": {
-              "strength": 380,
+              "strength": 430,
               "reward": {
                 "prestige": 6,
                 "treasury": 60,
@@ -937,7 +937,7 @@
           "label": "派兵圍剿",
           "effects": {
             "war": {
-              "strength": 280,
+              "strength": 320,
               "reward": {
                 "prestige": 5,
                 "armament": 30
@@ -5365,7 +5365,7 @@
           "label": "發兵征討",
           "effects": {
             "war": {
-              "strength": 300,
+              "strength": 345,
               "reward": {
                 "prestige": 5,
                 "treasury": 40
@@ -5411,7 +5411,7 @@
           "label": "水師迎擊",
           "effects": {
             "war": {
-              "strength": 260,
+              "strength": 300,
               "reward": {
                 "treasury": 30,
                 "prestige": 3
@@ -5569,7 +5569,7 @@
           "label": "調兵征剿",
           "effects": {
             "war": {
-              "strength": 330,
+              "strength": 380,
               "reward": {
                 "military": 4,
                 "prestige": 4
@@ -5723,7 +5723,7 @@
           "label": "派大軍出關",
           "effects": {
             "war": {
-              "strength": 360,
+              "strength": 410,
               "reward": {
                 "prestige": 6,
                 "treasury": 50
@@ -5813,7 +5813,7 @@
           "label": "剿平",
           "effects": {
             "war": {
-              "strength": 250,
+              "strength": 290,
               "reward": {
                 "prestige": 3
               },
