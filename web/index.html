@@ -5,124 +5,187 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>皇帝養成綜合版</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&family=Noto+Serif+TC:wght@500;700;900&display=swap">
 <style>
-/* 設計方向：宮廷奏摺。宣紙底色、硃砂印、金線與墨色，數值以墨色橫條呈現。 */
+/* 設計方向（Phase 8 組合）：朝堂以工筆宮廷為主（摺本、絹黃底、朱批）；宮城平面圖為導覽入口；年終考評以史冊卷軸呈現。 */
 :root{
-  --paper:#f3ead8; --paper-2:#fbf6ea; --ink:#2a211a; --ink-2:#6b5b48; --line:#dccdb2;
-  --vermilion:#b33a2a; --gold:#a9802a; --jade:#3e6b58; --seal-fg:#fbf6ea;
-  --display:"Noto Serif TC","Songti TC","STSong",serif;
-  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --silk:#EFE6D2; --paper:#F8F1E0; --ink:#1F1A17; --ink-soft:#5a4f45; --line:#B9A77F;
+  --vermilion:#B03A2E; --azure:#2E5E7E; --green:#4E7D5B; --gold:#B48A3C;
+  --zone:#E4D9BF; --zone-hi:#D5C49C; --shadow:rgba(60,40,20,.18);
+  --seal-fg:#EFE6D2;
+  --serif:"Noto Serif TC","LXGW WenKai TC","PingFang TC",serif;
+  --kai:"LXGW WenKai TC","Noto Serif TC","PingFang TC",serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --paper:#1d1812; --paper-2:#26201a; --ink:#eee3cd; --ink-2:#a89a84; --line:#3d3328;
-    --vermilion:#e0644f; --gold:#d9ae55; --jade:#7fb79c; --seal-fg:#1d1812; color-scheme:dark;
+    --silk:#1A1512; --paper:#26201B; --ink:#EDE3CC; --ink-soft:#bfb29a; --line:#5d5140;
+    --vermilion:#D8604F; --azure:#6FA3C4; --green:#86B894; --gold:#D4A95A;
+    --zone:#2b251f; --zone-hi:#3d342a; --shadow:rgba(0,0,0,.5); --seal-fg:#1A1512; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --paper:#1d1812; --paper-2:#26201a; --ink:#eee3cd; --ink-2:#a89a84; --line:#3d3328;
-  --vermilion:#e0644f; --gold:#d9ae55; --jade:#7fb79c; --seal-fg:#1d1812; color-scheme:dark;
+  --silk:#1A1512; --paper:#26201B; --ink:#EDE3CC; --ink-soft:#bfb29a; --line:#5d5140;
+  --vermilion:#D8604F; --azure:#6FA3C4; --green:#86B894; --gold:#D4A95A;
+  --zone:#2b251f; --zone-hi:#3d342a; --shadow:rgba(0,0,0,.5); --seal-fg:#1A1512; color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{margin:0}
+html,body{margin:0;max-width:100%;overflow-x:hidden}
 body{
-  background:var(--paper); color:var(--ink); font:15px/1.6 var(--body);
+  background:var(--silk); color:var(--ink); font:15px/1.7 var(--kai);
   padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));
-  padding-block:0 96px; min-height:100vh; overflow-x:hidden;
-  background-image:radial-gradient(circle at 50% -10%, var(--paper-2), transparent 60%);
+  padding-block:0 104px; min-height:100vh;
+  background-image:radial-gradient(circle at 50% -10%, var(--paper), transparent 60%);
 }
 .wrap{max-width:560px;margin:0 auto}
-/* 頂欄：年號與世次 */
-.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding:14px 0 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
-.seal{flex:none;width:40px;height:40px;border-radius:6px;background:var(--vermilion);color:var(--seal-fg);display:grid;place-items:center;font:900 20px/1 var(--display);box-shadow:inset 0 0 0 2px var(--seal-fg)33}
-.top h1{font:900 18px/1.2 var(--display);margin:0;letter-spacing:.08em}
-.top .when{font-size:13px;color:var(--ink-2);margin-top:2px}
-/* 卷面：奏摺 */
-.card{background:var(--paper-2);border:1px solid var(--line);border-radius:4px;padding:16px;margin:14px 0;position:relative}
-.card::after{content:"";position:absolute;inset:4px;border:1px dashed var(--line);border-radius:2px;pointer-events:none;opacity:.6}
-.card h2{font:700 16px/1.3 var(--display);margin:0 0 10px;color:var(--ink);letter-spacing:.06em;display:flex;align-items:center;gap:8px}
+/* 頂欄：年號、世次，以及四項國勢（僅示意高低，確切數值見帝王頁） */
+.top{position:sticky;top:0;z-index:5;background:var(--silk);margin:0 -16px;padding:12px 16px 10px;border-bottom:1px solid var(--line)}
+.top-row{display:flex;align-items:center;gap:12px}
+.seal{flex:none;width:40px;height:40px;border-radius:4px;background:var(--ink);color:var(--seal-fg);display:grid;place-items:center;font:900 20px/1 var(--serif);box-shadow:inset 0 0 0 2px var(--gold)}
+.top h1{font:900 18px/1.2 var(--serif);margin:0;letter-spacing:.08em}
+.top .when{font-size:13px;color:var(--ink-soft);margin-top:2px}
+.gauges{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.gauges:empty{display:none}
+.gauge{min-width:0;font-size:12px;color:var(--ink-soft)}
+.gauge .bar{height:4px;background:var(--line);border-radius:2px;margin:3px 0 2px;overflow:hidden}
+.gauge .bar i{display:block;height:100%;background:var(--azure);border-radius:2px}
+.gauge.lo .bar i{background:var(--ink-soft)}
+.gauge.hi .bar i{background:var(--green)}
+.gauge b{font-weight:500;color:var(--ink)}
+/* 卷面：一般卡片 */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:16px;margin:14px 0;position:relative}
+.card::after{content:"";position:absolute;inset:4px;border:1px dashed var(--line);border-radius:2px;pointer-events:none;opacity:.5}
+.card h2{font:700 16px/1.3 var(--serif);margin:0 0 10px;color:var(--ink);letter-spacing:.06em;display:flex;align-items:center;gap:8px}
 .card h2::before{content:"";width:4px;height:16px;background:var(--gold);border-radius:1px}
-.kicker{font-size:12px;letter-spacing:.2em;color:var(--vermilion);margin-bottom:4px}
+.kicker{font-size:12px;letter-spacing:.2em;color:var(--azure);margin-bottom:4px}
+.sub{color:var(--ink-soft);font-size:13px;margin:0 0 10px}
 /* 數值橫條 */
 .meters{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
-.meter .row1{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-2)}
+.meter .row1{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-soft)}
 .meter .row1 b{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:500}
 .track{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:4px}
-.fill{height:100%;background:var(--jade);border-radius:3px;transition:width .5s ease}
-.fill.warn{background:var(--vermilion)} .fill.gold{background:var(--gold)}
-/* 奏摺事件 */
-.memorial h3{font:900 22px/1.3 var(--display);margin:0 0 4px;text-wrap:balance}
-.memorial .sub{color:var(--ink-2);font-size:14px;margin-bottom:12px}
-.opts{display:grid;gap:10px}
-.opt{all:unset;cursor:pointer;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:4px;background:var(--paper);transition:border-color .15s, transform .15s}
-.opt:hover,.opt:focus-visible{border-color:var(--vermilion);transform:translateX(2px)}
+.fill{height:100%;background:var(--azure);border-radius:3px;transition:width .5s ease}
+.fill.warn{background:var(--ink-soft)} .fill.gold{background:var(--green)}
+/* 摺本：奏摺卡片（直書標題、摺線） */
+.memorial{position:relative;display:grid;grid-template-columns:52px 1fr;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:6px;box-shadow:0 6px 18px var(--shadow);padding:18px 16px 18px 14px;margin:14px 0}
+.memorial::before{content:"";position:absolute;top:12px;bottom:12px;left:66px;width:1px;background:repeating-linear-gradient(to bottom,var(--line) 0 6px,transparent 6px 10px);pointer-events:none}
+.memorial::after{content:"";position:absolute;top:6px;left:6px;right:6px;border-top:1px dashed var(--line);opacity:.6;pointer-events:none}
+.vtitle{writing-mode:vertical-rl;font:700 17px/1.3 var(--serif);letter-spacing:.3em;color:var(--ink);border-right:2px solid var(--gold);padding-right:8px;min-height:200px;align-self:stretch}
+.mbody{min-width:0}
+.memorial h3{font:900 22px/1.3 var(--serif);margin:0 0 4px;text-wrap:balance}
+.opts{display:grid;gap:8px}
+.opt{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:10px;align-items:flex-start;width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--silk);transition:border-color .15s,background .15s}
+.opt:hover,.opt:focus-visible{border-color:var(--azure)}
 .opt:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.opt .mark{flex:none;width:28px;height:28px;border:1.5px solid var(--vermilion);color:var(--vermilion);border-radius:50%;display:grid;place-items:center;font:700 13px/1 var(--display)}
+.opt:active{background:color-mix(in srgb,var(--green) 12%,var(--silk))}
+.opt:disabled{opacity:.45;cursor:default}
+.opt .mark{flex:none;width:28px;height:28px;border:1.5px solid var(--azure);color:var(--azure);border-radius:50%;display:grid;place-items:center;font:700 13px/1 var(--serif)}
+/* 朱批：僅用於帝王裁決（奏摺與東廠處置、開局、禪位） */
+.opt.zhu .mark{border-color:var(--vermilion);color:var(--vermilion)}
+.opt .otxt{min-width:0;display:flex;flex-direction:column;gap:2px}
 .opt .label{font-weight:500}
-.opt .eff{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.chip{font-size:12px;padding:1px 8px;border-radius:99px;background:var(--line);color:var(--ink-2);font-variant-numeric:tabular-nums}
-.chip.up{background:color-mix(in srgb,var(--jade) 22%,transparent);color:var(--jade)}
-.chip.down{background:color-mix(in srgb,var(--vermilion) 18%,transparent);color:var(--vermilion)}
-/* 按鈕 */
-.btn{all:unset;cursor:pointer;display:block;text-align:center;padding:12px;background:var(--vermilion);color:var(--seal-fg);border-radius:4px;font-weight:700;letter-spacing:.1em;width:100%;box-sizing:border-box}
+.opt .hint{font-size:12px;color:var(--ink-soft)}
+.eff{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font-size:12px;padding:1px 8px;border-radius:99px;background:var(--line);color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.chip.up{background:color-mix(in srgb,var(--green) 22%,transparent);color:var(--green)}
+.chip.down{background:transparent;border:1px solid var(--ink-soft);color:var(--ink-soft)}
+/* 按鈕：一般操作用藍，朱批用朱 */
+.btn{all:unset;box-sizing:border-box;cursor:pointer;display:block;text-align:center;padding:12px;background:var(--azure);color:var(--seal-fg);border-radius:4px;font-weight:700;letter-spacing:.1em;width:100%;margin-top:12px}
+.btn.zhu{background:var(--vermilion)}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .btn+.btn{margin-top:10px}
 /* 朝臣：人物卡 */
 .officials{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.person{background:var(--paper-2);border:1px solid var(--line);border-radius:4px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.person{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .person .head{display:flex;gap:10px;align-items:center}
-.portrait{flex:none;width:44px;height:52px;border-radius:4px 4px 22px 22px;display:grid;place-items:center;font:900 18px/1 var(--display);color:var(--seal-fg)}
-.person .name{font:700 15px/1.2 var(--display);min-width:0}
+.portrait{flex:none;width:44px;height:52px;border-radius:4px 4px 22px 22px;display:grid;place-items:center;font:900 18px/1 var(--serif);color:var(--seal-fg)}
+.person .name{font:700 15px/1.2 var(--serif);min-width:0}
 .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
-.tag{font-size:11px;padding:0 6px;border-radius:3px;border:1px solid var(--line);color:var(--ink-2)}
-.abil{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;text-align:center;font-size:11px;color:var(--ink-2)}
+.tag{font-size:11px;padding:0 6px;border-radius:3px;border:1px solid var(--line);color:var(--ink-soft)}
+.abil{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;text-align:center;font-size:11px;color:var(--ink-soft)}
 .abil b{display:block;font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums;font-weight:500}
-.loy{font-size:12px;color:var(--ink-2)}
+.loy{font-size:12px;color:var(--ink-soft)}
 /* 勢力 */
 .factions{display:flex;height:14px;border-radius:3px;overflow:hidden;margin:6px 0 10px;border:1px solid var(--line)}
 .factions div{transition:width .5s}
-.legend{display:flex;gap:14px;font-size:13px;color:var(--ink-2);flex-wrap:wrap}
+.legend{display:flex;gap:14px;font-size:13px;color:var(--ink-soft);flex-wrap:wrap}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
 /* 東廠 */
 .case{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px dashed var(--line)}
 .case:last-child{border-bottom:0}
 .lvl{display:inline-flex;gap:3px}
 .lvl span{width:10px;height:10px;border-radius:50%;background:var(--line)}
-.lvl span.on{background:var(--vermilion)}
-.empty{color:var(--ink-2);font-size:14px;margin:4px 0}
+.lvl span.on{background:var(--azure)}
+.empty{color:var(--ink-soft);font-size:14px;margin:4px 0}
 /* 後宮與子嗣 */
 .list{list-style:none;padding:0;margin:0}
 .list li{padding:8px 0;border-bottom:1px dashed var(--line);display:flex;justify-content:space-between;gap:8px}
 .list li:last-child{border-bottom:0}
+/* 宮城平面圖（導覽入口） */
+.plan{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px}
+.plan svg{display:block;width:100%;height:auto}
+.plan .wall{fill:none;stroke:var(--ink-soft);stroke-width:2}
+.plan .gate{fill:none;stroke:var(--ink-soft);stroke-width:1;stroke-dasharray:3 3}
+.plan g.zone{cursor:pointer;outline:none}
+.plan rect.tile{fill:var(--zone);stroke:var(--line);stroke-width:1.2;transition:fill .15s}
+.plan rect.hall{fill:var(--zone-hi);stroke:var(--azure);stroke-width:1.6}
+.plan g.zone:hover rect,.plan g.zone:focus-visible rect{fill:var(--zone-hi)}
+.plan g.zone:focus-visible rect{stroke:var(--gold);stroke-width:2}
+.plan text{font-family:var(--serif);fill:var(--ink);font-size:13px;pointer-events:none}
+.plan text.hallname{font-size:17px;font-weight:700}
+.plan text.sm{font-size:11px;fill:var(--ink-soft)}
+.plan text.compass{font-size:11px;fill:var(--ink-soft)}
+/* 史冊卷軸：年終考評 */
+.review{margin:14px 0}
+.roller{height:20px;border-radius:10px;background:linear-gradient(to bottom,#8a6a45,#6B4A2B 40%,#4f3620);box-shadow:0 3px 6px rgba(0,0,0,.25);margin:0 -10px;position:relative;z-index:2}
+.roller.bottom{margin-top:-2px}
+.scroll-paper{background:var(--paper);background-image:repeating-linear-gradient(to bottom,transparent 0 31px,rgba(120,95,55,.06) 31px 32px);margin:-4px 4px;padding:22px 18px 22px;border-left:2px solid var(--line);border-right:2px solid var(--line);animation:unroll 1.1s cubic-bezier(.2,.7,.2,1) both;box-shadow:inset 0 0 22px rgba(90,60,20,.12)}
+@keyframes unroll{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.stitle{font:700 22px/1.3 var(--serif);text-align:center;letter-spacing:.3em;margin:0 0 4px}
+.ssub{text-align:center;font-size:13px;color:var(--ink-soft);margin:0 0 14px}
+.ribbon{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:0 -18px 16px;padding:10px 0;background:color-mix(in srgb,var(--gold) 10%,transparent)}
+.ribbon>div{text-align:center;font-size:12px;color:var(--ink-soft);border-left:1px dashed var(--line);min-width:0}
+.ribbon>div:first-child{border-left:0}
+.ribbon b{display:block;font:700 15px/1.4 var(--serif);color:var(--ink)}
+.ribbon small{display:block;font-size:11px}
+.ribbon .up{color:var(--green)} .ribbon .dn{color:var(--ink-soft)} .ribbon .flat{color:var(--gold)}
+.chapter{font-size:13px;color:var(--azure);margin:0 0 6px;letter-spacing:.08em}
+.narr{font-size:16px;line-height:1.9;margin:0 0 16px;text-align:justify}
 /* 底部分頁 */
-nav.tabs{position:fixed;left:0;right:0;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--paper);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:6}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--silk);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:6}
 nav.tabs .in{display:flex;width:100%;max-width:560px;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
-nav.tabs button{all:unset;flex:1;text-align:center;padding:10px 0 12px;font-size:13px;color:var(--ink-2);cursor:pointer;position:relative;letter-spacing:.06em}
-nav.tabs button.active{color:var(--vermilion);font-weight:700}
-nav.tabs button.active::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;background:var(--vermilion)}
+nav.tabs button{all:unset;flex:1;min-width:0;text-align:center;padding:8px 0 10px;font-size:12px;color:var(--ink-soft);cursor:pointer;position:relative;letter-spacing:.04em}
+nav.tabs button.active{color:var(--azure);font-weight:700}
+nav.tabs button.active::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;background:var(--azure)}
 nav.tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:-4px}
 /* 開局 */
 .hero{text-align:center;padding:28px 0 8px}
-.hero .seal-big{width:76px;height:76px;margin:0 auto 14px;border-radius:10px;background:var(--vermilion);color:var(--seal-fg);display:grid;place-items:center;font:900 40px/1 var(--display);box-shadow:0 0 0 4px var(--paper),0 0 0 5px var(--gold)}
-.hero h2{font:900 26px/1.25 var(--display);margin:0 0 8px;letter-spacing:.1em}
-.hero p{color:var(--ink-2);margin:0 auto;max-width:34ch}
-label.lbl{display:block;font-size:13px;color:var(--ink-2);margin:12px 0 6px}
-input.seed{font:inherit;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink)}
+.hero .seal-big{width:76px;height:76px;margin:0 auto 14px;border-radius:8px;background:var(--ink);color:var(--seal-fg);display:grid;place-items:center;font:900 40px/1 var(--serif);box-shadow:0 0 0 4px var(--silk),0 0 0 5px var(--gold)}
+.hero h2{font:900 26px/1.25 var(--serif);margin:0 0 8px;letter-spacing:.1em}
+.hero p{color:var(--ink-soft);margin:0 auto;max-width:34ch}
+label.lbl{display:block;font-size:13px;color:var(--ink-soft);margin:12px 0 6px}
+input.seed{font:inherit;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:4px;background:var(--silk);color:var(--ink)}
 input.seed:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
-.ending .score{font:900 40px/1 var(--display);color:var(--vermilion);margin:8px 0 14px;letter-spacing:.04em}
+.ending .score{font:900 40px/1 var(--serif);color:var(--ink);margin:8px 0 14px;letter-spacing:.04em}
 .axes{display:grid;gap:10px}
-@media (max-width:360px){ .meters,.officials{grid-template-columns:1fr} }
-@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+@media (max-width:360px){
+  .meters,.officials{grid-template-columns:1fr}
+  .vtitle{font-size:15px;min-height:180px}
+  .memorial{grid-template-columns:44px 1fr}
+  .memorial::before{left:58px}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top" id="top">
-    <div class="seal" aria-hidden="true">帝</div>
-    <div><h1>皇帝養成綜合版</h1><div class="when" id="when"></div></div>
+    <div class="top-row">
+      <div class="seal" aria-hidden="true">帝</div>
+      <div><h1>皇帝養成綜合版</h1><div class="when" id="when"></div></div>
+    </div>
+    <div class="gauges" id="gauges" aria-label="國勢概況"></div>
   </header>
   <main id="app"></main>
 </div>
@@ -149,9 +212,9 @@ const STAT = {
   people:{l:'民心',ref:100}, agriculture:{l:'農業',ref:500}, commerce:{l:'商業',ref:600}, armament:{l:'軍備',ref:500},
   heaven:{l:'天命',ref:100}
 };
-const FACTION = { qingliu:{l:'清流',c:'#3e6b58'}, xunggui:{l:'勳貴',c:'#a9802a'}, hanmen:{l:'寒門',c:'#8a4b6b'} };
+const FACTION = { qingliu:{l:'清流',c:'#4E7D5B'}, xunggui:{l:'勳貴',c:'#B48A3C'}, hanmen:{l:'寒門',c:'#2E5E7E'} };
 const ABIL = { intellect:'智', politics:'政', martial:'武', command:'統', virtue:'德' };
-const TABS = [['court','朝堂'],['officials','朝臣'],['harem','後宮'],['dc','東廠'],['throne','帝王']];
+const TABS = [['court','朝堂'],['palace','宮城'],['officials','朝臣'],['harem','後宮'],['dc','東廠'],['throne','帝王']];
 const DC_LABEL = { warn:'告誡', punish:'責罰', prison:'下獄' };
 const DC_HINT = { warn:'口頭告誡，收其野心，回其忠誠', punish:'降職罷黜，震懾同僚', prison:'下獄審訊，或可得其供詞' };
 const OFFICE = { chancellor:'丞相', revenue:'戶部', works:'工部', war:'兵部', prefect:'知府', tutor:'太傅' };
@@ -159,14 +222,16 @@ const EFFECT_EXTRA = { official_loyalty_add:'官員忠誠', removeOfficial:'罷�
 const EFFECT = { ...EFFECT_EXTRA, treasury:'國庫', agriculture:'農業', people:'民心', benevolence:'仁德', prestige:'威儀', charm:'聲色', literature:'文學', military:'兵力', power:'權勢', commerce:'商業', armament:'軍備', heaven:'天命', health:'健康' };
 const TAB_ICON = {
   court:'<path d="M3 20h18M5 20V10l7-5 7 5v10M9 20v-6h6v6"/>',
+  palace:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16"/>',
   officials:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
   harem:'<path d="M12 3l7 8-7 10-7-10z"/>',
   dc:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
   throne:'<path d="M4 20h16M6 20V9l6-5 6 5v11M9 20v-5h6v5"/>'
 };
+const TOP_GAUGES = ['treasury','people','armament','heaven'];
 
 let state = null, seed = '', tab = 'court', events = [];
-let panel = null, pick1 = null, feedback = '', resignArmed = false;
+let panel = null, pick1 = null, feedback = '', resignArmed = false, reviewedCount = 0;
 const app = document.getElementById('app');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const rng = (...parts) => makeRng([seed, ...parts]);
@@ -203,6 +268,7 @@ function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
 function newGame(s){
   seed = s || String(Math.floor(Math.random()*1e9));
   state = createInitialState(seed, { policy:'agrarian' });
+  reviewedCount = 0;
   save(); tab = 'court'; render();
 }
 function pendingCase(){ return state.dongchang.cases.find(c => c.status === 'leverage'); }
@@ -247,23 +313,42 @@ function fmt(k, v){
   if (k === 'population') return v >= 10000 ? (v/10000).toFixed(0)+'萬' : Math.round(v);
   return Math.round(v);
 }
+const pctOf = k => Math.max(0, Math.min(100, state.stats[k] / STAT[k].ref * 100));
+const levelWord = k => { const p = pctOf(k); return p < 25 ? '低' : p > 70 ? '高' : '中'; };
 function meter(k){
   const s = STAT[k], v = state.stats[k];
-  const pct = k === 'population' ? 100 : Math.max(0, Math.min(100, v / s.ref * 100));
+  const pct = pctOf(k);
   const cls = pct < 25 ? 'warn' : pct > 70 ? 'gold' : '';
   return `<div class="meter"><div class="row1"><span>${s.l}</span><b>${fmt(k,v)}</b></div>
     <div class="track"><div class="fill ${cls}" style="width:${pct.toFixed(1)}%"></div></div></div>`;
 }
-function statsCard(){
-  const keys = Object.keys(STAT);
-  const act = (!pendingCase() && state.alive) ? actionsCard() : '';
-  return act + `<section class="card"><h2>國勢</h2><div class="meters">${keys.map(meter).join('')}</div></section>`;
+// 朝堂的行動卡（僅在無待決案件、尚未駕崩時出現）
+function actionsSection(){
+  return (!pendingCase() && state.alive) ? actionsCard() : '';
 }
 function calendar(){
   document.getElementById('when').textContent = `第${state.dynasty.generation}世 · ${state.year}年${state.month}月 · ${state.age}歲`;
 }
+// 頂欄四項國勢：只示意高低，不顯示數值
+function topGauges(){
+  const el = document.getElementById('gauges');
+  if (!state || !state.alive) { el.innerHTML = ''; return; }
+  el.innerHTML = TOP_GAUGES.map(k => {
+    const lw = levelWord(k), cls = lw === '低' ? 'lo' : lw === '高' ? 'hi' : '';
+    return `<div class="gauge ${cls}" title="${STAT[k].l}"><span>${STAT[k].l}</span>
+      <div class="bar"><i style="width:${pctOf(k).toFixed(1)}%"></i></div><b>${lw}</b></div>`;
+  }).join('');
+}
 function hue(name){ let h=0; for (const c of String(name)) h = (h*31 + c.charCodeAt(0)) % 360; return h; }
 function portraitStyle(o){ return `background:linear-gradient(160deg,hsl(${hue(o.name)} 30% 38%),hsl(${hue(o.name)} 30% 22%))`; }
+function memorialCard(vt, inner){
+  return `<section class="memorial"><div class="vtitle">${vt}</div><div class="mbody">${inner}</div></section>`;
+}
+function effChips(o){
+  return Object.entries(o.effects||{}).map(([k,v]) => typeof v === 'boolean'
+    ? `<span class="chip">${EFFECT[k]||k}</span>`
+    : `<span class="chip ${v>0?'up':v<0?'down':''}">${EFFECT[k]||k} ${v>0?'+':''}${v}</span>`).join('') || '<span class="chip">無直接效果</span>';
+}
 
 function renderNav(){
   document.getElementById('tabs').innerHTML = TABS.map(([k,l]) =>
@@ -285,15 +370,15 @@ function renderStart(){
       <h2>開啟新局</h2>
       <label class="lbl" for="seed">種子（相同種子與相同選擇，結果一致）</label>
       <input class="seed" id="seed" placeholder="留空即隨機">
-      <div style="margin-top:14px"><button class="btn" id="start">開始新局</button>
+      <div style="margin-top:14px"><button class="btn zhu" id="start">開始新局</button>
       ${cs && cs.state ? `<button class="btn ghost" id="ccont">繼續雲端進度（${new Date(cs.savedAt).toLocaleString('zh-TW')}）</button>` : ''}
       ${saved && saved.state ? '<button class="btn ghost" id="cont">繼續本機進度</button>' : ''}</div>
     </section>`;
   document.getElementById('start').onclick = () => newGame(document.getElementById('seed').value.trim());
   const c = document.getElementById('cont');
-  if (c) c.onclick = () => { seed = saved.seed; state = saved.state; render(); };
+  if (c) c.onclick = () => { seed = saved.seed; state = saved.state; reviewedCount = (state.annals||[]).length; render(); };
   const cc = document.getElementById('ccont');
-  if (cc) cc.onclick = () => { seed = cs.seed; state = cs.state; save(); render(); };
+  if (cc) cc.onclick = () => { seed = cs.seed; state = cs.state; reviewedCount = (state.annals||[]).length; save(); render(); };
 }
 
 function renderEnding(){
@@ -309,7 +394,7 @@ function renderEnding(){
         <div class="track"><div class="fill ${k==='military'?'warn':''}" style="width:${v}%"></div></div></div>`).join('')}</div>
     </section>
     <section class="card"><h2>史記</h2><ul class="list">${chron || '<li><span class="empty">無紀錄</span></li>'}</ul></section>
-    <button class="btn" id="again">重新開局</button>`;
+    <button class="btn zhu" id="again">重新開局</button>`;
   document.getElementById('again').onclick = () => { clearSave(); state = null; render(); };
 }
 
@@ -317,39 +402,109 @@ function renderCourt(){
   const dc = pendingCase();
   if (dc) {
     const off = state.officials.find(o => o.id === dc.officialId);
-    app.innerHTML = `
-      <section class="card memorial">
-        <div class="kicker">東廠密報</div>
+    app.innerHTML = memorialCard('東廠密報', `
+        <div class="kicker">密報・把柄</div>
         <h3>${off ? esc(off.name) : '某官'} 查有把柄</h3>
         <div class="sub">把柄等級 ${dc.level}。請裁決如何處置：</div>
         <div class="opts">${DC_ACTIONS.map((a,i) => `
-          <button class="opt" data-dc="${a}"><span class="mark">${i+1}</span>
-          <span><span class="label">${DC_LABEL[a]}</span><br><span class="sub" style="margin:0">${DC_HINT[a]}</span></span></button>`).join('')}
-        </div>
-      </section>` + statsCard();
+          <button class="opt zhu" data-dc="${a}"><span class="mark">${i+1}</span>
+          <span class="otxt"><span class="label">${DC_LABEL[a]}</span><span class="hint">${DC_HINT[a]}</span></span></button>`).join('')}
+        </div>`);
     app.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => chooseDC(b.dataset.dc));
     return;
   }
   const ev = currentEvent();
   if (!ev) {
-    app.innerHTML = `<section class="card memorial"><div class="kicker">本月</div><h3>風平浪靜</h3><div class="sub">此月無奏摺上呈。</div>
-      <button class="btn" id="next">進入下月</button></section>` + statsCard();
+    app.innerHTML = memorialCard('本月', `<div class="kicker">本月</div><h3>風平浪靜</h3><div class="sub">此月無奏摺上呈。</div>
+      <button class="btn" id="next">進入下月</button>`) + actionsSection();
     document.getElementById('next').onclick = finishMonth;
     return;
   }
   const opts = ev.options.filter(isAvailable);
-  app.innerHTML = `
-    <section class="card memorial">
+  app.innerHTML = memorialCard(`御覽・${esc(ev.name)}`, `
       <div class="kicker">奏摺</div>
       <h3>${esc(ev.name)}</h3>
       <div class="sub">${opts.length} 項處置可選</div>
       <div class="opts">${opts.map((o,i) => `
-        <button class="opt" data-i="${i}"><span class="mark">${esc(o.key)}</span>
-        <span style="min-width:0"><span class="label">${esc(o.label)}</span>
-        <span class="eff">${Object.entries(o.effects||{}).map(([k,v]) => `${typeof v === 'boolean' ? `<span class="chip">${EFFECT[k]||k}</span>` : `<span class="chip ${v>0?'up':v<0?'down':''}">${EFFECT[k]||k} ${v>0?'+':''}${v}</span>`}`).join('') || '<span class="chip">無直接效果</span>'}</span></span></button>`).join('')}
-      </div>
-    </section>` + statsCard();
+        <button class="opt zhu" data-i="${i}"><span class="mark">${esc(o.key)}</span>
+        <span class="otxt"><span class="label">${esc(o.label)}</span>
+        <span class="eff">${effChips(o)}</span></span></button>`).join('')}
+      </div>`) + actionsSection();
   app.querySelectorAll('[data-i]').forEach(b => b.onclick = () => chooseOption(opts[+b.dataset.i], ev.id));
+}
+
+// ── 宮城平面圖：點選宮室即前往對應分頁 ──
+function renderPalace(){
+  const openCases = state.dongchang.cases.filter(c => c.status !== 'closed').length;
+  const Z = [
+    {id:'yushu', n:'御書房', s:`史冊 ${(state.annals||[]).length}`, t:'throne', x:22, y:40, w:66, h:78},
+    {id:'houggong', n:'後宮', s:`嬪妃 ${state.consorts.length} / 8`, t:'harem', x:100, y:40, w:120, h:78},
+    {id:'cining', n:'慈寧宮', s:`子嗣 ${state.heirs.length}`, t:'harem', x:232, y:40, w:66, h:78},
+    {id:'taihe', n:'太和殿', s:'朝會・御批', t:'court', x:100, y:128, w:120, h:104, hall:true},
+    {id:'jiaochang', n:'校場', s:`軍備 ${levelWord('armament')}`, t:'officials', x:22, y:250, w:92, h:106},
+    {id:'dongchang', n:'東廠', s:`進行中 ${openCases} 案`, t:'dc', x:206, y:250, w:92, h:106},
+  ];
+  const zone = z => {
+    const cx = z.x + z.w/2, cy = z.y + z.h/2;
+    return `<g class="zone" role="button" tabindex="0" data-tab="${z.t}" aria-label="${z.n}，${esc(z.s)}">
+      <rect class="${z.hall ? 'tile hall' : 'tile'}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="5"/>
+      <text class="${z.hall ? 'hallname' : ''}" x="${cx}" y="${z.hall ? cy-4 : cy-2}" text-anchor="middle">${z.n}</text>
+      <text class="sm" x="${cx}" y="${cy+16}" text-anchor="middle">${esc(z.s)}</text></g>`;
+  };
+  app.innerHTML = `
+    <section class="card"><h2>宮城</h2>
+      <p class="sub">點選宮室，前往其所主之事。</p>
+      <div class="plan">
+        <svg viewBox="0 0 320 380" role="group" aria-label="宮城平面圖">
+          <rect class="wall" x="10" y="10" width="300" height="360" rx="6"/>
+          <path class="gate" d="M140 10 L180 10"/>
+          <path class="gate" d="M140 370 L180 370"/>
+          <text class="compass" x="160" y="28" text-anchor="middle">午門</text>
+          <text class="compass" x="160" y="364" text-anchor="middle">玄武門</text>
+          ${Z.map(zone).join('')}
+          <text class="sm" x="160" y="264" text-anchor="middle">午朝廣場</text>
+        </svg>
+      </div>
+      <p class="sub" style="margin:10px 0 0">御書房（文學）、校場（武略）、慈寧宮（家事）暫以相近分頁代理。</p>
+    </section>`;
+  app.querySelectorAll('g.zone').forEach(g => {
+    const go = () => { tab = g.dataset.tab; resignArmed = false; render(); };
+    g.onclick = go;
+    g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+  });
+}
+
+// ── 年終考評（史冊卷軸）：歲末結算後於朝堂展開，收卷即回朝堂 ──
+function reviewPending(){ return (state.annals || []).length > reviewedCount; }
+function renderReview(){
+  const list = state.annals, a = list[list.length - 1], p = list[list.length - 2];
+  const cell = (label, k, val) => {
+    if (!p) return `<div><span>${label}</span><b>${val}</b><small>首年考評</small></div>`;
+    const d = a[k] - p[k];
+    const cls = d > 0 ? 'up' : d < 0 ? 'dn' : 'flat';
+    const txt = d > 0 ? `▲ ${d}` : d < 0 ? `▼ ${-d}` : '— 持平';
+    return `<div><span>${label}</span><b>${val}</b><small class="${cls}">${txt}</small></div>`;
+  };
+  app.innerHTML = `
+    <section class="review" aria-label="年終考評">
+      <div class="kicker" style="text-align:center">年終考評 · 第${a.generation}世</div>
+      <div class="roller" aria-hidden="true"></div>
+      <article class="scroll-paper">
+        <h2 class="stitle">史冊・${a.year}年</h2>
+        <p class="ssub">歲末考評，陛下治國之績如下</p>
+        <div class="ribbon">
+          ${cell('國庫', 'treasury', a.treasury)}
+          ${cell('民心', 'people', a.people)}
+          ${cell('兵力', 'military', a.military)}
+          ${cell('農業', 'agriculture', a.agriculture)}
+        </div>
+        <p class="chapter">征戰　${a.wars} 次，勝 ${a.wins} 次</p>
+        <p class="narr">朝臣 ${a.officials} 人，嬪妃 ${a.consorts} 人，東廠未結案 ${a.dc} 件。史官記之，留待後世評說。</p>
+        <button class="btn" id="rollup">收卷，回朝堂</button>
+      </article>
+      <div class="roller bottom" aria-hidden="true"></div>
+    </section>`;
+  document.getElementById('rollup').onclick = () => { reviewedCount = list.length; render(); };
 }
 
 function renderOfficials(){
@@ -366,7 +521,7 @@ function renderOfficials(){
           <span class="tag">${o.office ? OFFICE[o.office] || o.office : '閒置'}</span></div>
         </div>
       </div>
-      <div class="loy">忠誠 <b style="color:${o.loyalty<40?'var(--vermilion)':'var(--jade)'}">${Math.round(o.loyalty)}</b> · 野心 ${Math.round(o.ambition)}</div>
+      <div class="loy">忠誠 <b style="color:${o.loyalty<40?'var(--gold)':'var(--green)'}">${Math.round(o.loyalty)}</b> · 野心 ${Math.round(o.ambition)}</div>
       <div class="abil">${Object.keys(ABIL).map(k => `<div>${ABIL[k]}<b>${o.abilities[k]}</b></div>`).join('')}</div>
     </article>`).join('');
   app.innerHTML = `
@@ -402,13 +557,14 @@ function renderThrone(){
   const annals = (state.annals || []).slice().reverse().map(a =>
     `<li><span>第${a.generation}世 ${a.year}年</span><span class="loy">國庫 ${a.treasury}　民心 ${a.people}　兵力 ${a.military}　勝 ${a.wins}/${a.wars}</span></li>`).join('');
   app.innerHTML = `
+    <section class="card"><h2>國勢</h2><div class="meters">${Object.keys(STAT).map(meter).join('')}</div></section>
     <section class="card"><h2>年度回顧</h2><ul class="list">${annals || '<li><span class="empty">歲末方有回顧。</span></li>'}</ul></section>
     <section class="card"><h2>帝王</h2>
       <div class="meters">
         <div class="meter"><div class="row1"><span>年歲</span><b>${state.age}</b></div></div>
         <div class="meter"><div class="row1"><span>征戰</span><b>${state.wars.length} 次 · 勝 ${wins}</b></div></div>
       </div>
-      <div style="margin-top:16px"><button class="btn ghost" id="resign">${resignArmed ? "再按一次，確定禪位" : "禪位予皇子"}</button></div>
+      <div style="margin-top:16px"><button class="btn ${resignArmed ? 'zhu' : 'ghost'}" id="resign">${resignArmed ? "再按一次，確定禪位" : "禪位予皇子"}</button></div>
     </section>
     <section class="card"><h2>史記</h2><ul class="list">${chron || '<li><span class="empty">本朝初立，尚無史記。</span></li>'}</ul></section>`;
   document.getElementById('resign').onclick = () => {
@@ -442,7 +598,7 @@ function actionsCard(){
       ['dc','東廠開案','對一位官員展開調查，之後可在東廠頁處置'],
       ['policy','變更國策','改變每月的施政修正'],
       ['faction','拉攏派系','提升一派影響力，其他兩派會下降'],
-    ].map(([k,l,h]) => `<button class="opt" data-act="open" data-arg="${k}" ${dis}><span class="mark">＋</span><span><span class="label">${l}</span><br><span class="sub" style="margin:0">${h}</span></span></button>`).join('') + `</div>`;
+    ].map(([k,l,h]) => `<button class="opt" data-act="open" data-arg="${k}" ${dis}><span class="mark">＋</span><span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span></span></button>`).join('') + `</div>`;
   } else if (panel === 'appoint') {
     const empty = Object.keys(OFFICES).filter(k => !state.officials.some(o => o.office === k));
     body = `<div class="sub">選擇要補任的官職</div><div class="opts">` + (empty.length
@@ -451,7 +607,7 @@ function actionsCard(){
   } else if (panel === 'appoint2') {
     const idle = state.officials.filter(o => !o.office);
     body = `<div class="sub">選擇人選補任${OFFICE[pick1]||pick1}</div><div class="opts">` + (idle.length
-      ? idle.map(o => `<button class="opt" data-act="assign" data-arg="${o.id}"><span class="mark">${esc(o.name.slice(0,1))}</span><span><span class="label">${esc(o.name)}</span><br><span class="sub" style="margin:0">${FACTION[o.faction].l}　忠誠 ${Math.round(o.loyalty)}</span></span></button>`).join('')
+      ? idle.map(o => `<button class="opt" data-act="assign" data-arg="${o.id}"><span class="mark">${esc(o.name.slice(0,1))}</span><span class="otxt"><span class="label">${esc(o.name)}</span><span class="hint">${FACTION[o.faction].l}　忠誠 ${Math.round(o.loyalty)}</span></span></button>`).join('')
       : '<p class="empty">朝中無閒置之臣。</p>') + `</div>`;
   } else if (panel === 'dc') {
     const busy = new Set(state.dongchang.cases.filter(c => c.status !== 'closed').map(c => c.officialId));
@@ -464,9 +620,9 @@ function actionsCard(){
       `<button class="opt" data-act="policy" data-arg="${k}" ${dis || (k===state.policy?'disabled':'')}><span class="mark">${POLICIES[k].name.slice(0,1)}</span><span class="label">${POLICIES[k].name}${k===state.policy?'（現行）':''}</span></button>`).join('') + `</div>`;
   } else if (panel === 'faction') {
     body = `<div class="sub">選擇要拉攏的一派</div><div class="opts">` + Object.keys(FACTION).map(k =>
-      `<button class="opt" data-act="faction" data-arg="${k}" ${dis}><span class="mark" style="color:${FACTION[k].c};border-color:${FACTION[k].c}">${FACTION[k].l.slice(0,1)}</span><span class="label">${FACTION[k].l}　<span class="sub">目前 ${Math.round(state.factions[k])}</span></span></button>`).join('') + `</div>`;
+      `<button class="opt" data-act="faction" data-arg="${k}" ${dis}><span class="mark" style="color:${FACTION[k].c};border-color:${FACTION[k].c}">${FACTION[k].l.slice(0,1)}</span><span class="label">${FACTION[k].l}　<span class="sub" style="margin:0">目前 ${Math.round(state.factions[k])}</span></span></button>`).join('') + `</div>`;
   }
-  const fb = feedback ? `<div class="sub" style="color:var(--jade);margin:0 0 10px">${esc(feedback)}</div>` : '';
+  const fb = feedback ? `<div class="sub" style="color:var(--green);margin:0 0 10px">${esc(feedback)}</div>` : '';
   return `<section class="card"><h2>朝政行動</h2>
     <div class="kicker">本月剩餘 ${left} / ${ACTION_LIMIT} 次</div>${fb}
     ${body}
@@ -506,12 +662,14 @@ function onAgency(e){
 app.addEventListener('click', onAgency);
 
 function render(){
+  topGauges();
   if (!state) { document.getElementById('when').textContent = '未開局'; renderStart(); document.getElementById('nav').style.display='none'; return; }
   document.getElementById('nav').style.display='';
   calendar();
   if (!state.alive) { renderEnding(); document.getElementById('nav').style.display='none'; return; }
   renderNav();
-  ({ court: renderCourt, officials: renderOfficials, harem: renderHarem, dc: renderDC, throne: renderThrone })[tab]();
+  if (tab === 'court' && reviewPending()) return renderReview();
+  ({ court: renderCourt, palace: renderPalace, officials: renderOfficials, harem: renderHarem, dc: renderDC, throne: renderThrone })[tab]();
 }
 
 try { events = (await (await fetch('data/events.json')).json()).events; } catch (e) { events = []; }
