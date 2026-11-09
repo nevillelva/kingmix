@@ -5,10 +5,10 @@ import { applyOption, monthlyTick } from '../src/turn.js';
 import { recordSharedEvent, sharedCount, isBonded, remonstrate, BOND_THRESHOLD, BOND_NAME } from '../src/bonds.js';
 import { makeRng } from '../src/rng.js';
 
-test('five shared events unlock 君臣相得 exactly on the fifth', () => {
+test('BOND_THRESHOLD shared events unlock 君臣相得 exactly on the last one', () => {
   const s = createInitialState('b');
-  const results = [1, 2, 3, 4, 5].map((i) => recordSharedEvent(s, 'o1', `E${i}`));
-  assert.deepEqual(results, [false, false, false, false, true]);
+  const results = Array.from({ length: BOND_THRESHOLD }, (_, i) => recordSharedEvent(s, 'o1', `E${i + 1}`));
+  assert.deepEqual(results, [...Array(BOND_THRESHOLD - 1).fill(false), true]);
   assert.equal(sharedCount(s, 'o1'), BOND_THRESHOLD);
   assert.equal(isBonded(s, 'o1'), true);
   assert.equal(isBonded(s, 'o2'), false);
@@ -17,7 +17,7 @@ test('five shared events unlock 君臣相得 exactly on the fifth', () => {
 
 test('unlock happens only once', () => {
   const s = createInitialState('b');
-  for (let i = 0; i < 5; i++) recordSharedEvent(s, 'o1', `E${i}`);
+  for (let i = 0; i < BOND_THRESHOLD; i++) recordSharedEvent(s, 'o1', `E${i}`);
   assert.equal(recordSharedEvent(s, 'o1', 'E9'), false);
 });
 

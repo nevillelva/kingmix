@@ -70,15 +70,17 @@ test('rejecting a remonstrance kills the official, removes him from office, and 
   assert.ok(line.text.includes('死諫'));
 });
 
-test('死諫 is rare: at most a few per run, and never past the per-event cap', () => {
+test('死諫 fires about 1–3 times per 600-month run, and never past the per-event cap', () => {
   let total = 0;
-  for (let seed = 1; seed <= 60; seed++) {
+  const N = 120;
+  for (let seed = 1; seed <= N; seed++) {
     const r = runSimulation({ seed: `rem-rate-${seed}`, months: 600, events });
     const n = r.triggered.E420 || 0;
     assert.ok(n <= 8, `E420 ran ${n} times in seed ${seed}`);
     total += n;
   }
-  assert.ok(total / 60 < 1, `average ${total / 60} per run`);
+  const avg = total / N;
+  assert.ok(avg >= 1 && avg <= 3, `average ${avg} per run`);
 });
 
 test('the death event respects the per-run cap helper', () => {
