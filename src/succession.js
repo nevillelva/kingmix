@@ -10,6 +10,10 @@ const LEGACY_KEYS = ['literature', 'military', 'power', 'benevolence', 'prestige
 
 // 幼子月死亡率（依年齡，0–4 歲；5 歲以上不受此項影響）。暫定值，見模擬校準。
 export const CHILD_MORTALITY = [0.0175, 0.007, 0.0035, 0.00175, 0.0009];
+// 幼兒疾病：0–4 歲皇子每月有機率患病，病中數月內夭折率加倍（倍數見下）。暫定值，見模擬校準。
+export const CHILD_ILLNESS_CHANCE = 0.02;
+export const CHILD_ILLNESS_MONTHS = 6;
+export const CHILD_ILLNESS_MORTALITY_MULT = 2;
 // 奪嫡期間，最弱的成年皇子每月遭除名（薨逝或被貶）的機率。
 export const RIVALRY_LOSS = 0.02;
 // 立太子：清流支持（勢力加成）；其餘派系官員警覺（忠誠下降）。暫定值。
@@ -105,7 +109,21 @@ function removeHeir(state, heir, cause) {
 export function tickHeirs(state) {
   const base = [state.seed, 'heirs', state.year, state.month];
   for (const h of [...state.heirs]) {
-    const p = childMortalityRate(h.age);
+    const p0 = childMortalityRate(h.age);
+    if (p0 === 0) {
+      delete h.ill;
+      continue;
+    }
+    // 患病：獨立的 rng 路徑，不影響既有夭折序列；病況以剩餘月數記於 h.ill。
+    if (!h.ill && makeRng([...base, 'illness', h.id])() < CHILD_ILLNESS_CHANCE) {
+      h.ill = CHILD_ILLNESS_MONTHS;
+      state.chronicle.push({
+        kind: 'heir_illness', generation: state.dynasty.generation, year: state.year, month: state.month,
+        heirId: h.id, name: h.name, age: h.age,
+      });
+    }
+    const p = h.ill ? p0 * CHILD_ILLNESS_MORTALITY_MULT : p0;
+    if (h.ill && --h.ill <= 0) delete h.ill;
     if (p > 0 && makeRng([...base, 'child', h.id])() < p) removeHeir(state, h, 'child_mortality');
   }
 

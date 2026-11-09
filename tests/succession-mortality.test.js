@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createInitialState } from '../src/state.js';
-import { createHeir, tryAccession, tickHeirs, childMortalityRate } from '../src/succession.js';
+import { createHeir, tryAccession, tickHeirs, childMortalityRate, CHILD_ILLNESS_MONTHS } from '../src/succession.js';
 import { makeRng } from '../src/rng.js';
 
 function addHeir(s, gender, age, abilityValue = 50) {
@@ -70,6 +70,52 @@ test('two adult male heirs raise the rivalry flag, one does not', () => {
   s.month = 3;
   tickHeirs(s);
   assert.equal(s.dynasty.rivalry, true);
+});
+
+// ---- 幼兒疾病：傳承風險 ----
+
+const tickAt = (s, m) => {
+  s.year = 1 + Math.floor(m / 12);
+  s.month = (m % 12) + 1;
+  tickHeirs(s);
+};
+
+test('illness is recorded, lasts CHILD_ILLNESS_MONTHS, then clears', () => {
+  let found = null;
+  for (let i = 0; i < 300 && !found; i++) {
+    const s = createInitialState(`ill-${i}`);
+    const h = addHeir(s, 'male', 0);
+    for (let m = 0; m < 36 && !h.ill && s.heirs.includes(h); m++) tickAt(s, m);
+    if (h.ill) found = { s, h };
+  }
+  assert.ok(found, 'expected an illness in 300 seeds');
+  const { s, h } = found;
+  assert.ok(s.chronicle.some((c) => c.kind === 'heir_illness' && c.heirId === h.id));
+  for (let m = 1; m < CHILD_ILLNESS_MONTHS && s.heirs.includes(h); m++) tickAt(s, 36 + m);
+  if (s.heirs.includes(h)) assert.equal(h.ill, undefined, 'illness cleared after its course');
+});
+
+test('only heirs under 5 can fall ill', () => {
+  const s = createInitialState('ill-adult');
+  const h = addHeir(s, 'male', 5);
+  for (let m = 0; m < 600; m++) tickAt(s, m);
+  assert.equal(h.ill, undefined);
+  assert.ok(s.heirs.includes(h));
+});
+
+test('an ill infant dies more often than a healthy one (same seeds, six months)', () => {
+  const deaths = (sick) => {
+    let n = 0;
+    for (let i = 0; i < 1500; i++) {
+      const s = createInitialState(`sick-${i}`);
+      const h = addHeir(s, 'male', 0);
+      if (sick) h.ill = CHILD_ILLNESS_MONTHS;
+      for (let m = 0; m < CHILD_ILLNESS_MONTHS; m++) tickAt(s, m);
+      if (!s.heirs.includes(h)) n++;
+    }
+    return n;
+  };
+  assert.ok(deaths(true) > deaths(false));
 });
 
 test('dynasty ends when the emperor dies and only children remain', () => {

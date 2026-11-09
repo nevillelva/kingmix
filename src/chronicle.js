@@ -1,6 +1,7 @@
 // 御書房與結局頁「史記」的文字組裝。依 state.chronicle 各筆紀錄的寫入欄位分派，不依賴 undefined 欄位。
 // 既有紀錄種類：
 //   era          改元（era.js 的 eraChronicleEntry，含 text）
+//   heir_illness 幼子染疾（succession.js 的 tickHeirs）
 //   heir_death   皇子夭折／奪嫡失勢（succession.js 的 removeHeir）
 //   assassination 刺殺（assassination.js）：來源、目標、結果
 //   （無 kind）  駕崩或禪位後的世代紀錄（succession.js 的 tryAccession）
@@ -23,6 +24,9 @@ export function chronicleLine(c) {
       text: `${orDash(ASSASSIN_SOURCE[c.source])}行刺${orDash(c.targetName)} · ${orDash(c.year)}年${orDash(c.month)}月`,
       tag: ASSASSIN_OUTCOME[c.outcome] ?? '—',
     };
+  }
+  if (c.kind === 'heir_illness') {
+    return { text: `皇子${orDash(c.name)}染疾 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '患病' };
   }
   if (c.kind === 'heir_death') {
     return {

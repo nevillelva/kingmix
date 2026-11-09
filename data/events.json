@@ -8498,6 +8498,122 @@
           }
         }
       ]
+    },
+    {
+      "id": "E413",
+      "name": "九鼎出土",
+      "speaker": "太常寺卿",
+      "narrative": "淮水之濱有農人掘井，得古鼎殘片數件，紋飾與典籍所載九鼎相合。太常寺請陛下定奪：或收入太廟，或歸還地方，請聖裁。",
+      "when": {
+        "treasury_gt": 400,
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "收入太廟",
+          "tone": "穩妥",
+          "effects": {
+            "collect": "jiuding",
+            "prestige": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "歸還地方",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 5,
+            "people": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "熔鑄為錢",
+          "tone": "冒險",
+          "effects": {
+            "treasury": 60,
+            "people": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E414",
+      "name": "文房四寶",
+      "speaker": "翰林學士",
+      "narrative": "江南織造進獻一套古製文房，硯、墨、紙、筆皆出名家之手。臣等以為此物可供御覽，亦可賜予詞臣，請陛下酌定。",
+      "when": {
+        "literature_gt": 150,
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "陳於文華殿",
+          "tone": "穩妥",
+          "effects": {
+            "collect": "sibao",
+            "literature": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "賜予翰林",
+          "tone": "仁厚",
+          "effects": {
+            "official_loyalty_add": 5,
+            "benevolence": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "變賣充用",
+          "tone": "冒險",
+          "effects": {
+            "treasury": 50
+          }
+        }
+      ]
+    },
+    {
+      "id": "E415",
+      "name": "梨園新劇",
+      "speaker": "教坊司使",
+      "narrative": "梨園班主獻上新編樂曲，詞美韻雅，足傳後世。然亦有諫官以為過於綺麗，恐非朝廷所宜。請陛下聖斷。",
+      "when": {
+        "charm_gt": 150,
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "召入內廷",
+          "tone": "穩妥",
+          "effects": {
+            "collect": "mingju",
+            "charm": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "命教坊演習",
+          "tone": "仁厚",
+          "effects": {
+            "people": 3,
+            "charm": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "斥為淫靡",
+          "tone": "強硬",
+          "effects": {
+            "benevolence": 3,
+            "charm": -5
+          }
+        }
+      ]
     }
   ]
 }

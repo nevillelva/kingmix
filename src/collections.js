@@ -31,6 +31,22 @@ export function collectionProgress(state, setId) {
   return { id: setId, name: set.name, have, total: set.items.length, complete: have === set.items.length };
 }
 
+// 事件效果 collect: <套id> 每次收得的件數。每局同一事件最多 8 次，故九鼎每次 3 件（三次集齊）、四寶每次 2 件。
+export const PICK_SIZE = { jiuding: 3, sibao: 2, mingju: 1 };
+
+// 由事件抽得一批收藏：自該套尚未收得者中，以 rng 抽出 PICK_SIZE 件。該套已集齊時為空操作（不消耗 rng）。
+export function collectFromSet(state, setId, rng) {
+  const set = COLLECTIONS[setId];
+  if (!set) throw new Error(`unknown collection: ${setId}`);
+  const pool = set.items.filter((item) => !state.flags[itemFlag(item)]);
+  const results = [];
+  for (let i = 0; i < PICK_SIZE[setId] && pool.length > 0; i++) {
+    const [item] = pool.splice(Math.floor(rng() * pool.length), 1);
+    results.push(collectItem(state, item));
+  }
+  return results;
+}
+
 // 收得一件收藏項目。重複收得無效；集齊時回傳該套 id 並套用加成。
 export function collectItem(state, item) {
   const setId = SET_OF.get(item);
