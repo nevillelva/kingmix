@@ -12,6 +12,7 @@ import { createHeir, advanceHeirs, tickHeirs, tickCrownPrince } from './successi
 import { tickTutorTraits } from './education.js';
 import { tickTitles } from './titles.js';
 import { isLoyaltyFrozen } from './bonds.js';
+import { collectFromSet } from './collections.js';
 import { tickEconomy, applyPrefectureYield } from './economy.js';
 import { tickCity } from './city.js';
 import { tickHarem, applyWaijiaCoupling, taihouPenalty } from './harem.js';
@@ -101,6 +102,8 @@ function applyEffectsOnly(state, effects, rng) {
       }
     } else if (key === 'war') {
       resolveWar(state, val, rng, (st, eff) => applyEffectsOnly(st, eff, rng));
+    } else if (key === 'collect') {
+      collectFromSet(state, val, rng); // 收藏（見 collections.js）：自該套未收得者抽件
     } else if (key === 'investigate_lowest') {
       if (val) openInvestigationOnLowest(state);
     } else if (key === 'recruit') {
