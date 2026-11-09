@@ -213,6 +213,22 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
   .gauges{gap:6px}
 }
 @media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+/* ── 時段、奏摺滑動、新年年號覆蓋層（gap-ui-slots） ── */
+.opt.sel{border-color:var(--vermilion);box-shadow:inset 0 0 0 1px var(--vermilion)}
+.opts.swipe{touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.swipe-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.swipe-bar .swipe-hint{flex:1 1 90px;font-size:12px;color:var(--ink-soft);text-align:center}
+.slot-kicker{font-size:13px;color:var(--ink-soft);letter-spacing:.1em;margin:0 0 6px}
+.nianhao{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(31,26,23,.72);padding:16px;cursor:pointer}
+.nh-card{background:var(--paper);border:2px solid var(--gold);border-radius:6px;padding:28px 20px;text-align:center;max-width:320px;width:100%;box-sizing:border-box;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.nh-kicker{font-size:14px;color:var(--ink-soft);letter-spacing:.15em}
+.nh-title{font:900 56px/1.25 var(--serif);color:var(--vermilion);margin:10px 0;overflow-wrap:anywhere}
+.nh-sub{font-size:15px;color:var(--ink-soft);margin-bottom:16px}
+.nh-close{margin-top:0}
+@media (prefers-reduced-motion: no-preference){
+  .nianhao{animation:nhIn .4s ease-out both}
+  @keyframes nhIn{from{opacity:0}to{opacity:1}}
+}
 </style>
 </head>
 <body>
@@ -537,7 +553,7 @@ function meter(k){
 }
 // 朝堂的行動卡（僅在無待決案件、尚未駕崩時出現）
 function actionsSection(){
-  return (!pendingCase() && state.alive) ? actionsCard() : '';
+  return (!pendingCase() && state.alive) ? actionsCard() + slotsCard() : '';
 }
 function calendar(){
   document.getElementById('when').textContent = `第${state.dynasty.generation}世 · ${state.year}年${state.month}月 · ${state.age}歲`;
@@ -709,6 +725,7 @@ function renderCourt(){
       </div>`) + actionsSection();
   app.querySelectorAll('[data-i]').forEach(b => b.onclick = () => chooseOption(opts[+b.dataset.i], ev));
   app.querySelectorAll('[data-camp]').forEach(b => b.onclick = () => startEventCampaign(opts[+b.dataset.camp], ev));
+  wireMemorialSwipe(opts.length);
 }
 
 // ── 宮城平面圖：點選宮室即前往對應分頁 ──
@@ -1073,6 +1090,110 @@ function onAgency(e){
 }
 app.addEventListener('click', onAgency);
 
+// ── 時段（gap-ui-slots）：早朝為奏摺卡；午後、夜間各一張擇一卡。
+// 每個選項只映射到既有分頁或朝政行動面板，不消耗行動次數、不改引擎。
+const SLOTS = {
+  afternoon: { name: '午後', opts: [
+    ['audience', '召見大臣', '前往朝臣，面見在朝諸臣', { tab: 'officials' }],
+    ['review', '校閱軍務', '開啟朝政行動的外交面板（宣戰、結盟）', { panel: 'diplo' }],
+    ['garden', '幸御花園', '前往後宮，見諸嬪妃', { tab: 'harem' }],
+  ] },
+  night: { name: '夜間', opts: [
+    ['harem', '後宮', '前往後宮，安排侍寢與嬪妃', { tab: 'harem' }],
+    ['dc', '東廠密報', '前往東廠，閱覽密報與案件', { tab: 'dc' }],
+    ['rest', '休息', '陛下安寢，夜間無事', { feedback: '陛下安寢，夜間無事。' }],
+  ] },
+};
+function slotsCard(){
+  return Object.entries(SLOTS).map(([k, s]) => `<section class="card" data-slot-card="${k}">
+    <h2>${s.name}</h2><p class="slot-kicker">${s.name}時段　・　擇一而行</p>
+    <div class="opts">${s.opts.map(([id, l, h]) => `<button class="opt" data-slot="${k}" data-arg="${id}"><span class="mark">${l.slice(0,1)}</span>
+      <span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span></span></button>`).join('')}</div>
+  </section>`).join('');
+}
+function onSlot(e){
+  const b = e.target.closest('[data-slot]');
+  if (!b || b.disabled || !state || !state.alive) return;
+  const s = SLOTS[b.dataset.slot];
+  const o = s && s.opts.find(x => x[0] === b.dataset.arg);
+  if (!o) return;
+  const t = o[3];
+  panel = null; pick1 = null; resignArmed = false; feedback = t.feedback || '';
+  if (t.tab) tab = t.tab;
+  if (t.panel) { tab = 'court'; panel = t.panel; }
+  render();
+}
+app.addEventListener('click', onSlot);
+
+// ── 奏摺左右滑動（gap-ui-slots）：滑動只改變選取，點擊仍立即裁決；另附按鈕備援 ──
+function wireMemorialSwipe(n){
+  const card = app.querySelector('.memorial');
+  const box = card && card.querySelector('.opts');
+  const body = card && card.querySelector('.mbody');
+  if (!box || !body || n < 1) return;
+  let sel = 0, sx = null, sy = null, swiped = false;
+  const items = () => [...box.querySelectorAll('.opt[data-i]')];
+  const paint = () => items().forEach((el, i) => {
+    el.classList.toggle('sel', i === sel);
+    el.setAttribute('aria-current', i === sel ? 'true' : 'false');
+  });
+  const go = d => { sel = (sel + d + n) % n; paint(); };
+  box.classList.add('swipe');
+  box.addEventListener('pointerdown', e => { if (e.button > 0) return; sx = e.clientX; sy = e.clientY; swiped = false; });
+  box.addEventListener('pointerup', e => {
+    if (sx === null) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    sx = null;
+    if (Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy) * 1.5) { swiped = true; go(dx < 0 ? 1 : -1); }
+  });
+  box.addEventListener('pointercancel', () => { sx = null; });
+  // 滑動結束後的那次 click 不應誤觸裁決
+  box.addEventListener('click', e => { if (swiped) { swiped = false; e.preventDefault(); e.stopPropagation(); } }, true);
+  const bar = document.createElement('div');
+  bar.className = 'swipe-bar';
+  bar.innerHTML = `<button type="button" class="btn ghost mini" data-sw="-1" aria-label="上一項">◀ 上一項</button>
+    <span class="swipe-hint">左右滑動選擇，或點擊直接裁決</span>
+    <button type="button" class="btn ghost mini" data-sw="1" aria-label="下一項">下一項 ▶</button>
+    <button type="button" class="btn zhu mini" data-sw="commit">裁決所選</button>`;
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('[data-sw]');
+    if (!b) return;
+    if (b.dataset.sw === 'commit') { const it = items()[sel]; if (it) it.click(); return; }
+    go(+b.dataset.sw);
+  });
+  body.appendChild(bar);
+  paint();
+}
+
+// ── 新年年號覆蓋層（gap-ui-slots）：每逢一月第一次進入時顯示，點擊或 Esc 關閉；每局每年一次 ──
+// 年號名稱尚未定案，未設定時顯示「新歲」。
+const NIAN_HAO = {};
+const shownNewYear = new Set();
+function showNewYear(){
+  if (!state || !state.alive || state.month !== 1) return;
+  const key = `kingmix.newyear.${seed}.${state.year}`;
+  if (shownNewYear.has(key)) return;
+  shownNewYear.add(key);
+  try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) {}
+  const nh = NIAN_HAO[state.dynasty.generation] || '新歲';
+  const ov = document.createElement('div');
+  ov.className = 'nianhao';
+  ov.setAttribute('role', 'dialog');
+  ov.setAttribute('aria-modal', 'true');
+  ov.setAttribute('aria-label', '新年年號');
+  ov.innerHTML = `<div class="nh-card">
+      <div class="nh-kicker">第${state.dynasty.generation}世 · ${state.year}年</div>
+      <div class="nh-title">${esc(nh)}</div>
+      <div class="nh-sub">元旦改元，萬象更新。</div>
+      <button type="button" class="btn zhu nh-close">點擊繼續</button></div>`;
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); };
+  ov.addEventListener('click', close);
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(ov);
+  ov.querySelector('.nh-close').focus();
+}
+
 const VIEWS = { court: renderCourt, palace: renderPalace, officials: renderOfficials, harem: renderHarem, dc: renderDC, throne: renderThrone };
 function render(){
   topGauges();
@@ -1088,6 +1209,7 @@ function render(){
   renderNav();
   if (tab === 'court' && reviewPending()) { renderReview(); return inkFlash('review'); }
   VIEWS[tab]();
+  showNewYear();
   inkFlash(tab);
 }
 
