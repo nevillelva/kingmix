@@ -86,7 +86,9 @@ test('changeEra costs prestige, updates name and era start, and writes a log ent
   assert.equal(s.stats.prestige, before - ERA_CHANGE_PRESTIGE_COST);
   assert.equal(eraName(s), '承平');
   assert.equal(eraYearText(s), '承平元年');
-  assert.deepEqual(s.era.log.at(-1), { year: 5, month: 4, from: '永和', to: '承平', kind: 'change' });
+  assert.equal(s.chronicle.at(-1).kind, 'era');
+  assert.equal(s.chronicle.at(-1).text, '改元為承平，於 5 年 4 月');
+  assert.deepEqual(s.era.log, []);
 });
 
 test('changeEra is limited to once per 12 months', () => {
@@ -113,7 +115,7 @@ test('changeEra refuses when prestige is insufficient or the name is invalid', (
   s.stats.prestige = 10;
   assert.equal(changeEra(s, '太長的年號名').reason, 'length');
   assert.equal(s.stats.prestige, 10);
-  assert.equal(s.era.log.length, 0);
+  assert.equal(s.chronicle.length, 0);
 });
 
 test('Chinese year labels for 1–99', () => {
