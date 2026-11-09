@@ -63,3 +63,16 @@ export function applyFactionPressure(state) {
   }
   return state;
 }
+
+// 派系打壓（與拉攏對稱）：所打壓之派 -10，其他兩派各 +5；勢力限制於 0–100。
+export const SUPPRESS_TARGET_DELTA = -10;
+export const SUPPRESS_OTHER_DELTA = 5;
+
+export function suppressFaction(state, id) {
+  if (!(id in state.factions)) throw new Error(`unknown faction: ${id}`);
+  for (const k of Object.keys(state.factions)) {
+    const delta = k === id ? SUPPRESS_TARGET_DELTA : SUPPRESS_OTHER_DELTA;
+    state.factions[k] = Math.min(100, Math.max(0, state.factions[k] + delta));
+  }
+  return state;
+}

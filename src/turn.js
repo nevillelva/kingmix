@@ -5,7 +5,7 @@ import { makeRng } from './rng.js';
 import { officeHolder } from './offices.js';
 import { generateOfficial } from './officials.js';
 import { attachPerson, applyTraitEffects, generateConsort } from './people.js';
-import { openInvestigationOnLowest, tickDongchang } from './dongchang.js';
+import { openInvestigationOnLowest, tickDongchang, applyTyrannyDrift } from './dongchang.js';
 import { POLICIES } from './policy.js';
 import { resolveWar } from './war.js';
 import { createHeir, advanceHeirs, tickHeirs, tickCrownPrince } from './succession.js';
@@ -168,6 +168,7 @@ export function monthlyTick(state, rng) {
 
   applyTraitEffects(state);
 
+  applyTyrannyDrift(state);
   tickDongchang(state, r);
   tickHeirs(state);
   tickCrownPrince(state);

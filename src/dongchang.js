@@ -4,11 +4,35 @@
 import { setStat } from './state.js';
 
 export const DC_ACTIONS = ['warn', 'punish', 'prison'];
+export const MAX_ACTIVE_CASES = 2; // 東廠同時最多進行的案件數（未結案者皆計入）
+export const TYRANNY_GAIN = Object.freeze({ punish: 4, prison: 3 }); // 責罰、下獄累積暴政
+export const TYRANNY_MAX = 100;
+export const TYRANNY_QINGLIU_THRESHOLD = 30; // 暴政達此值，清流好感每月下降
+export const TYRANNY_QINGLIU_DRAIN = 1;
+
+export function activeCaseCount(state) {
+  return state.dongchang.cases.filter((c) => c.status !== 'closed').length;
+}
+
+export function addTyranny(state, amount) {
+  const v = Math.min(TYRANNY_MAX, Math.max(0, (state.tyranny || 0) + amount));
+  state.tyranny = Math.round(v * 100) / 100;
+  return state.tyranny;
+}
+
+// 每月結算：暴政過高時清流好感下降（月結，不另外觸發）。
+export function applyTyrannyDrift(state) {
+  if ((state.tyranny || 0) >= TYRANNY_QINGLIU_THRESHOLD) {
+    state.factions.qingliu = Math.max(0, state.factions.qingliu - TYRANNY_QINGLIU_DRAIN);
+  }
+  return state;
+}
 
 export function openInvestigation(state, officialId) {
   const dc = state.dongchang;
   const active = dc.cases.some((c) => c.officialId === officialId && c.status !== 'closed');
   if (active) return null;
+  if (activeCaseCount(state) >= MAX_ACTIVE_CASES) return null;
   const c = {
     id: `DC${dc.nextId}`,
     officialId,
@@ -73,6 +97,7 @@ export function applyDongchangAction(state, caseId, action) {
       setStat(state, 'treasury', state.stats.treasury + c.level * 25 + Math.round((100 - official.abilities.virtue) / 4));
     }
     setStat(state, 'prestige', state.stats.prestige + 5);
+    addTyranny(state, TYRANNY_GAIN.punish);
     c.status = 'closed';
     c.outcome = 'punished';
   } else if (action === 'prison') {
@@ -80,6 +105,7 @@ export function applyDongchangAction(state, caseId, action) {
     c.status = 'imprisoned';
     c.imprisonedTurn = state.turn;
     c.outcome = 'imprisoned';
+    addTyranny(state, TYRANNY_GAIN.prison);
   } else {
     throw new Error(`unknown dongchang action: ${action}`);
   }

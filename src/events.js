@@ -22,6 +22,9 @@ export function isEligible(state, event, rng) {
       case 'flag': if (!state.flags[val]) return false; break;
       case 'consorts_gt': if (!(state.consorts.length > val)) return false; break;
       case 'heirs_gt': if (!(state.heirs.length > val)) return false; break;
+      case 'policy': if (state.policy !== val) return false; break;
+      case 'tyranny_gt': if (!((state.tyranny || 0) > val)) return false; break;
+      case 'tyranny_lt': if (!((state.tyranny || 0) < val)) return false; break;
       default: {
         // 通用數值條件：<stat>_lt / <stat>_gt，例如 prestige_lt、commerce_gt
         const m = key.match(/^([a-z]+)_(lt|gt)$/);
