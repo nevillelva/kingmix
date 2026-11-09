@@ -3,6 +3,7 @@
 
 import { officeHolder } from './offices.js';
 import { POLICIES } from './policy.js';
+import { warDefenseMultiplier } from './city.js';
 
 // 己方戰力的名目值（不含擲骰）：軍備、武略、兵部/大將武力與國策修正。
 export function nominalStrength(state) {
@@ -25,7 +26,7 @@ export const EVENT_ENEMY_SPREAD = 0.3;
 // 勢均力敵的戰前刺探加成：出兵前已探知敵情（兵部偵查），敵方有效強度 × (1 − EVEN_EDGE × w(ratio))。
 // w 在 ratio 0.9–1.1 為 1，於 0.8–0.9 與 1.1–1.2 線性遞減至 0；1.2 以上（含強敵 ≥1.3）完全不受影響。
 // 連續遞減可保證敵強度單調（強敵不會因跨過區間邊界而變得較弱）。
-export const EVEN_EDGE = 0.05;
+export const EVEN_EDGE = 0.08;
 export function evenWeight(ratio) {
   if (!(ratio > 0.8) || ratio >= 1.2) return 0;
   if (ratio < 0.9) return (ratio - 0.8) / 0.1;
@@ -36,9 +37,11 @@ export function evenWeight(ratio) {
 // spec: { strength, reward, loss }；reward/loss 為 effects 物件
 // 事件戰爭同時擲己方與敵方戰力，敵強度愈高勝率愈低（單調）。
 // 記錄的 ratio 為名目比（敵方名目強度 ÷ 己方名目戰力），供校準用。
+// spec.prefecture（可省略）：戰事所在州府，其城防加成己方戰力（見 city.js warDefenseMultiplier）；省略則取全國平均。
 export function resolveWar(state, spec, rng, applyEffects) {
   const nominal = nominalStrength(state);
-  const power = ourStrength(state, rng);
+  const defense = warDefenseMultiplier(state, spec.prefecture);
+  const power = ourStrength(state, rng) * defense;
   const ratio = nominal > 0 ? spec.strength / nominal : null;
   const edge = 1 - EVEN_EDGE * (ratio === null ? 0 : evenWeight(ratio));
   const enemy = spec.strength * (1 + (rng() * 2 - 1) * EVENT_ENEMY_SPREAD) * edge;
@@ -52,6 +55,8 @@ export function resolveWar(state, spec, rng, applyEffects) {
     power: Math.round(power),
     won,
     ratio: ratio === null ? null : Math.round(ratio * 1000) / 1000,
+    defense: Math.round(defense * 1000) / 1000,
+    ...(spec.prefecture ? { prefecture: spec.prefecture } : {}),
   });
   return won;
 }

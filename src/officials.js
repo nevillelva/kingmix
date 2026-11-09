@@ -27,6 +27,9 @@ export function generateOfficial(rng, id, opts = {}) {
   };
 }
 
+// 朝臣與知府：知府（帶 prefecture 欄位）為地方官，不參與「忠誠最低」等朝堂事件的對象選取。
+export const isCourtOfficial = (o) => !o.prefecture;
+
 // 回傳未達標的需求清單；loyalty 為忠誠，其餘為能力。
 export function unmetRequirements(official, requires) {
   const gaps = [];

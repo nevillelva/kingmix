@@ -15,8 +15,11 @@ import { unmetRequirements } from './officials.js';
 import { OFFICES } from './offices.js';
 import { autoCampaignStep } from './campaign.js';
 import { monthlyDrift } from './diplomacy.js';
+import { COLLECTIONS, collectionProgress } from './collections.js';
+import { autoRepairCities, ensureCity } from './city.js';
+import { PREFECTURE_DEFS, prefectOfficeKey } from './economy.js';
 
-const AUTO_OFFICES = ['chancellor', 'revenue', 'works', 'war', 'tutor'];
+const AUTO_OFFICES = ['chancellor', 'revenue', 'works', 'war', 'tutor', ...PREFECTURE_DEFS.map((d) => prefectOfficeKey(d.id))];
 
 // 劇本對外 id（與 scenarios.js 的內部 id 對應）；內部 id 亦接受。
 export const SCENARIO_ALIASES = Object.freeze({
@@ -105,6 +108,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
     }
     const { year, month } = state;
     autoAppoint(state);
+    autoRepairCities(state); // 工部修繕城池：城防偏低且國庫充裕時，每月至多修繕一府
     const pending = state.dongchang.cases.find((c) => c.status === 'leverage');
     // 連鎖事件先取出（每月至多一則）；東廠有把柄時該月略過，不補發。
     const chainId = takeChain(state);
@@ -180,6 +184,12 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
     wars: state.wars,
     campaignSteps,
     diplomacy: countDiplomacy(state.diplomacyLog),
+    // 收藏集齊狀況（稽核用）：每套的件數與是否集齊
+    // 州府城防（稽核用）：各府城防與最近修繕年
+    prefectures: ensureCity(state).map((p) => ({ id: p.id, defense: Math.round(p.defense), repairedYear: p.repairedYear })),
+    // 君臣相得者（稽核用）：解鎖者 id 與其當前忠誠
+    bonded: state.officials.filter((o) => state.bonds?.unlocked?.[o.id]).map((o) => ({ id: o.id, loyalty: o.loyalty, prefecture: o.prefecture ?? null })),
+    collections: Object.fromEntries(Object.keys(COLLECTIONS).map((id) => [id, collectionProgress(state, id)])),
     warningCount: state.warnings.length,
     warningBreakdown: state.warnings.reduce((acc, w) => { const k = `${w.key}:${w.reason}`; acc[k] = (acc[k] || 0) + 1; return acc; }, {}),
     log,

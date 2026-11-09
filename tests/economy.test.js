@@ -4,7 +4,7 @@ import { createInitialState, BOUNDS } from '../src/state.js';
 import { monthlyTick } from '../src/turn.js';
 import {
   TAX_TIERS, TAX_EFFECTS, PREFECTURE_DEFS, setTaxTier, tickEconomy,
-  createPrefectures, administrativeEfficiency, ensureEconomy,
+  createPrefectures, administrativeEfficiency, ensureEconomy, VACANT_YIELD,
 } from '../src/economy.js';
 
 test('default tax tier is 中 and its effect is empty (neutral)', () => {
@@ -75,10 +75,42 @@ test('six prefectures, each with a character and a governor', () => {
   assert.equal(new Set(PREFECTURE_DEFS.map((p) => p.id)).size, 6);
   for (const p of PREFECTURE_DEFS) assert.ok(['farming', 'trade'].includes(p.character));
   const s = createInitialState('t');
-  assert.equal(s.prefectures, undefined);
+  // 開局即建立六府，知府併入官員名單（同一人、同一官職）
+  assert.equal(s.prefectures.length, 6);
   tickEconomy(s);
   assert.equal(s.prefectures.length, 6);
   assert.ok(s.prefectures.every((p) => p.governor.name && p.governor.abilities.politics >= 40));
+  for (const p of s.prefectures) {
+    const gov = s.officials.find((o) => o.office === `prefect:${p.id}`);
+    assert.ok(gov, `${p.id} has a governor on the official list`);
+    assert.equal(gov.name, p.governor.name);
+  }
+});
+
+test('governors are officials: six of them, one per prefecture, and all appointable', () => {
+  const s = createInitialState('gov-list');
+  const govs = s.officials.filter((o) => o.prefecture);
+  assert.equal(govs.length, 6);
+  assert.equal(new Set(govs.map((o) => o.office)).size, 6);
+  for (const o of govs) {
+    assert.ok(o.traits && o.traits.length >= 2, 'governors carry traits like other officials');
+    assert.ok(typeof o.personName === 'string' && o.personName === o.name);
+  }
+  // 知府不是朝臣：不被「忠誠最低」類事件選中
+  assert.ok(s.officials.filter((o) => !o.prefecture).length === 4);
+});
+
+test('a vacant prefecture yields at the vacancy rate; an appointed governor restores the normal yield', () => {
+  const s = createInitialState('vacancy');
+  const holder = s.officials.find((o) => o.office === 'prefect:hedong');
+  holder.office = null;
+  tickEconomy(s);
+  const hedong = s.prefectures.find((p) => p.id === 'hedong');
+  assert.equal(hedong.yield, VACANT_YIELD);
+  assert.equal(hedong.governor, null);
+  holder.office = 'prefect:hedong';
+  tickEconomy(s);
+  assert.equal(hedong.yield, Math.round((holder.abilities.politics / 40) * 100) / 100);
 });
 
 test('governors are deterministic per seed and differ across seeds', () => {

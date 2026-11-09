@@ -9,7 +9,7 @@ import { officeHolder } from './offices.js';
 export const CITY_DEFENSE_INIT = 50;
 export const CITY_DEFENSE_MAX = 100;
 export const CITY_DECAY = 0.3; // 每月風化
-export const REPAIR_COST = 30; // 國庫
+export const REPAIR_COST = 20; // 國庫
 export const REPAIR_BASE = 12; // 無工部尚書時的基礎修繕量
 export const REPAIR_PEOPLE = 1; // 民心
 export const DEFENSE_HOLD_SCALE = 500; // 堅守戰力倍率 = 1 + (平均城防 − 50) / 500，範圍 0.9–1.1
@@ -52,6 +52,32 @@ export function tickCity(state) {
     pref.defense = Math.max(0, pref.defense - CITY_DECAY);
   }
   return state;
+}
+
+// 事件戰爭的城防加成：所在府城防相對 50 的偏差，換算為己方戰力的 ±5%（城防 100 為 +5%，0 為 −5%）。
+// 未指定府（prefId 缺省）時取全國平均。城防僅影響事件戰爭（war.js），戰役堅守見 defenseHoldMultiplier。
+export const WAR_DEFENSE_SCALE = 0.05;
+export function warDefenseMultiplier(state, prefId) {
+  const prefs = ensureCity(state);
+  const pref = prefId ? prefs.find((p) => p.id === prefId) : null;
+  const defense = pref ? pref.defense : averageDefense(state);
+  const clamped = Math.min(CITY_DEFENSE_MAX, Math.max(0, defense));
+  return 1 + WAR_DEFENSE_SCALE * (clamped - CITY_DEFENSE_INIT) / CITY_DEFENSE_INIT;
+}
+
+// 自動修繕（sim 每月）：城防低於 AUTO_REPAIR_BELOW 的府中，取城防最低者修繕一府；國庫需留有 AUTO_REPAIR_RESERVE。
+// 每月至多修繕一府；每府每年仍受 repairCity 的年度限制。回傳修繕的府 id，無則 null。
+export const AUTO_REPAIR_BELOW = 70;
+export const AUTO_REPAIR_RESERVE = 250;
+export function autoRepairCities(state) {
+  if (state.stats.treasury < AUTO_REPAIR_RESERVE) return null;
+  const candidates = [...ensureCity(state)]
+    .filter((p) => p.defense < AUTO_REPAIR_BELOW && p.repairedYear !== state.year)
+    .sort((a, b) => a.defense - b.defense);
+  for (const pref of candidates) {
+    if (repairCity(state, pref.id).ok) return pref.id;
+  }
+  return null;
 }
 
 export function averageDefense(state) {

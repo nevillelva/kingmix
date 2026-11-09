@@ -25,6 +25,13 @@ export function chronicleLine(c) {
       tag: ASSASSIN_OUTCOME[c.outcome] ?? '—',
     };
   }
+  if (c.kind === 'remonstrance') {
+    const died = c.outcome === 'died';
+    return {
+      text: `${orDash(c.name)}${died ? '於殿前死諫' : '進諫，陛下納之'} · ${orDash(c.year)}年${orDash(c.month)}月`,
+      tag: died ? '死諫' : '納諫',
+    };
+  }
   if (c.kind === 'heir_illness') {
     return { text: `皇子${orDash(c.name)}染疾 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '患病' };
   }

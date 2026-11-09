@@ -2,14 +2,20 @@
 // 不達標仍可任命（保留玩家選擇權），但會記錄 unfit_office 警告。
 
 import { unmetRequirements } from './officials.js';
+import { PREFECTURE_DEFS, prefectOfficeKey } from './economy.js';
+
+// 六府知府各為一個官職（prefect:<州府 id>），任免方式與其他官職相同。
+const PREFECT_OFFICES = Object.fromEntries(
+  PREFECTURE_DEFS.map((def) => [prefectOfficeKey(def.id), { name: `${def.name}知府`, requires: { intellect: 60, politics: 60, virtue: 60 } }]),
+);
 
 export const OFFICES = {
   chancellor: { name: '丞相', requires: { intellect: 60, politics: 60, loyalty: 80 } },
   revenue: { name: '戶部尚書', requires: { intellect: 60, politics: 60, virtue: 60 } },
   works: { name: '工部尚書', requires: { intellect: 60 } },
   war: { name: '兵部尚書', requires: { intellect: 60 } },
-  prefect: { name: '知府', requires: { intellect: 60, politics: 60, virtue: 60 } },
   tutor: { name: '太傅', requires: { intellect: 60, martial: 40, virtue: 60 } },
+  ...PREFECT_OFFICES,
 };
 
 export function officeHolder(state, key) {
