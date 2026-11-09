@@ -6,7 +6,7 @@ import { setStat } from './state.js';
 export const DC_ACTIONS = ['warn', 'punish', 'prison'];
 export const MAX_ACTIVE_CASES = 2; // 東廠同時最多進行的案件數（未結案者皆計入）
 export const DC_ACTION_CAP = 8; // 每局東廠處置行動上限（開案不計入）；達上限後一律改為告誡
-export const TYRANNY_GAIN = Object.freeze({ punish: 4, prison: 3 }); // 責罰、下獄累積暴政
+export const TYRANNY_GAIN = Object.freeze({ punish: 5, prison: 4 }); // 責罰、下獄累積暴政（校準：刺殺來源門檻降至 30 後，暴政需略快累積）
 export const TYRANNY_MAX = 100;
 export const TYRANNY_QINGLIU_THRESHOLD = 30; // 暴政達此值，清流好感每月下降
 export const TYRANNY_QINGLIU_DRAIN = 1;

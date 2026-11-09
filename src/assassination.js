@@ -1,5 +1,5 @@
 // 刺殺引擎：每月依三種來源計算觸發機率（確定性，種子 [seed, 年, 月, 'assassin']）。
-//   tyranny  暴政：暴政高於 E305/E306 的門檻（40）時，機率隨暴政上升。
+//   tyranny  暴政：暴政高於刺殺專用門檻（30，低於 E305/E306 的 40）時，機率隨暴政上升。
 //   remnant  前朝遺臣：王朝更替後（dynasty.generation > 1）每月有固定機率。
 //   court    朝堂江湖：派系強度高、且忠誠低的官員多時機率上升。
 // 每月至多一起刺殺（來源依上列順序取第一個觸發者）。目標為太子、皇帝或一名官員，結果為擋下、受傷或死亡。
@@ -12,7 +12,9 @@ import { scheduleChain } from './chains.js';
 import { eventAllowed } from './events.js';
 
 export const ASSASSIN_SOURCES = Object.freeze({ tyranny: '暴政', remnant: '前朝遺臣', court: '朝堂江湖' });
-export const ASSASSIN_TYRANNY_THRESHOLD = 40; // 與 E305/E306 的暴政門檻一致
+// 刺殺來源專用門檻：標準平衡局暴政最高約 31，原門檻 40 使此來源從未觸發。
+// 無頭模擬 600 月（big1..200 校準、hold1..200 驗證）：30 + 暴政累積（見 dongchang.js TYRANNY_GAIN）→ 來源觸發局數約 2%–2.5%。
+export const ASSASSIN_TYRANNY_THRESHOLD = 30;
 export const ASSASSIN_LOW_LOYALTY = 50; // 忠誠低於此值視為「離心」官員
 export const ASSASSIN_RATE = Object.freeze({ tyranny: 0.03, remnant: 0.002, court: 0.012 }); // 月機率上限（暫定，待模擬校準）
 export const ASSASSIN_INJURY = 12; // 皇帝受傷時健康損耗

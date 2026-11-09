@@ -35,13 +35,13 @@ test('punish accumulates tyranny', () => {
   const s = leverageCase();
   assert.equal(s.tyranny, 0);
   applyDongchangAction(s, 'DC1', 'punish');
-  assert.equal(s.tyranny, 4);
+  assert.equal(s.tyranny, 5);
 });
 
 test('prison accumulates tyranny', () => {
   const s = leverageCase();
   applyDongchangAction(s, 'DC1', 'prison');
-  assert.equal(s.tyranny, 3);
+  assert.equal(s.tyranny, 4);
 });
 
 test('warn does not accumulate tyranny', () => {
