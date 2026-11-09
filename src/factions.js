@@ -76,3 +76,16 @@ export function suppressFaction(state, id) {
   }
   return state;
 }
+
+// 拉攏（與打壓對稱）：所拉攏之派 +10，其他兩派各 -5；勢力限制於 0–100。
+export const RALLY_TARGET_DELTA = 10;
+export const RALLY_OTHER_DELTA = -5;
+
+export function rallyFaction(state, id) {
+  if (!(id in state.factions)) throw new Error(`unknown faction: ${id}`);
+  for (const k of Object.keys(state.factions)) {
+    const delta = k === id ? RALLY_TARGET_DELTA : RALLY_OTHER_DELTA;
+    state.factions[k] = Math.min(100, Math.max(0, state.factions[k] + delta));
+  }
+  return state;
+}

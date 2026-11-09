@@ -43,3 +43,9 @@ export const FACTION_NEUTRAL = 33; // 同 state.js FACTION_BASE，此處獨立�
 export function loyaltySafeInfluence(ambition) {
   return FACTION_NEUTRAL + ambition / 2;
 }
+
+// 忠誠安全線判定（介面顯示用）：回傳安全線、本派勢力與是否達標。
+export function loyaltySafetyStatus(official, influence) {
+  const need = loyaltySafeInfluence(official.ambition);
+  return { need, influence, ok: influence >= need };
+}
