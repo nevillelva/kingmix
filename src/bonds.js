@@ -1,9 +1,9 @@
-// 君臣羈絆：同一官員與皇帝共歷 5 件事件後，解鎖「君臣相得」。
+// 君臣羈絆：同一官員與皇帝共歷 2 件事件後，解鎖「君臣相得」。
 // 相得的官員忠誠不再每月流失；進諫時仍有風險殞命。數值為暫定。
 // 注意：事件本身不帶官員 ID，共歷事件須由呼叫端明確 recordSharedEvent。
 
 export const BOND_NAME = '君臣相得';
-export const BOND_THRESHOLD = 5;
+export const BOND_THRESHOLD = 2;
 export const REMONSTRATE_DEATH_CHANCE = 0.25;
 
 function ensureBonds(state) {

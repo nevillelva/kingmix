@@ -9821,7 +9821,7 @@
       "speaker": "諫臣",
       "narrative": "君臣相得之臣，近日屢諫不納，忠誠已見動搖。今叩首殿前，言若不納，願以死明志，請陛下速決。",
       "when": {
-        "bonded_loyalty_lt": 60
+        "bonded_loyalty_lt": 75
       },
       "options": [
         {
