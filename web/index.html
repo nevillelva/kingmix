@@ -255,9 +255,11 @@ import { isAvailable, recordEvent, EVENT_MAX_PER_RUN } from './src/events.js';
 import { makeRng } from './src/rng.js';
 import { applyOption, afterOption, monthlyTick, advanceMonth, AFTER_OPTION_KEYS } from './src/turn.js';
 import { takeChain } from './src/chains.js';
-import { applyDongchangAction, DC_ACTIONS, openInvestigation, MAX_ACTIVE_CASES, activeCaseCount } from './src/dongchang.js';
+import { applyDongchangAction, DC_ACTIONS, openInvestigation, MAX_ACTIVE_CASES, activeCaseCount, tyrannyStatus } from './src/dongchang.js';
 import { assignOffice, OFFICES } from './src/offices.js';
-import { POLICIES, POLICY_KEYS, changePolicy, policyLockRemaining, POLICY_CHANGE_PRESTIGE_COST } from './src/policy.js';
+import { POLICIES, POLICY_KEYS, changePolicy, policyLockRemaining, POLICY_CHANGE_PRESTIGE_COST, setAccessionPolicies, ACCESSION_POLICY_MAX } from './src/policy.js';
+import { holdExam, examRemaining, EXAM_INTERVAL_TURNS } from './src/exam.js';
+import { loyaltySafeInfluence } from './src/officials.js';
 import { eligibleCrownHeirs, heirFaction, chooseCrownPrince, CHANGE_CROWN_PRINCE_PRESTIGE_COST } from './src/heirs-choice.js';
 import { pickEvent, pickSecondMemorial, autoAppoint } from './src/sim.js';
 import { tryAccession } from './src/succession.js';
@@ -308,6 +310,7 @@ const REASON = { busy:'已有戰事在進行', unknown:'無此鄰國', treasury:
 
 let state = null, seed = '', tab = 'court', events = [];
 let panel = null, pick1 = null, feedback = '', resignArmed = false, reviewedCount = 0;
+let accPolicies = ['agrarian']; // 即位國策（1–2 條，第一條為主策）
 const app = document.getElementById('app');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const rng = (...parts) => makeRng([seed, ...parts]);
@@ -399,15 +402,17 @@ function inkFlash(key){
   ink.classList.remove('go'); void ink.offsetWidth; ink.classList.add('go');
 }
 
-function newGame(s, scenId, eraRaw){
+function newGame(s, scenId, eraRaw, pols){
   seed = s || String(Math.floor(Math.random()*1e9));
-  const opts = { policy:'agrarian', era: eraRaw };
+  const list = pols && pols.length ? pols : ['agrarian'];
+  const opts = { policy: list[0], era: eraRaw };
   try {
     state = scenId ? createScenarioState(seed, scenId, opts) : createInitialState(seed, opts);
   } catch (e) {
     state = createInitialState(seed, opts);
     feedback = '本紀劇本載入失敗，已改為一般開局。';
   }
+  setAccessionPolicies(state, list);
   reviewedCount = 0;
   save(); tab = 'court'; render();
 }
@@ -632,6 +637,16 @@ function renderNav(){
   document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; resignArmed = false; render(); });
 }
 
+function paintAccPolicies(){
+  const box = document.getElementById('acc-policy');
+  if (!box) return;
+  box.innerHTML = POLICY_KEYS.map(k => {
+    const i = accPolicies.indexOf(k), on = i >= 0;
+    const tag = on ? (i === 0 ? '主策：' : '輔策：') : '';
+    return `<button type="button" class="btn ${on ? 'zhu' : 'ghost'}" data-pol="${k}" aria-pressed="${on}">${tag}${POLICIES[k].name}</button>`;
+  }).join('');
+  document.getElementById('acc-policy-hint').textContent = `已選 ${accPolicies.length} / ${ACCESSION_POLICY_MAX} 條。第一條為主策；輔策效果減半（暫定）。`;
+}
 function renderStart(){
   const saved = load();
   const cs = cloudSave();
@@ -653,10 +668,26 @@ function renderStart(){
       <label class="lbl" for="scen">本紀劇本（選用）</label>
       <select class="seed" id="scen"><option value="">一般開局（不選劇本）</option>${scenOpts}</select>
       <p class="sub" id="scen-desc" style="margin:8px 0 0">不選劇本，即為自由治國的一般開局。</p>
+      <label class="lbl">即位國策（選 1–2 條）</label>
+      <div class="opts" id="acc-policy" style="grid-template-columns:1fr 1fr;margin:0"></div>
+      <p class="sub" id="acc-policy-hint" style="margin:8px 0 0"></p>
       <div style="margin-top:14px"><button class="btn zhu" id="start">開始新局</button>
       ${cs && cs.state ? `<button class="btn ghost" id="ccont">繼續雲端進度（${new Date(cs.savedAt).toLocaleString('zh-TW')}）</button>` : ''}
       ${saved && saved.state ? '<button class="btn ghost" id="cont">繼續本機進度</button>' : ''}</div>
     </section>`;
+  paintAccPolicies();
+  document.getElementById('acc-policy').onclick = e => {
+    const b = e.target.closest('[data-pol]');
+    if (!b) return;
+    const k = b.dataset.pol, hint = document.getElementById('acc-policy-hint');
+    if (accPolicies.includes(k)) {
+      if (accPolicies.length === 1) { hint.textContent = '至少需保留一條國策。'; return; }
+      accPolicies = accPolicies.filter(x => x !== k);
+    } else if (accPolicies.length < ACCESSION_POLICY_MAX) {
+      accPolicies = [...accPolicies, k];
+    } else { hint.textContent = `最多選 ${ACCESSION_POLICY_MAX} 條，請先取消一條。`; return; }
+    paintAccPolicies();
+  };
   const scenSel = document.getElementById('scen');
   scenSel.onchange = () => {
     const d = SCENARIOS[scenSel.value];
@@ -670,7 +701,7 @@ function renderStart(){
       const v = validateEra(raw);
       if (!v.ok) { eraErr.textContent = ERA_REASON_TEXT[v.reason]; eraErr.hidden = false; return; }
     }
-    newGame(document.getElementById('seed').value.trim(), scenSel.value, raw);
+    newGame(document.getElementById('seed').value.trim(), scenSel.value, raw, accPolicies.slice());
   };
   const c = document.getElementById('cont');
   if (c) c.onclick = () => { seed = saved.seed; state = saved.state; migrateEraLog(state); reviewedCount = (state.annals||[]).length; render(); };
@@ -890,6 +921,13 @@ function pressureLine(){
   return parts.length ? `<div class="sub" style="margin:10px 0 0">${parts.map(esc).join('<br>')}</div>` : '';
 }
 
+// 忠誠安全線：本派勢力達 33 + 野心/2 時，忠誠不再每月下滑；未達則流失（見 turn.js 忠誠漂移）。
+function safetyLine(o){
+  const infl = state.factions[o.faction] ?? 0;
+  const need = loyaltySafeInfluence(o.ambition);
+  const ok = infl >= need;
+  return `<div class="loy">忠誠安全線：${FAC(o.faction).l}勢 ${Math.round(infl)} ／ 需 ${Math.ceil(need)}，${ok ? '已達，忠誠穩定' : '未達，忠誠每月流失'}</div>`;
+}
 function personCard(o){
   const f = FAC(o.faction);
   const bonded = isBonded(state, o.id);
@@ -902,6 +940,7 @@ function personCard(o){
         <div class="tags"><span class="tag" style="color:${f.c};border-color:${f.c}">${esc(f.l)}</span>
         <span class="tag">${o.office ? esc(OFFICE[o.office] || o.office) : '閒置'}</span>${bonded ? '<span class="tag bond">君臣相得</span>' : ''}</div></div></div>
     <div class="loy">忠誠 <b style="color:${o.loyalty<40?'var(--gold)':'var(--green)'}">${Math.round(o.loyalty)}</b> · 野心 ${Math.round(o.ambition)}</div>
+    ${bonded ? '' : safetyLine(o)}
     <div class="abil">${Object.keys(ABIL).map(k => `<div>${ABIL[k]}<b>${o.abilities?.[k] ?? '—'}</b></div>`).join('')}</div>
     ${traits ? `<div class="tags">${traits}</div>` : ''}
     ${bonded ? `<div><button class="btn ghost mini" data-act="remon" data-arg="${esc(o.id)}" ${dis}>進諫</button></div>` : shared ? `<div class="loy">共歷 ${shared} / ${BOND_THRESHOLD}</div>` : ''}
@@ -1013,6 +1052,9 @@ function renderThrone(){
       <div class="meters">
         <div class="meter"><div class="row1"><span>年歲</span><b>${state.age}</b></div></div>
         <div class="meter"><div class="row1"><span>征戰</span><b>${state.wars.length} 次 · 勝 ${wins}</b></div></div>
+        <div class="meter"><div class="row1"><span>暴政</span><b>${tyrannyStatus(state).value} / ${tyrannyStatus(state).max}</b></div>
+          <div class="track"><div class="fill ${tyrannyStatus(state).qingliuDrainOn ? 'warn' : ''}" style="width:${tyrannyStatus(state).value}%"></div></div>
+          <div class="sub" style="margin:6px 0 0">責罰、下獄會累積暴政。暴政達 ${tyrannyStatus(state).threshold}，清流勢力每月下降 1${tyrannyStatus(state).qingliuDrainOn ? '（目前生效）' : ''}。刺殺事件尚未實作，高暴政目前不會觸發刺殺。</div></div>
       </div>
       <div style="margin-top:16px"><button class="btn ${resignArmed ? 'zhu' : 'ghost'}" id="resign">${resignArmed ? "再按一次，確定禪位" : "禪位予皇子"}</button></div>
     </section>
@@ -1050,11 +1092,19 @@ function actionsCard(){
       ['policy','變更國策','改變每月的施政修正'],
       ['era','改元','更改年號，耗威儀 2 點，每 12 個月一次'],
       ['heir','立儲','擇一成年皇子立為太子；已立者可改立，耗威儀'],
+      ['exam','開科取士',''],
       ['faction','拉攏派系','提升一派影響力，其他兩派會下降'],
       ['suppress','打壓派系','壓抑一派影響力，其他兩派會上升'],
       ['tax','調整稅制','三級稅制：低稅養民，高稅裕庫'],
       ['diplo','外交','聯姻、朝貢、結盟，或宣戰'],
-    ].map(([k,l,h]) => `<button class="opt" data-act="open" data-arg="${k}" ${dis}><span class="mark">＋</span><span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span></span></button>`).join('') + `</div>`;
+    ].map(([k,l,h]) => {
+      if (k === 'exam') {
+        const r = examRemaining(state);
+        const hint = r > 0 ? `每 ${EXAM_INTERVAL_TURNS} 個月一次，尚餘 ${r} 月` : `每 ${EXAM_INTERVAL_TURNS} 個月一次，招募 1–2 名進士`;
+        return `<button class="opt" data-act="exam" ${dis || (r > 0 ? 'disabled' : '')}><span class="mark">科</span><span class="otxt"><span class="label">${l}</span><span class="hint">${hint}</span></span></button>`;
+      }
+      return `<button class="opt" data-act="open" data-arg="${k}" ${dis}><span class="mark">＋</span><span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span></span></button>`;
+    }).join('') + `</div>`;
   } else if (panel === 'appoint') {
     const empty = Object.keys(OFFICES).filter(k => !state.officials.some(o => o.office === k));
     body = `<div class="sub">選擇要補任的官職</div><div class="opts">` + (empty.length
@@ -1161,6 +1211,15 @@ function onAgency(e){
   if (a.startsWith('camp-')) return campAct(a, v);
   if (a === 'close') { panel = null; pick1 = null; return render(); }
   if (a === 'open') { panel = v; pick1 = null; return render(); }
+  if (a === 'exam') {
+    const r = holdExam(state, rng('exam', state.year, state.month));
+    if (!r.ok) {
+      feedback = r.reason === 'cooldown' ? `開科每 ${EXAM_INTERVAL_TURNS} 月一次，尚餘 ${r.remaining} 月。` : '朝中官員已滿，無法開科。';
+      save(); return render();
+    }
+    const names = r.added.map(id => { const o = state.officials.find(x => x.id === id); return o ? (o.personName || o.name) : id; }).join('、');
+    return useAction(`開科取士，新進士${names}入朝，可任官。`);
+  }
   if (a === 'office') { pick1 = v; panel = 'appoint2'; return render(); }
   if (a === 'assign') {
     const off = state.officials.find(o => o.id === v);
@@ -1253,7 +1312,7 @@ app.addEventListener('click', onAgency);
 // ── 時段（gap-ui-slots）：早朝為奏摺卡；午後、夜間各一張擇一卡。
 // 每個選項只映射到既有分頁或朝政行動面板，不消耗行動次數、不改引擎。
 const SLOTS = {
-  afternoon: { name: '午後', opts: [
+  afternoon: { name: '午後', pick: '三擇一', opts: [
     ['audience', '召見大臣', '前往朝臣，面見在朝諸臣', { tab: 'officials' }],
     ['review', '校閱軍務', '開啟朝政行動的外交面板（宣戰、結盟）', { panel: 'diplo' }],
     ['garden', '幸御花園', '前往後宮，見諸嬪妃', { tab: 'harem' }],
@@ -1266,7 +1325,7 @@ const SLOTS = {
 };
 function slotsCard(){
   return Object.entries(SLOTS).map(([k, s]) => `<section class="card" data-slot-card="${k}">
-    <h2>${s.name}</h2><p class="slot-kicker">${s.name}時段　・　擇一而行</p>
+    <h2>${s.name}</h2><p class="slot-kicker">${s.name}時段　・　${s.pick || '擇一而行'}</p>
     <div class="opts">${s.opts.map(([id, l, h]) => `<button class="opt" data-slot="${k}" data-arg="${id}"><span class="mark">${l.slice(0,1)}</span>
       <span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span></span></button>`).join('')}</div>
   </section>`).join('');

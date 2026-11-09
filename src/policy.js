@@ -52,3 +52,32 @@ export function changePolicy(state, key) {
   state.policyMeta = { lastChangeTurn: state.turn, changes: meta.changes + 1 };
   return { ok: true };
 }
+
+// 即位國策（方案：即位時選 1–2 條）。第一條為主策（state.policy，沿用既有換策與逼迫規則）；
+// 第二條為輔策（state.policySecondary），其月修正以 SECONDARY_POLICY_WEIGHT 折算。
+// 權重為暫定值，待模擬校準；僅選一條時與舊行為完全相同。
+export const ACCESSION_POLICY_MAX = 2;
+export const SECONDARY_POLICY_WEIGHT = 0.5;
+
+// 開局設定國策；keys 須為 1–2 條不重複的既有國策。失敗時不改動狀態。
+export function setAccessionPolicies(state, keys) {
+  const list = [...new Set(keys)];
+  if (list.length < 1 || list.length > ACCESSION_POLICY_MAX) return { ok: false, reason: 'count' };
+  if (list.some((k) => !POLICIES[k])) return { ok: false, reason: 'unknown' };
+  state.policy = list[0];
+  state.policySecondary = list[1] ?? null;
+  return { ok: true };
+}
+
+// 當月生效的國策修正（主策全額、輔策折算）。
+export function activeMonthly(state) {
+  const out = {};
+  const add = (pol, w) => {
+    for (const [k, v] of Object.entries(pol.monthly)) out[k] = (out[k] || 0) + v * w;
+  };
+  const main = POLICIES[state.policy];
+  if (main) add(main, 1);
+  const sec = state.policySecondary ? POLICIES[state.policySecondary] : null;
+  if (sec && state.policySecondary !== state.policy) add(sec, SECONDARY_POLICY_WEIGHT);
+  return out;
+}
