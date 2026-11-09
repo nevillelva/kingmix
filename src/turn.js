@@ -13,6 +13,7 @@ import { tickTutorTraits } from './education.js';
 import { tickTitles } from './titles.js';
 import { isLoyaltyFrozen } from './bonds.js';
 import { tickEconomy, applyPrefectureYield } from './economy.js';
+import { tickCity } from './city.js';
 import { tickHarem, applyWaijiaCoupling, taihouPenalty } from './harem.js';
 import { applyFactionPressure } from './factions.js';
 import { scheduleChain } from './chains.js';
@@ -153,6 +154,7 @@ export function monthlyTick(state, rng) {
   applyPolicyEffects(state);
   tickEconomy(state);
   applyPrefectureYield(state);
+  tickCity(state);
   tickHarem(state);
   applyWaijiaCoupling(state);
   const tp = taihouPenalty(state);
