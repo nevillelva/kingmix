@@ -3,6 +3,7 @@
 
 import { setStat } from './state.js';
 import { makeRng } from './rng.js';
+import { PERSONALITIES } from './people.js';
 
 export const ADULT_AGE = 15;
 const LEGACY_KEYS = ['literature', 'military', 'power', 'benevolence', 'prestige'];
@@ -19,6 +20,12 @@ export function heirStrength(heir) {
   return Object.values(heir.abilities).reduce((a, b) => a + b, 0);
 }
 
+// 皇子個性：以獨立的 rng 路徑抽取（不消耗 createHeir 呼叫端的 rng），既有出生序列不受影響。
+export function heirPersonality(seed, id) {
+  const rng = makeRng([seed, 'heirPersonality', id]);
+  return PERSONALITIES[Math.floor(rng() * PERSONALITIES.length)].id;
+}
+
 export function createHeir(state, rng, { gender, mother }) {
   const roll = () => Math.round(40 + rng() * 20);
   const id = `h${state.dynasty.nextHeirId}`;
@@ -28,6 +35,7 @@ export function createHeir(state, rng, { gender, mother }) {
     name: `${gender === 'male' ? '皇子' : '皇女'}${id}`,
     gender,
     mother,
+    personality: heirPersonality(state.seed, id),
     age: 0,
     abilities: { intellect: roll(), politics: roll(), martial: roll(), command: roll(), virtue: roll() },
   };
@@ -126,18 +134,13 @@ export function designateCrownPrince(state, heirId) {
   return true;
 }
 
-// 選項以 setFlag: 'crown_prince_pending' 請求立太子（見 E125「冊立東宮」）。
-// 尚無成年皇子時請求保留，待有成年男嗣再由最強者立為太子。
+// E125 選項 A 設定 flags.crown_choice_pending，由玩家於立儲面板自行選定（見 heirs-choice.js）。
+// 本函式不再自動指定太子；僅在太子已選定後清除殘留旗標。待選旗標保留至選定為止。
 export function tickCrownPrince(state) {
-  if (!state.flags.crown_prince_pending) return state;
   if (state.dynasty.crownPrince) {
-    delete state.flags.crown_prince_pending;
-    return state;
+    delete state.flags.crown_choice_pending;
+    delete state.flags.crown_prince_pending; // 舊版旗標
   }
-  const adults = state.heirs
-    .filter((h) => h.gender === 'male' && h.age >= ADULT_AGE)
-    .sort((a, b) => heirStrength(b) - heirStrength(a) || a.id.localeCompare(b.id));
-  if (adults.length && designateCrownPrince(state, adults[0].id)) delete state.flags.crown_prince_pending;
   return state;
 }
 

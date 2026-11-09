@@ -24,34 +24,29 @@ function addHeir(s, { gender = 'male', age = 0, traits } = {}) {
 
 // ---- 1. 立太子 ----
 
-test('E125 option A carries the crown-prince request flag, other options do not', () => {
+test('E125 option A sets the player-choice flag, other options do not', () => {
   const e125 = events.find((e) => e.id === 'E125');
-  assert.equal(e125.options[0].effects.setFlag, 'crown_prince_pending');
+  assert.equal(e125.options[0].effects.setFlag, 'crown_choice_pending');
   for (const o of e125.options.slice(1)) assert.equal(o.effects.setFlag, undefined);
 });
 
-test('a pending crown-prince request designates the strongest adult son and clears the flag', () => {
+test('a pending choice never designates automatically; the flag persists until the player chooses', () => {
   const s = createInitialState('cp1');
-  const weak = addHeir(s, { age: 16 });
   const strong = addHeir(s, { age: 20 });
   strong.abilities = { intellect: 99, politics: 99, martial: 99, command: 99, virtue: 99 };
-  weak.abilities = { intellect: 1, politics: 1, martial: 1, command: 1, virtue: 1 };
-  applyOption(s, { effects: { setFlag: 'crown_prince_pending' } });
-  tickCrownPrince(s);
-  assert.equal(s.dynasty.crownPrince, strong.id);
-  assert.equal(s.flags.crown_prince_pending, undefined);
-});
-
-test('a crown-prince request waits while no adult son exists', () => {
-  const s = createInitialState('cp2');
-  addHeir(s, { age: ADULT_AGE - 1 });
-  applyOption(s, { effects: { setFlag: 'crown_prince_pending' } });
+  applyOption(s, { effects: { setFlag: 'crown_choice_pending' } });
   tickCrownPrince(s);
   assert.equal(s.dynasty.crownPrince, undefined);
-  assert.equal(s.flags.crown_prince_pending, true);
-  s.heirs[0].age = ADULT_AGE;
+  assert.equal(s.flags.crown_choice_pending, true);
+});
+
+test('a pending choice waits while no adult son exists', () => {
+  const s = createInitialState('cp2');
+  addHeir(s, { age: ADULT_AGE - 1 });
+  applyOption(s, { effects: { setFlag: 'crown_choice_pending' } });
   tickCrownPrince(s);
-  assert.equal(s.dynasty.crownPrince, s.heirs[0].id);
+  assert.equal(s.dynasty.crownPrince, undefined);
+  assert.equal(s.flags.crown_choice_pending, true);
 });
 
 test('designation: qingliu backs the heir, other factions alarmed (officials lose loyalty)', () => {

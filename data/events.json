@@ -4858,7 +4858,7 @@
           "effects": {
             "power": 2,
             "prestige": 3,
-            "setFlag": "crown_prince_pending"
+            "setFlag": "crown_choice_pending"
           }
         },
         {
