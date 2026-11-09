@@ -8,8 +8,8 @@ export function evaluateDynasty(state) {
   const military = Math.max(0, Math.min(100, Math.round(wins * 5 - losses * 3)));
   const civil = Math.max(0, Math.min(100, Math.round(state.stats.literature / 16 + recruits * 2)));
   const benevolence = Math.max(0, Math.min(100, Math.round(state.stats.benevolence / 5 + state.stats.people / 2) / 3.5));
-  // 承續權重 ×1.05（校準：承續稱號 14.5% → 18.5%，見 PR 說明）
-  const legacy = Math.min(100, Math.round((Math.min(30, (state.dynasty.generation - 1) * 9) + (state.dynasty.ended ? 0 : 10)) * 1.05));
+  // 承續權重 ×1.1（校準：事件戰爭敵方擲骰後的稱號分布，見 PR 說明）
+  const legacy = Math.min(100, Math.round((Math.min(30, (state.dynasty.generation - 1) * 9) + (state.dynasty.ended ? 0 : 10)) * 1.1));
 
   const axes = { military, civil, benevolence, legacy };
   const top = Object.entries(axes).sort((a, b) => b[1] - a[1])[0][0];

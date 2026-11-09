@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createInitialState } from '../src/state.js';
 import { applyOption, monthlyTick, advanceMonth } from '../src/turn.js';
 import { makeRng } from '../src/rng.js';
-import { ourStrength, resolveWar } from '../src/war.js';
+import { ourStrength, resolveWar, nominalStrength } from '../src/war.js';
 import { POLICIES, POLICY_KEYS } from '../src/policy.js';
 
 const winSpec = { strength: 1, reward: { treasury: 10 }, loss: { armament: -50 } };
@@ -70,4 +70,35 @@ test('resolveWar is pure with respect to the rng it is given', () => {
   const r2 = resolveWar(s2, { strength: 300, reward: {}, loss: {} }, makeRng(['z']), () => {});
   assert.equal(r1, r2);
   advanceMonth(s);
+});
+
+// 事件戰爭同時擲己方與敵方戰力：同一組擲骰下，敵強度愈高愈不可能獲勝。
+test('event war: a stronger enemy never wins where a weaker one loses (monotone per draw)', () => {
+  for (let i = 0; i < 500; i++) {
+    const weak = resolveWar(createInitialState('mono'), { strength: 200, reward: {}, loss: {} }, makeRng(['mono', i]), () => {});
+    const strong = resolveWar(createInitialState('mono'), { strength: 260, reward: {}, loss: {} }, makeRng(['mono', i]), () => {});
+    assert.ok(!(strong && !weak), `draw ${i} won against 260 but lost against 200`);
+  }
+});
+
+test('event war: raising enemy strength lowers the aggregate win rate', () => {
+  const rateAt = (strength) => {
+    let wins = 0;
+    for (let i = 0; i < 2000; i++) {
+      if (resolveWar(createInitialState('mono'), { strength, reward: {}, loss: {} }, makeRng(['agg', i]), () => {})) wins++;
+    }
+    return wins / 2000;
+  };
+  const even = rateAt(195);
+  const hard = rateAt(195 * 1.1);
+  const strong = rateAt(195 * 1.3);
+  assert.ok(even > hard && hard > strong, `win rates ${even} > ${hard} > ${strong} expected`);
+  assert.ok(strong > 0, 'a 1.3x nominal enemy should still be beatable sometimes');
+});
+
+test('event war records the nominal ratio of the enemy strength', () => {
+  const s = createInitialState('ratio');
+  resolveWar(s, { strength: 260, reward: {}, loss: {} }, makeRng(['ratio']), () => {});
+  const rec = s.wars.at(-1);
+  assert.equal(rec.ratio, Math.round((260 / nominalStrength(createInitialState('ratio'))) * 1000) / 1000);
 });

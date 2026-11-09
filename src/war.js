@@ -4,23 +4,42 @@
 import { officeHolder } from './offices.js';
 import { POLICIES } from './policy.js';
 
-export function ourStrength(state, rng) {
+// 己方戰力的名目值（不含擲骰）：軍備、武略、兵部/大將武力與國策修正。
+export function nominalStrength(state) {
   const commander = officeHolder(state, 'war');
   const martial = commander ? commander.abilities.martial : 0;
   const policy = POLICIES[state.policy];
   const base = state.stats.armament / 4 + state.stats.military * 1.5 + martial * 2.5;
-  const roll = 0.8 + rng() * 0.4; // 0.8 – 1.2
-  return base * roll * (policy ? policy.warStrength : 1);
+  return base * (policy ? policy.warStrength : 1);
 }
 
+export function ourStrength(state, rng) {
+  const roll = 0.8 + rng() * 0.4; // 0.8 – 1.2
+  return nominalStrength(state) * roll;
+}
+
+// 事件戰爭的敵方擲骰幅度：與戰役路徑（campaign.js 的 SPREAD_UNSCOUTED）同一模型，
+// 敵方強度 = 名目強度 × (1 + (2u − 1) × spread)。上限 0.3。
+export const EVENT_ENEMY_SPREAD = 0.3;
+
 // spec: { strength, reward, loss }；reward/loss 為 effects 物件
+// 事件戰爭同時擲己方與敵方戰力，敵強度愈高勝率愈低（單調）。
+// 記錄的 ratio 為名目比（敵方名目強度 ÷ 己方名目戰力），供校準用。
 export function resolveWar(state, spec, rng, applyEffects) {
+  const nominal = nominalStrength(state);
   const power = ourStrength(state, rng);
-  const won = power >= spec.strength;
+  const enemy = spec.strength * (1 + (rng() * 2 - 1) * EVENT_ENEMY_SPREAD);
+  const won = power >= enemy;
   const effects = won ? spec.reward : spec.loss;
   applyEffects(state, effects || {});
   if (!won) applyEffects(state, { prestige: -3 });
-  state.wars.push({ turn: state.turn, strength: spec.strength, power: Math.round(power), won });
+  state.wars.push({
+    turn: state.turn,
+    strength: spec.strength,
+    power: Math.round(power),
+    won,
+    ratio: nominal > 0 ? Math.round((spec.strength / nominal) * 1000) / 1000 : null,
+  });
   return won;
 }
 
