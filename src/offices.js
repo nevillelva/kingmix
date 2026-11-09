@@ -54,3 +54,18 @@ export function suggestCandidate(state, officeKey) {
   }
   return best;
 }
+
+// 手動免職：空出官職，回傳原任者（無人任職則為 null）。空缺可由月末吏部自動補任（見 sim.js autoAppoint）。
+export function dismissOffice(state, officeKey) {
+  if (!OFFICES[officeKey]) throw new Error(`unknown office: ${officeKey}`);
+  const holder = officeHolder(state, officeKey);
+  if (holder) holder.office = null;
+  return holder;
+}
+
+// 某人若任此官職，未達標的需求清單（空陣列即達標）。
+export function officeFit(official, officeKey) {
+  const office = OFFICES[officeKey];
+  if (!office) throw new Error(`unknown office: ${officeKey}`);
+  return unmetRequirements(official, office.requires);
+}
