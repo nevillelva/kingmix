@@ -2001,7 +2001,7 @@
       "narrative": "翰林院諸臣上書請求開館修史，言稱前朝事蹟多有缺漏，須及時纂修。是准其所請、暫緩辦理，還是改由內閣擬稿，還望陛下示下。",
       "when": {
         "literature_lt": 105,
-        "chance": 0.3
+        "chance": 0.2
       },
       "options": [
         {
@@ -2760,7 +2760,7 @@
       "narrative": "各地書院講學之風漸盛，士子聚會議論時政，言辭頗有激切之處。是獎掖書院、以禁令限制，還是不加過問，請陛下酌定。",
       "when": {
         "literature_lt": 105,
-        "chance": 0.3
+        "chance": 0.2
       },
       "options": [
         {
@@ -7811,6 +7811,209 @@
       }
     },
     {
+      "id": "E209",
+      "name": "浴佛齋會",
+      "speaker": "太常寺卿",
+      "narrative": "四月初八佛誕之辰，京中寺院皆請設齋浴佛，並求宮中頒施供養。是於宮中設大齋以祈福，還是只行小禮，伏請陛下裁奪。",
+      "when": {
+        "months": [
+          4
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "宮中設大齋",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -30,
+            "benevolence": 3,
+            "heaven": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "只行小禮",
+          "tone": "穩妥",
+          "effects": {
+            "heaven": 1
+          }
+        },
+        {
+          "key": "C",
+          "label": "停齋省費",
+          "tone": "強硬",
+          "effects": {
+            "treasury": 20,
+            "heaven": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E210",
+      "name": "夏至祭地",
+      "speaker": "太常寺卿",
+      "narrative": "夏至陰氣始生，古禮當於方澤祭地。禮官請依舊制親祀，或遣官代行，年來國事繁重，伏請陛下定奪。",
+      "when": {
+        "months": [
+          6
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "親祀方澤",
+          "tone": "仁厚",
+          "effects": {
+            "heaven": 4,
+            "health": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣官代行",
+          "tone": "穩妥",
+          "effects": {
+            "heaven": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "免祭省事",
+          "tone": "冒險",
+          "effects": {
+            "heaven": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E211",
+      "name": "重陽登高",
+      "speaker": "內侍總管",
+      "narrative": "九月九日重陽，京中士民登高賞菊，宮中亦循舊例設宴。是大開宮宴與民同慶，還是簡素行禮，請陛下示下。",
+      "when": {
+        "months": [
+          9
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "大開宮宴",
+          "tone": "奸巧",
+          "effects": {
+            "treasury": -25,
+            "charm": 3,
+            "people": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "簡素行禮",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "賜宴大臣",
+          "tone": "仁厚",
+          "effects": {
+            "official_loyalty_add": 3,
+            "treasury": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E212",
+      "name": "寒衣頒賜",
+      "speaker": "內侍總管",
+      "narrative": "十月初一寒衣節，民間焚紙祭祖，宮中例請頒寒衣。邊地戍卒與貧戶久缺禦寒之物，是否遍頒寒衣，請陛下裁奪。",
+      "when": {
+        "months": [
+          10
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遍頒寒衣",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -35,
+            "people": 4,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "只賜邊軍",
+          "tone": "穩妥",
+          "effects": {
+            "military": 2,
+            "treasury": -15
+          }
+        },
+        {
+          "key": "C",
+          "label": "免頒寒衣",
+          "tone": "冒險",
+          "effects": {
+            "people": -4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E213",
+      "name": "冬至朝賀",
+      "speaker": "太常寺卿",
+      "narrative": "冬至一陽來復，古來列為大節，百官請行慶賀之禮。陛下或親受百官朝賀，或停賀以示儉德，伏請聖裁。",
+      "when": {
+        "months": [
+          11
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "行大朝賀",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": 3,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "停賀示儉",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3,
+            "prestige": -1
+          }
+        },
+        {
+          "key": "C",
+          "label": "遣使慰百官",
+          "tone": "奸巧",
+          "effects": {
+            "official_loyalty_add": 3,
+            "treasury": -10
+          }
+        }
+      ]
+    },
+    {
       "id": "E301",
       "name": "屯田之議",
       "speaker": "司農寺卿",
@@ -8039,6 +8242,245 @@
           "effects": {
             "health": 6,
             "treasury": -15
+          }
+        }
+      ]
+    },
+    {
+      "id": "E307",
+      "name": "東廠請設私緝所",
+      "speaker": "東廠提督",
+      "narrative": "東廠提督請在京城設一處私緝所，專司察訪官員言行，並言此可早絕奸謀。是否准其所請，陛下自有權衡。",
+      "when": {
+        "official_loyalty_lt": 55,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准設私緝所",
+          "tone": "強硬",
+          "effects": {
+            "power": 4,
+            "benevolence": -4
+          }
+        },
+        {
+          "key": "B",
+          "label": "駁回不准",
+          "tone": "仁厚",
+          "effects": {
+            "official_loyalty_add": 4,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "改由都察院覆核",
+          "tone": "穩妥",
+          "effects": {
+            "investigate_lowest": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "E308",
+      "name": "朝臣結社議政",
+      "speaker": "御史",
+      "narrative": "京中士人數十人結社議政，每月聚於城南書院，議論朝政得失，頗有人以為清議可用。是許之以聽清議，還是加以約束，請陛下明斷。",
+      "when": {
+        "prestige_lt": 70,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "許其議政",
+          "tone": "仁厚",
+          "effects": {
+            "prestige": 2,
+            "power": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "下令解散",
+          "tone": "強硬",
+          "effects": {
+            "power": 3,
+            "official_loyalty_add": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "命御史查察",
+          "tone": "奸巧",
+          "effects": {
+            "investigate_lowest": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "E309",
+      "name": "廠衛誤捕忠良",
+      "speaker": "東廠提督",
+      "narrative": "東廠誤捕一名老臣，罪名查無實據，其家屬已赴宮門喊冤。是平反其罪並責罰辦案之人，還是維持原判，請陛下定奪。",
+      "when": {
+        "official_loyalty_lt": 60,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "平反並罰辦案者",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 4,
+            "power": -3,
+            "investigate_lowest": true
+          }
+        },
+        {
+          "key": "B",
+          "label": "維持原判",
+          "tone": "強硬",
+          "effects": {
+            "power": 3,
+            "benevolence": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "從輕發落",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 1,
+            "official_loyalty_add": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E310",
+      "name": "內臣結交外官",
+      "speaker": "御史",
+      "narrative": "有內臣近來頻頻宴請外任官員，並以厚禮相饋，人言其有結黨之意。是嚴令禁絕，還是置之不問，請陛下示下。",
+      "when": {
+        "charm_gt": 160,
+        "official_loyalty_lt": 65,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴令禁絕",
+          "tone": "強硬",
+          "effects": {
+            "official_loyalty_add": 3,
+            "power": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "置之不問",
+          "tone": "冒險",
+          "effects": {
+            "official_loyalty_add": -3,
+            "power": -1
+          }
+        },
+        {
+          "key": "C",
+          "label": "令東廠密查",
+          "tone": "奸巧",
+          "effects": {
+            "investigate_lowest": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "E311",
+      "name": "同鄉官連名薦人",
+      "speaker": "翰林學士",
+      "narrative": "數位同鄉出身的官員連名薦舉一人入京，文書中多有偏私之語，翰林院亦有異議。是准其所薦，還是駁回重議，伏請聖裁。",
+      "when": {
+        "every_years": 2,
+        "months": [
+          6
+        ],
+        "official_loyalty_lt": 62,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其所薦",
+          "tone": "穩妥",
+          "effects": {
+            "official_loyalty_add": 3,
+            "prestige": -1
+          }
+        },
+        {
+          "key": "B",
+          "label": "駁回重議",
+          "tone": "強硬",
+          "effects": {
+            "official_loyalty_add": -2,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "分調各地",
+          "tone": "奸巧",
+          "effects": {
+            "power": 2,
+            "official_loyalty_add": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E312",
+      "name": "東廠舉薦屬官",
+      "speaker": "東廠提督",
+      "narrative": "東廠提督舉薦一名通曉律令的屬官，言其辦案精明，可補刑部空缺。是准其所薦，還是令吏部覆核其資歷，請陛下定奪。",
+      "when": {
+        "every_years": 3,
+        "months": [
+          9
+        ],
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其所薦",
+          "tone": "強硬",
+          "effects": {
+            "official_loyalty_add": 4,
+            "power": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "令吏部覆核",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "斥其妄薦",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 2,
+            "official_loyalty_add": -2
           }
         }
       ]
