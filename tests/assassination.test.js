@@ -28,7 +28,7 @@ function scan(state, predicate, maxMonths = 6000, { keepChain = false } = {}) {
 }
 
 // 來源一：暴政
-test('tyranny: no chance at or below the E305 threshold, rising above it', () => {
+test('tyranny: no chance at or below the assassination threshold, rising above it', () => {
   const s = createInitialState('a-tyr');
   s.tyranny = ASSASSIN_TYRANNY_THRESHOLD;
   assert.equal(assassinChance(s, 'tyranny'), 0);
@@ -38,6 +38,14 @@ test('tyranny: no chance at or below the E305 threshold, rising above it', () =>
   const mid = assassinChance(s, 'tyranny');
   s.tyranny = 100;
   assert.ok(mid < assassinChance(s, 'tyranny'));
+});
+
+test('tyranny above the new threshold triggers a tyranny-sourced attempt', () => {
+  const s = createInitialState('a-tyr-new');
+  s.tyranny = ASSASSIN_TYRANNY_THRESHOLD + 5;
+  assert.ok(assassinChance(s, 'tyranny') > 0, '超過新門檻即有機率');
+  const hit = scan(s, (r) => r.source === 'tyranny');
+  assert.ok(hit, 'expected a tyranny-sourced attempt within 6000 months just above the threshold');
 });
 
 test('tyranny source fires as a 暴政 assassination at high tyranny', () => {
