@@ -5,6 +5,7 @@ import { setStat } from './state.js';
 
 export const DC_ACTIONS = ['warn', 'punish', 'prison'];
 export const MAX_ACTIVE_CASES = 2; // 東廠同時最多進行的案件數（未結案者皆計入）
+export const DC_ACTION_CAP = 8; // 每局東廠處置行動上限（開案不計入）；達上限後一律改為告誡
 export const TYRANNY_GAIN = Object.freeze({ punish: 4, prison: 3 }); // 責罰、下獄累積暴政
 export const TYRANNY_MAX = 100;
 export const TYRANNY_QINGLIU_THRESHOLD = 30; // 暴政達此值，清流好感每月下降
@@ -78,7 +79,17 @@ export function tickDongchang(state, rng) {
 export function applyDongchangAction(state, caseId, action) {
   const c = state.dongchang.cases.find((x) => x.id === caseId);
   if (!c || c.status !== 'leverage') throw new Error(`case not pending: ${caseId}`);
+  if (!DC_ACTIONS.includes(action)) throw new Error(`unknown dongchang action: ${action}`);
   const official = state.officials.find((o) => o.id === c.officialId);
+
+  // 每局處置行動上限：執行前檢查，達上限則改為告誡；計數照常 +1。
+  const dc = state.dongchang;
+  const capped = (dc.runActions || 0) >= DC_ACTION_CAP;
+  dc.runActions = (dc.runActions || 0) + 1;
+  if (capped && action !== 'warn') {
+    c.cappedFrom = action;
+    action = 'warn';
+  }
 
   if (action === 'warn') {
     if (official) {
@@ -106,8 +117,6 @@ export function applyDongchangAction(state, caseId, action) {
     c.imprisonedTurn = state.turn;
     c.outcome = 'imprisoned';
     addTyranny(state, TYRANNY_GAIN.prison);
-  } else {
-    throw new Error(`unknown dongchang action: ${action}`);
   }
   return c;
 }

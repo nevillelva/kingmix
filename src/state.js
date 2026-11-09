@@ -79,7 +79,7 @@ export function createInitialState(seed, opts = {}) {
     dynasty: { generation: 1, nextHeirId: 1, nextConsortId: 1, ended: false, rivalry: false },
     chronicle: [],
     era: createEra(opts.era), // 年號：純展示資料，不進入 RNG
-    dongchang: { cases: [], nextId: 1 },
+    dongchang: { cases: [], nextId: 1, runActions: 0 },
     tyranny: 0, // 東廠暴政：責罰、下獄累積，見 dongchang.js
     policyMeta: { lastChangeTurn: null, changes: 0 }, // 國策變更紀錄，見 policy.js
     flags: {},
