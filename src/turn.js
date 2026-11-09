@@ -8,7 +8,9 @@ import { attachPerson, applyTraitEffects, generateConsort } from './people.js';
 import { openInvestigationOnLowest, tickDongchang } from './dongchang.js';
 import { POLICIES } from './policy.js';
 import { resolveWar } from './war.js';
-import { createHeir, advanceHeirs, tickHeirs } from './succession.js';
+import { createHeir, advanceHeirs, tickHeirs, tickCrownPrince } from './succession.js';
+import { tickTutorTraits } from './education.js';
+import { tickTitles } from './titles.js';
 import { isLoyaltyFrozen } from './bonds.js';
 import { tickEconomy, applyPrefectureYield } from './economy.js';
 import { tickHarem, applyWaijiaCoupling, taihouPenalty } from './harem.js';
@@ -168,6 +170,9 @@ export function monthlyTick(state, rng) {
 
   tickDongchang(state, r);
   tickHeirs(state);
+  tickCrownPrince(state);
+  tickTutorTraits(state);
+  tickTitles(state);
 
   // 太傅到任後，皇子教育事件才會出現
   if (officeHolder(state, 'tutor')) state.flags.tutor_appointed = true;

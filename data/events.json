@@ -4857,7 +4857,8 @@
           "tone": "穩妥",
           "effects": {
             "power": 2,
-            "prestige": 3
+            "prestige": 3,
+            "setFlag": "crown_prince_pending"
           }
         },
         {
