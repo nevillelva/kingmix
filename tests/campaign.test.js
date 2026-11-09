@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createInitialState } from '../src/state.js';
 import { makeRng } from '../src/rng.js';
-import { ourStrength, TACTICS } from '../src/war.js';
+import { nominalStrength, TACTICS } from '../src/war.js';
 import {
   startCampaign, pickTactic, reconnoiter, offerPeace, GRAIN_RATIO, MAX_ROUNDS,
 } from '../src/campaign.js';
@@ -11,11 +11,10 @@ import { NEIGHBORS, diplomacyOf } from '../src/diplomacy.js';
 
 const spec = (strength) => ({ strength, reward: { prestige: 2 }, loss: { armament: -20 } });
 
-// 以初始狀態的己方平均戰力作為「勢均力敵」基準。
+// 以初始狀態的名目己方強度作為「勢均力敵」基準（不含擲骰）。
+// 原實作取擲骰平均值，擲骰中心偏移（ROLL_BIAS）後須改以名目值為準，否則基準會隨偏移移動。
 function evenStrength() {
-  let sum = 0;
-  for (let i = 0; i < 200; i++) sum += ourStrength(createInitialState(`m${i}`), makeRng(['m', i]));
-  return sum / 200;
+  return nominalStrength(createInitialState('m0'));
 }
 
 function playOut(seed, strength, pick) {
@@ -129,7 +128,7 @@ test('a neighbor campaign uses diplomacy and refuses allies', () => {
   assert.ok(NEIGHBORS.some((n) => n.id === 'north'));
 });
 
-test('calibration: even strength lands 55 to 70 percent for an unskilled player, strong enemy under 40', () => {
+test('calibration: even strength lands 55 to 70 percent for an unskilled player; strong enemy (ratio 1.3) under 40 but not zero', () => {
   const even = evenStrength();
   const N = 200;
   const pickRandom = (rng) => ['assault', 'hold', 'ambush'][Math.floor(rng() * 3)];
@@ -137,12 +136,13 @@ test('calibration: even strength lands 55 to 70 percent for an unskilled player,
   let strongWins = 0;
   for (let i = 0; i < N; i++) {
     if (playOut(i, even, pickRandom).won) evenWins++;
-    if (playOut(i, even * 1.25, pickRandom).won) strongWins++;
+    if (playOut(i, even * 1.3, pickRandom).won) strongWins++;
   }
   const evenRate = evenWins / N;
   const strongRate = strongWins / N;
   assert.ok(evenRate >= 0.55 && evenRate <= 0.7, `even win rate ${evenRate}`);
   assert.ok(strongRate < 0.4, `strong win rate ${strongRate}`);
+  assert.ok(strongRate > 0, `strong win rate must not be zero: ${strongRate}`);
 });
 
 test('calibration: fixed tactics and the best hybrid stay within 55 to 70 percent at even strength', () => {
@@ -164,7 +164,7 @@ test('calibration: fixed tactics and the best hybrid stay within 55 to 70 percen
     const seq = [a, b, c];
     if (a === b && b === c) continue;
     const r = rateOf(seq, even);
-    if (r > best) { best = r; bestStrong = rateOf(seq, even * 1.25); }
+    if (r > best) { best = r; bestStrong = rateOf(seq, even * 1.3); }
   }
   assert.ok(best >= 0.55 && best <= 0.7, `best hybrid win rate ${best}`);
   assert.ok(bestStrong < 0.4, `best hybrid strong win rate ${bestStrong}`);

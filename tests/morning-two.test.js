@@ -10,8 +10,8 @@ const { events } = JSON.parse(readFileSync(new URL('../data/events.json', import
 
 const SEEDS = Array.from({ length: 20 }, (_, i) => `m2-${i}`);
 
-test('第 2 則機率為 10%（平衡調整，見 PR）', () => {
-  assert.equal(SECOND_MEMORIAL_CHANCE, 0.1);
+test('第 2 則機率為 33%（平衡調整，見 PR；舊值 10%）', () => {
+  assert.equal(SECOND_MEMORIAL_CHANCE, 0.33);
 });
 
 test('第 2 則的機率閘門只用 [seed,year,month,morning2] 的第一個亂數', () => {

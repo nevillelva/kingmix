@@ -4,13 +4,24 @@
 import { officeHolder } from './offices.js';
 import { POLICIES } from './policy.js';
 
-export function ourStrength(state, rng) {
+// 擲骰：己方強度乘以 (1 + ROLL_BIAS + 幅度內的均勻亂數)。幅度上限 ±30%。
+// ROLL_BIAS 為中心右移：純對稱擲骰時，名目強度比 0.9–1.1 的勝率恆約 50%，無法達到 55% 下限；
+// 右移後，強敵（比 1.3）仍保有非零勝率（理論值 (ROLL_BIAS + 幅度 - 0.3) / (2 * 幅度)，見 tests/war.test.js）。
+export const ROLL_AMPLITUDE = 0.3;
+export const ROLL_BIAS = 0.025;
+
+// 名目己方強度：不含擲骰。名目強度比 = 敵方強度 / nominalStrength。
+export function nominalStrength(state) {
   const commander = officeHolder(state, 'war');
   const martial = commander ? commander.abilities.martial : 0;
   const policy = POLICIES[state.policy];
   const base = state.stats.armament / 4 + state.stats.military * 1.5 + martial * 2.5;
-  const roll = 0.8 + rng() * 0.4; // 0.8 – 1.2
-  return base * roll * (policy ? policy.warStrength : 1);
+  return base * (policy ? policy.warStrength : 1);
+}
+
+export function ourStrength(state, rng) {
+  const roll = 1 + ROLL_BIAS + (rng() * 2 - 1) * ROLL_AMPLITUDE;
+  return nominalStrength(state) * roll;
 }
 
 // spec: { strength, reward, loss }；reward/loss 為 effects 物件
@@ -20,7 +31,7 @@ export function resolveWar(state, spec, rng, applyEffects) {
   const effects = won ? spec.reward : spec.loss;
   applyEffects(state, effects || {});
   if (!won) applyEffects(state, { prestige: -3 });
-  state.wars.push({ turn: state.turn, strength: spec.strength, power: Math.round(power), won });
+  state.wars.push({ turn: state.turn, strength: spec.strength, nominal: Math.round(nominalStrength(state)), power: Math.round(power), won });
   return won;
 }
 

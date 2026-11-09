@@ -76,9 +76,9 @@ export function pickEvent(state, events, rng, exclude = null) {
   return eligible[eligible.length - 1];
 }
 
-// 早朝第 2 則奏摺：每月以 50% 機率出現（同一個 rng 先抽機率、再抽事件，確定性）。
+// 早朝第 2 則奏摺：每月以 33% 機率出現（平衡調整，舊值 10%；實際出現率約 32%，見 PR）（同一個 rng 先抽機率、再抽事件，確定性）。
 // 冷卻與每局上限沿用 pickEvent 的 eventAllowed；exclude 避免與第 1 則重複。
-export const SECOND_MEMORIAL_CHANCE = 0.1;
+export const SECOND_MEMORIAL_CHANCE = 0.33;
 export function pickSecondMemorial(state, events, rng, exclude = null) {
   if (!(rng() < SECOND_MEMORIAL_CHANCE)) return null;
   return pickEvent(state, events, rng, exclude);

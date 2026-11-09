@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createInitialState } from '../src/state.js';
 import { applyOption, monthlyTick, advanceMonth } from '../src/turn.js';
 import { makeRng } from '../src/rng.js';
-import { ourStrength, resolveWar } from '../src/war.js';
+import { ourStrength, resolveWar, nominalStrength, ROLL_AMPLITUDE, ROLL_BIAS } from '../src/war.js';
 import { POLICIES, POLICY_KEYS } from '../src/policy.js';
 
 const winSpec = { strength: 1, reward: { treasury: 10 }, loss: { armament: -50 } };
@@ -70,4 +70,36 @@ test('resolveWar is pure with respect to the rng it is given', () => {
   const r2 = resolveWar(s2, { strength: 300, reward: {}, loss: {} }, makeRng(['z']), () => {});
   assert.equal(r1, r2);
   advanceMonth(s);
+});
+
+// 強敵驗收：名目強度比 r = 敵方強度 / 名目己方強度（不含擲骰）。
+// 擲骰後勝率 P(r) = P(己方戰力 >= r * 名目)。r >= 1.3 時須 < 40%，且 r = 1.3 時須 > 0（不得恆為 0）。
+// 理論值 P(1.3) = (ROLL_BIAS + ROLL_AMPLITUDE - 0.3) / (2 * ROLL_AMPLITUDE)，即 0.025 / 0.6 ≈ 4.2%；此處以蒙地卡羅量測。
+const winRateAt = (state, ratio, n = 20000) => {
+  const rng = makeRng(['strong-acceptance', ratio]);
+  const target = ratio * nominalStrength(state);
+  let wins = 0;
+  for (let i = 0; i < n; i++) if (ourStrength(state, rng) >= target) wins++;
+  return wins / n;
+};
+
+test('強敵驗收：名目強度比 1.3 以上時勝率低於 40%', () => {
+  const s = createInitialState('strong');
+  for (const r of [1.3, 1.4, 1.6, 2]) assert.ok(winRateAt(s, r) < 0.4, `ratio ${r}`);
+});
+
+test('強敵驗收：名目強度比 1.3 時仍有勝機（不得恆為 0）', () => {
+  const s = createInitialState('strong');
+  const p = winRateAt(s, 1.3);
+  assert.ok(p > 0.02, `P(win | ratio 1.3) = ${p}`);
+});
+
+test('擲骰範圍不超過 ±30%（含中心偏移）', () => {
+  assert.ok(ROLL_AMPLITUDE <= 0.3);
+  const s = createInitialState('range');
+  const nominal = nominalStrength(s);
+  const lo = ourStrength(s, () => 0) / nominal;
+  const hi = ourStrength(s, () => 1 - Number.EPSILON) / nominal;
+  assert.ok(Math.abs(lo - (1 + ROLL_BIAS - ROLL_AMPLITUDE)) < 1e-9);
+  assert.ok(Math.abs(hi - (1 + ROLL_BIAS + ROLL_AMPLITUDE)) < 1e-6);
 });

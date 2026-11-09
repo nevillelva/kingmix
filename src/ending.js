@@ -8,7 +8,9 @@ export function evaluateDynasty(state) {
   const military = Math.max(0, Math.min(100, Math.round(wins * 5 - losses * 3)));
   const civil = Math.max(0, Math.min(100, Math.round(state.stats.literature / 16 + recruits * 2)));
   const benevolence = Math.max(0, Math.min(100, Math.round(state.stats.benevolence / 5 + state.stats.people / 2) / 3.5));
-  const legacy = Math.min(100, Math.min(30, (state.dynasty.generation - 1) * 9) + (state.dynasty.ended ? 0 : 10));
+  // 承續：代數（至多 30）+ 未斷嗣 10 + 仍在世皇子每人 1（至多 2）。皇子存活代表基業有後。
+  const heirsAlive = Math.min(2, state.heirs.length);
+  const legacy = Math.min(100, Math.min(30, (state.dynasty.generation - 1) * 9) + (state.dynasty.ended ? 0 : 10) + heirsAlive);
 
   const axes = { military, civil, benevolence, legacy };
   const top = Object.entries(axes).sort((a, b) => b[1] - a[1])[0][0];
