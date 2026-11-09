@@ -264,7 +264,7 @@ import { evaluateDynasty } from './src/ending.js';
 import { setTaxTier, ensureEconomy, administrativeEfficiency, TAX_TIERS } from './src/economy.js';
 import { taihouOpposes, WAIJIA_THRESHOLD, TAIHOU_OPPOSE } from './src/harem.js';
 import { factionsBalanced, forcingFaction, strongFactionCount, FORCE_MONTHS, FACTION_FORCE_THRESHOLD, FACTION_POLICY, BALANCED_EFFICIENCY, suppressFaction } from './src/factions.js';
-import { describeConsort, describeTraits } from './src/people.js';
+import { describeConsort, describeTraits, PERSONALITIES } from './src/people.js';
 import { SCENARIOS, createScenarioState, evaluateScenario } from './src/scenarios.js';
 import { isBonded, sharedCount, remonstrate, BOND_THRESHOLD } from './src/bonds.js';
 import { COLLECTIONS, collectionProgress } from './src/collections.js';
@@ -566,7 +566,7 @@ function meter(k){
 }
 // 朝堂的行動卡（僅在無待決案件、尚未駕崩時出現）
 function actionsSection(){
-  return (!pendingCase() && state.alive) ? actionsCard() + slotsCard() : '';
+  return (!pendingCase() && state.alive) ? crownChoiceCard() + actionsCard() + slotsCard() : '';
 }
 function calendar(){
   document.getElementById('when').textContent = `第${state.dynasty.generation}世 · ${eraYearText(state)}${state.month}月 · ${state.age}歲`;
@@ -1098,9 +1098,8 @@ function actionsCard(){
     body = `<div class="sub">${curHeir ? `目前太子：${esc(curHeir.personName || curHeir.name)}` : '尚未立儲'}　<span class="hint">${hint}</span></div><div class="opts">` + (cands.length
       ? cands.map(h => {
           const f = FAC(heirFaction(state, h)).l;
-          const tags = describeTraits(h).join('、') || '無特質';
           const off = dis || (h.id === cur || costLocked ? 'disabled' : '');
-          return `<button class="opt" data-act="heir" data-arg="${h.id}" ${off}><span class="mark">${esc((h.personName||h.name).slice(0,1))}</span><span class="otxt"><span class="label">${esc(h.personName||h.name)}${h.id===cur?'（太子）':''}</span><span class="hint">${f}之子　特質：${esc(tags)}</span></span></button>`;
+          return `<button class="opt" data-act="heir" data-arg="${h.id}" ${off}><span class="mark">${esc((h.personName||h.name).slice(0,1))}</span><span class="otxt"><span class="label">${esc(h.personName||h.name)}${h.id===cur?'（太子）':''}</span><span class="hint">${heirPersonLabel(h)}　${f}之子</span></span></button>`;
         }).join('')
       : '<p class="empty">朝中無成年皇子。</p>') + `</div>`;
   } else if (panel === 'faction') {
@@ -1139,6 +1138,22 @@ function actionsCard(){
     ${body}
     ${panel ? '<button class="btn ghost" data-act="close" style="margin-top:10px">取消</button>' : ''}
   </section>`;
+}
+// 皇子個性（立儲面板顯示用）；舊存檔無個性者顯示「—」。
+function heirPersonLabel(h){
+  const p = PERSONALITIES.find(x => x.id === h.personality);
+  return p ? `${p.name}：${p.description}` : '個性未明';
+}
+// 冊立東宮：E125 選項 A 設定 crown_choice_pending 後，於朝堂顯示此卡。不耗行動，無取消鈕，未選定前不自動指定。
+function crownChoiceCard(){
+  if (!state.flags?.crown_choice_pending || state.dynasty.crownPrince) return '';
+  const cands = eligibleCrownHeirs(state);
+  return `<section class="card"><h2>冊立東宮</h2>
+    <div class="kicker">群臣請早定國本，請陛下親定東宮人選（不耗行動）。</div>
+    ${feedback ? `<div class="sub" style="color:var(--green);margin:0 0 10px">${esc(feedback)}</div>` : ''}
+    <div class="opts">` + (cands.length
+      ? cands.map(h => `<button class="opt" data-act="crownpick" data-arg="${h.id}"><span class="mark">${esc((h.personName||h.name).slice(0,1))}</span><span class="otxt"><span class="label">${esc(h.personName||h.name)}</span><span class="hint">${heirPersonLabel(h)}　${FAC(heirFaction(state, h)).l}之子</span></span></button>`).join('')
+      : '<p class="empty">朝中尚無成年皇子，待有成年男嗣再行冊立。</p>') + `</div></section>`;
 }
 function onAgency(e){
   const b = e.target.closest('[data-act]');
@@ -1184,6 +1199,13 @@ function onAgency(e){
   if (a === 'suppress') {
     suppressFaction(state, v);
     return useAction(`打壓${FACTION[v].l}，其餘兩派上升。`);
+  }
+  if (a === 'crownpick') {
+    const h = state.heirs.find(x => x.id === v);
+    const r = chooseCrownPrince(state, v);
+    if (!r.ok) { feedback = '所選皇子不合資格。'; save(); return render(); }
+    feedback = `冊立${h ? (h.personName || h.name) : '皇子'}為太子。`;
+    save(); return render();
   }
   if (a === 'heir') {
     const h = state.heirs.find(x => x.id === v);

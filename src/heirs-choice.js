@@ -20,6 +20,11 @@ export function heirFaction(state, heir) {
   return state.consorts.find((c) => c.id === heir.mother)?.family ?? null;
 }
 
+function clearCrownChoiceFlags(state) {
+  delete state.flags.crown_choice_pending;
+  delete state.flags.crown_prince_pending;
+}
+
 function shiftFaction(state, faction, delta) {
   if (!faction || !(faction in state.factions)) return;
   state.factions[faction] = Math.min(100, Math.max(0, state.factions[faction] + delta));
@@ -33,7 +38,7 @@ export function chooseCrownPrince(state, heirId) {
   const current = state.dynasty.crownPrince;
   if (!current) {
     designateCrownPrince(state, heir.id);
-    delete state.flags.crown_prince_pending;
+    clearCrownChoiceFlags(state);
     return { ok: true, changed: false };
   }
   if (current === heir.id) return { ok: false, reason: 'same' };
@@ -45,6 +50,6 @@ export function chooseCrownPrince(state, heirId) {
   shiftFaction(state, oldFaction, -CROWN_PRINCE_SWAP_SHIFT);
   shiftFaction(state, newFaction, CROWN_PRINCE_SWAP_SHIFT);
   state.dynasty.crownPrince = heir.id;
-  delete state.flags.crown_prince_pending;
+  clearCrownChoiceFlags(state);
   return { ok: true, changed: true };
 }

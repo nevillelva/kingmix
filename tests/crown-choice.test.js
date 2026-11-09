@@ -1,4 +1,8 @@
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
+import { applyOption } from '../src/turn.js';
+import { tickCrownPrince } from '../src/succession.js';
+import { PERSONALITIES } from '../src/people.js';
 import assert from 'node:assert/strict';
 import { createInitialState } from '../src/state.js';
 import { createHeir, tryAccession, tickHeirs, ADULT_AGE } from '../src/succession.js';
@@ -156,4 +160,65 @@ test('rivalry never removes the player-chosen crown prince', () => {
   assert.ok(!s.heirs.some((x) => x.id === other.id), 'rival removed');
   assert.ok(s.heirs.some((x) => x.id === crown.id), 'crown prince kept');
   assert.equal(s.dynasty.crownPrince, crown.id);
+});
+
+// ---- E125 改為玩家選擇 ----
+
+const { events } = JSON.parse(readFileSync(new URL('../data/events.json', import.meta.url), 'utf8'));
+
+test('E125 option A opens the choice flag and does not pick a crown prince by itself', () => {
+  const e125 = events.find((e) => e.id === 'E125');
+  assert.equal(e125.options[0].effects.setFlag, 'crown_choice_pending');
+  const s = fresh('cc-e125');
+  addHeir(s, { age: 20, abilities: STRONG });
+  applyOption(s, e125.options[0], makeRng(['e125']));
+  for (let i = 0; i < 3; i++) tickCrownPrince(s);
+  assert.equal(s.flags.crown_choice_pending, true);
+  assert.equal(s.dynasty.crownPrince, undefined);
+});
+
+test('the pending flag survives unrelated play until the player picks, then clears', () => {
+  const s = fresh('cc-pend');
+  const a = addHeir(s, { age: 18 });
+  s.flags.crown_choice_pending = true;
+  tickCrownPrince(s);
+  assert.equal(s.flags.crown_choice_pending, true, 'not cleared without a choice');
+  assert.equal(s.dynasty.crownPrince, undefined);
+  assert.equal(chooseCrownPrince(s, a.id).ok, true);
+  assert.equal(s.dynasty.crownPrince, a.id);
+  assert.equal(s.flags.crown_choice_pending, undefined);
+});
+
+test('choosing through the pending flag applies the first-designation effects (qingliu +3, others loyalty -2)', () => {
+  const s = fresh('cc-pend-fx');
+  const a = addHeir(s, { age: 18 });
+  s.flags.crown_choice_pending = true;
+  const qingliu = s.factions.qingliu;
+  const loyalty = Object.fromEntries(s.officials.map((o) => [o.id, o.loyalty]));
+  chooseCrownPrince(s, a.id);
+  assert.equal(s.factions.qingliu, Math.min(100, qingliu + 3));
+  for (const o of s.officials) {
+    if (o.faction !== 'qingliu') assert.equal(o.loyalty, Math.max(0, loyalty[o.id] - 2));
+  }
+});
+
+// ---- 皇子個性 ----
+
+test('every new heir has a personality from PERSONALITIES, deterministically', () => {
+  const ids = new Set(PERSONALITIES.map((p) => p.id));
+  const make = () => {
+    const s = fresh('cc-personality');
+    return [0, 1, 2, 3, 4, 5, 6, 7].map(() => createHeir(s, makeRng(['pers-rng']), { gender: 'male', mother: null }).personality);
+  };
+  const first = make();
+  assert.deepEqual(make(), first, 'same seed gives same personalities');
+  for (const p of first) assert.ok(ids.has(p));
+});
+
+test('personality uses its own rng path: the heir birth order and other heir fields are unchanged', () => {
+  const s = fresh('cc-rng');
+  const h = createHeir(s, makeRng(['same']), { gender: 'male', mother: null });
+  const t = createHeir(fresh('cc-rng'), makeRng(['same']), { gender: 'male', mother: null });
+  assert.equal(h.id, t.id);
+  assert.deepEqual(h.abilities, t.abilities);
 });
