@@ -2,10 +2,13 @@
 // 既有紀錄種類：
 //   era          改元（era.js 的 eraChronicleEntry，含 text）
 //   heir_death   皇子夭折／奪嫡失勢（succession.js 的 removeHeir）
+//   assassination 刺殺（assassination.js）：來源、目標、結果
 //   （無 kind）  駕崩或禪位後的世代紀錄（succession.js 的 tryAccession）
 
-const END_WORD = { death: '駕崩', abdicated: '高年致仕', '禪位': '禪位' };
+const END_WORD = { death: '駕崩', abdicated: '高年致仕', '禪位': '禪位', assassinated: '遇刺' };
 const HEIR_DEATH_CAUSE = { child_mortality: '幼年夭折', rivalry: '奪嫡失勢' };
+const ASSASSIN_SOURCE = { tyranny: '暴政', remnant: '前朝遺臣', court: '朝堂江湖' };
+const ASSASSIN_OUTCOME = { blocked: '擋下', injured: '受傷', killed: '死亡' };
 
 const orDash = (v) => (v === undefined || v === null || v === '' ? '—' : String(v));
 
@@ -14,6 +17,12 @@ export function chronicleLine(c) {
   if (!c || typeof c !== 'object') return { text: '—', tag: '' };
   if (c.kind === 'era') {
     return { text: orDash(c.text ?? `改元為${orDash(c.to)}，於 ${orDash(c.year)} 年 ${orDash(c.month)} 月`), tag: '改元' };
+  }
+  if (c.kind === 'assassination') {
+    return {
+      text: `${orDash(ASSASSIN_SOURCE[c.source])}行刺${orDash(c.targetName)} · ${orDash(c.year)}年${orDash(c.month)}月`,
+      tag: ASSASSIN_OUTCOME[c.outcome] ?? '—',
+    };
   }
   if (c.kind === 'heir_death') {
     return {

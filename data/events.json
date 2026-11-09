@@ -8042,6 +8042,462 @@
           }
         }
       ]
+    },
+    {
+      "id": "E401",
+      "name": "前朝舊臣夜闖行宮",
+      "speaker": "禁衛統領",
+      "narrative": "昨夜有刺客潛入行宮，身著前朝舊服，口稱為故主復仇。禁衛及時截下，刺客已伏誅，然其同黨尚未緝盡，臣請陛下定奪如何處置。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴查餘黨，株連前朝舊臣",
+          "tone": "冒險",
+          "effects": {
+            "power": 5,
+            "benevolence": -4,
+            "people": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "寬以待之，罪止刺客一人",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 4,
+            "people": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "加派禁衛，嚴守宮門",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -40,
+            "health": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E402",
+      "name": "前朝餘孽傷及御體",
+      "speaker": "太醫院",
+      "narrative": "陛下遇刺受傷，刺客之刃偏離要害，已無性命之憂。然刺客乃前朝遺臣所遣，其黨羽猶在暗處，太醫院請陛下靜養，並定奪追查之事。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "遣東廠密查其黨",
+          "tone": "冒險",
+          "effects": {
+            "power": 6,
+            "benevolence": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "下詔安撫前朝舊臣",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 5,
+            "prestige": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "閉門靜養，不復朝議",
+          "tone": "穩妥",
+          "effects": {
+            "health": 6,
+            "power": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E403",
+      "name": "夜襲之黨出自朝堂",
+      "speaker": "御史大夫",
+      "narrative": "有刺客潛入寢殿，為侍衛所阻。查其所持符牌，乃朝中某派暗中豢養之江湖死士。朝野疑雲紛起，臣不敢妄指，請陛下明察。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "按派查究，清洗該派",
+          "tone": "冒險",
+          "effects": {
+            "power": 6,
+            "prestige": -2,
+            "benevolence": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "不予聲張，以安朝局",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3,
+            "official_loyalty_add": 4
+          }
+        },
+        {
+          "key": "C",
+          "label": "增設禁衛，防患未然",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -50,
+            "health": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E404",
+      "name": "朝中黨爭，刺客遁走",
+      "speaker": "禁衛統領",
+      "narrative": "陛下於殿中遇刺，刺客一擊得手，雖被禁衛重創，仍逃逸無蹤。朝中各派相互指摘，殿上爭執不休。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "以雷霆之怒震懾群臣",
+          "tone": "冒險",
+          "effects": {
+            "power": 8,
+            "benevolence": -6,
+            "official_loyalty_add": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "和解諸派，共議安危",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "official_loyalty_add": 4
+          }
+        },
+        {
+          "key": "C",
+          "label": "閉宮休養，遣使安撫",
+          "tone": "穩妥",
+          "effects": {
+            "health": 5,
+            "treasury": -30
+          }
+        }
+      ]
+    },
+    {
+      "id": "E405",
+      "name": "東廠之怨化為死士",
+      "speaker": "禁衛統領",
+      "narrative": "夜半有刺客潛入寢殿，被禁衛當場擒獲。刺客供稱，乃受東廠迫害之家所托。朝野竊竊私語，皆道陛下用東廠太過，民怨已成殺機。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "誅其全家，以儆天下",
+          "tone": "冒險",
+          "effects": {
+            "power": 6,
+            "benevolence": -8,
+            "people": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "下詔罷東廠之弊，示以寬仁",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "people": 4,
+            "power": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "加派禁衛，暫不深究",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -30,
+            "health": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E406",
+      "name": "東廠舊刃傷及御體",
+      "speaker": "太醫院",
+      "narrative": "陛下遇刺受創，刺客身份未明，然其所用兵器乃東廠舊制。太醫院奏稱傷勢不輕，宜靜養數月。群臣眼見東廠囂張，多有噤聲者。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "罷廢東廠，安撫朝野",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "people": 3,
+            "power": -4
+          }
+        },
+        {
+          "key": "B",
+          "label": "東廠照舊，嚴查凶手",
+          "tone": "冒險",
+          "effects": {
+            "power": 5,
+            "people": -4,
+            "benevolence": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "閉宮靜養，不問朝事",
+          "tone": "穩妥",
+          "effects": {
+            "health": 6,
+            "power": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E407",
+      "name": "東宮遇刺",
+      "speaker": "東宮太傅",
+      "narrative": "太子於東宮遇刺，隨侍力保，僅受輕傷。刺客出自前朝遺臣之手，欲斷大統之續。太傅請陛下速定東宮之防，以安人心。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "加派東宮護衛",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -40,
+            "health": -1
+          }
+        },
+        {
+          "key": "B",
+          "label": "嚴查前朝遺臣",
+          "tone": "冒險",
+          "effects": {
+            "power": 5,
+            "benevolence": -4
+          }
+        },
+        {
+          "key": "C",
+          "label": "召見太子慰勉，以示恩寵",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 5,
+            "charm": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E408",
+      "name": "朝臣遇刺未遂",
+      "speaker": "吏部",
+      "narrative": "一位朝臣於歸府途中遭遇刺客，幸得護衛拚死相救，刺客已遁。此人平日與某派往來密切，朝中黨爭之說甚囂塵上。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴查派系往來",
+          "tone": "冒險",
+          "effects": {
+            "power": 4,
+            "benevolence": -3,
+            "official_loyalty_add": -3
+          }
+        },
+        {
+          "key": "B",
+          "label": "厚加撫卹，以示朝廷仁厚",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 4,
+            "official_loyalty_add": 6
+          }
+        },
+        {
+          "key": "C",
+          "label": "不予追究，以免生事",
+          "tone": "穩妥",
+          "effects": {
+            "official_loyalty_add": -2,
+            "prestige": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E409",
+      "name": "朝臣死於刺殺",
+      "speaker": "都察院",
+      "narrative": "一位官員於歸府途中遇刺身亡，其黨羽皆指他派所為。朝堂空出一位，各派紛紛薦人，吏部請陛下定奪。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "廣納新進，以補空缺",
+          "tone": "穩妥",
+          "effects": {
+            "recruit": 1,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "嚴懲兇手，株連派系",
+          "tone": "冒險",
+          "effects": {
+            "power": 4,
+            "benevolence": -5,
+            "people": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "寬宥各派，不論是非",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 5,
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E410",
+      "name": "前朝餘孽刺臣",
+      "speaker": "都察院",
+      "narrative": "一位官員遭前朝遺臣行刺，負傷而歸。經查，其人曾為前朝舊僚所恨，故遭此橫禍。朝臣人心惶惶，各懷戒懼。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴查前朝舊臣，一併清算",
+          "tone": "冒險",
+          "effects": {
+            "power": 5,
+            "benevolence": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "厚賜湯藥，以安其心",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3,
+            "treasury": -20,
+            "official_loyalty_add": 5
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不理，靜觀其變",
+          "tone": "穩妥",
+          "effects": {
+            "official_loyalty_add": -3,
+            "prestige": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E411",
+      "name": "東廠之怨及於朝臣",
+      "speaker": "都察院",
+      "narrative": "朝中一位官員遭刺身亡，刺客之目標正是東廠舊日所構陷之人。都察院奏稱此乃東廠酷烈所致，請陛下速作決斷。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "停東廠之權，以安人心",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "people": 4,
+            "power": -4
+          }
+        },
+        {
+          "key": "B",
+          "label": "東廠照舊，嚴懲兇徒",
+          "tone": "冒險",
+          "effects": {
+            "power": 5,
+            "people": -4
+          }
+        },
+        {
+          "key": "C",
+          "label": "另擇忠直之士，充補其缺",
+          "tone": "穩妥",
+          "effects": {
+            "recruit": 1,
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E412",
+      "name": "太子遇害",
+      "speaker": "東宮太傅",
+      "narrative": "太子於東宮遭前朝遺臣刺殺，薨。東宮空虛，儲位出缺，朝野震動。太傅跪奏，請陛下速定後嗣，以安社稷。",
+      "kind": "assassination",
+      "when": {},
+      "options": [
+        {
+          "key": "A",
+          "label": "加速選立皇子，以定國本",
+          "tone": "穩妥",
+          "effects": {
+            "power": 3,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "嚴查前朝餘黨，為太子復仇",
+          "tone": "冒險",
+          "effects": {
+            "power": 6,
+            "benevolence": -6,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "哀痛罷朝，以示悲憫",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "health": -3
+          }
+        }
+      ]
     }
   ]
 }
