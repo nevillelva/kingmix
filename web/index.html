@@ -1547,7 +1547,7 @@ function onAgency(e){
 }
 app.addEventListener('click', onAgency);
 
-// ── 時段（gap-ui-slots）：早朝為奏摺卡；午後二選一、夜間二選一（設定見 src/slots.js）。
+// ── 時段（gap-ui-slots）：早朝為奏摺卡；午後三選一、夜間二選一（設定見 src/slots.js）。
 // 每個選項只映射到既有分頁或朝政行動面板，不消耗行動次數、不改引擎。
 function slotsCard(){
   return Object.entries(SLOTS).map(([k, s]) => `<section class="card" data-slot-card="${k}">
