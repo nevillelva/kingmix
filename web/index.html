@@ -256,7 +256,7 @@ import { takeChain } from './src/chains.js';
 import { applyDongchangAction, DC_ACTIONS, openInvestigation, MAX_ACTIVE_CASES, activeCaseCount } from './src/dongchang.js';
 import { assignOffice, OFFICES } from './src/offices.js';
 import { POLICIES, POLICY_KEYS, changePolicy, policyLockRemaining, POLICY_CHANGE_PRESTIGE_COST } from './src/policy.js';
-import { pickEvent, autoAppoint } from './src/sim.js';
+import { pickEvent, pickSecondMemorial, autoAppoint } from './src/sim.js';
 import { tryAccession } from './src/succession.js';
 import { evaluateDynasty } from './src/ending.js';
 import { setTaxTier, ensureEconomy, administrativeEfficiency, TAX_TIERS } from './src/economy.js';
@@ -416,13 +416,23 @@ function chainEvent(id){
   if ((state.eventHistory?.counts?.[id] || 0) >= EVENT_MAX_PER_RUN) return null;
   return e.options.some(isAvailable) ? e : null;
 }
-function currentEvent(){
+// 早朝兩則奏摺：第 1 則必出（連鎖優先），第 2 則 50%（與 sim.js 同一 rng 路徑）。
+// 每月開始時一次決定並存於 state.monthChain，同月重繪、行動後不改變。
+function morningPair(){
   const key = `${state.year}-${state.month}`;
   if (!state.monthChain || state.monthChain.key !== key) state.monthChain = { key, id: takeChain(state) };
-  if (!state.alive || pendingCase()) return null;
-  const chained = chainEvent(state.monthChain.id);
-  if (chained) return chained;
-  return pickEvent(state, events, rng('events', state.year, state.month));
+  const mc = state.monthChain;
+  if (!state.alive || pendingCase()) return { first: null, second: null, secondDone: false };
+  if (!('second' in mc)) {
+    const chained = chainEvent(mc.id);
+    const first = chained ?? pickEvent(state, events, rng('events', state.year, state.month));
+    mc.first = first ? first.id : null;
+    const second = pickSecondMemorial(state, events, rng(state.year, state.month, 'morning2'), mc.first);
+    mc.second = second ? second.id : null;
+    mc.secondDone = false;
+  }
+  const byId = id => (id ? events.find(x => x.id === id) : null) || null;
+  return { first: byId(mc.first), second: byId(mc.second), secondDone: !!mc.secondDone };
 }
 function finishMonth(keepFeedback){
   if (!keepFeedback) feedback = '';
@@ -685,6 +695,46 @@ function renderEnding(){
   sfx('end');
 }
 
+function secondMemorialCard(ev){
+  const opts = ev.options.filter(isAvailable);
+  return memorialCard(`次奏・${esc(ev.name)}`, `
+      <div class="kicker">次奏　・　可略過</div>
+      <h3>${esc(ev.name)}</h3>
+      <div class="sub">${opts.length} 項處置可選；略過則不作處置，亦不計入行動次數。</div>
+      <div class="opts">${opts.map((o,i) => `
+        <button class="opt zhu" data-m2="${i}"><span class="mark">${esc(o.key)}</span>
+        <span class="otxt"><span class="label">${esc(o.label)}</span>
+        <span class="eff">${effChips(o)}</span></span></button>`).join('')}
+      </div>
+      <div style="margin-top:8px"><button class="btn ghost mini" id="m2skip">略過此則</button></div>`);
+}
+// 次奏裁決：不推進月份、不計行動次數；第 1 則仍待裁決，月份由第 1 則推進。
+function chooseSecond(opt, ev){
+  const before = { ...state.stats };
+  recordEvent(state, ev.id);
+  applyOption(state, opt, rng(state.year, state.month, 'morning2', 'recruit'));
+  afterOption(state, ev, opt);
+  state.monthChain.secondDone = true;
+  const parts = Object.keys(STAT).map(k => {
+    const d = Math.round(state.stats[k] - before[k]);
+    return d ? `${STAT[k].l}${d > 0 ? '+' : ''}${d}` : null;
+  }).filter(Boolean);
+  feedback = `次奏所選：${opt.label}。${parts.length ? '數值變化：' + parts.join('、') : '數值無明顯變化。'}`;
+  sfx('pick');
+  save(); render();
+}
+function skipSecond(){
+  state.monthChain.secondDone = true;
+  feedback = '次奏留中，未作處置。';
+  save(); render();
+}
+function wireSecond(ev){
+  const opts = ev.options.filter(isAvailable);
+  app.querySelectorAll('[data-m2]').forEach(b => b.onclick = () => chooseSecond(opts[+b.dataset.m2], ev));
+  const sk = document.getElementById('m2skip');
+  if (sk) sk.onclick = skipSecond;
+}
+
 function renderCourt(){
   const sb = scenarioBanner();
   if (campaignActive()) { app.innerHTML = sb + campaignCard(); return; }
@@ -702,8 +752,15 @@ function renderCourt(){
     app.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => chooseDC(b.dataset.dc));
     return;
   }
-  const ev = currentEvent();
+  const { first: ev, second: ev2, secondDone } = morningPair();
+  const showSecond = !!ev2 && !secondDone;
+  const secondHtml = showSecond ? secondMemorialCard(ev2) : '';
   if (!ev) {
+    if (showSecond) {
+      app.innerHTML = sb + secondHtml + actionsSection();
+      wireSecond(ev2);
+      return;
+    }
     app.innerHTML = sb + memorialCard('本月', `<div class="kicker">本月</div><h3>風平浪靜</h3><div class="sub">此月無奏摺上呈。</div>
       <button class="btn" id="next">進入下月</button>`) + actionsSection();
     document.getElementById('next').onclick = () => finishMonth();
@@ -722,10 +779,11 @@ function renderCourt(){
         <button class="opt zhu" data-camp="${i}"><span class="mark">親</span>
         <span class="otxt"><span class="label">${esc(o.label)}・親征</span>
         <span class="hint">三回合戰役：可偵察、選戰術、遣使議和（上一項為速決）</span></span></button>` : ''}`).join('')}
-      </div>`) + actionsSection();
+      </div>`) + secondHtml + actionsSection();
   app.querySelectorAll('[data-i]').forEach(b => b.onclick = () => chooseOption(opts[+b.dataset.i], ev));
   app.querySelectorAll('[data-camp]').forEach(b => b.onclick = () => startEventCampaign(opts[+b.dataset.camp], ev));
   wireMemorialSwipe(opts.length);
+  if (showSecond) wireSecond(ev2);
 }
 
 // ── 宮城平面圖：點選宮室即前往對應分頁 ──

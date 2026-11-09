@@ -103,7 +103,10 @@ function applyEffectsOnly(state, effects, rng) {
       if (val) openInvestigationOnLowest(state);
     } else if (key === 'recruit') {
       for (let i = 0; i < val && state.officials.length < MAX_OFFICIALS; i++) {
-        const id = `r${state.turn}_${i}`;
+        // 同月可能有兩則奏摺都招募（早朝第 2 則），id 以後綴避免撞號。
+        const rid = `r${state.turn}_${i}`;
+        let id = rid;
+        for (let n = 1; state.officials.some((o) => o.id === id); n++) id = `${rid}_${n}`;
         const base = 30 + Math.round(state.stats.literature / 10);
         state.officials.push(
           attachPerson(state.seed, generateOfficial(rng, id, { name: `進士${state.year}-${i + 1}`, base, span: 40 })),
