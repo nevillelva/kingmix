@@ -1,4 +1,6 @@
 // 事件資格判斷。條件以 AND 組合；chance 會消耗 rng，順序固定以維持確定性。
+import { isBonded } from './bonds.js';
+import { isCourtOfficial } from './officials.js';
 
 import { canDiplomacy } from './diplomacy.js';
 
@@ -11,8 +13,8 @@ export function isEligible(state, event, rng) {
       case 'treasury_lt': if (!(s.treasury < val)) return false; break;
       case 'people_lt': if (!(s.people < val)) return false; break;
       case 'charm_gt': if (!(s.charm > val)) return false; break;
-      case 'official_loyalty_lt':
-        if (!state.officials.some((o) => o.loyalty < val)) return false;
+      case 'official_loyalty_lt': // 朝臣（知府不計）
+        if (!state.officials.some((o) => isCourtOfficial(o) && o.loyalty < val)) return false;
         break;
       case 'months': if (!val.includes(state.month)) return false; break;
       case 'every_years':
@@ -28,6 +30,10 @@ export function isEligible(state, event, rng) {
       case 'tyranny_gt': if (!((state.tyranny || 0) > val)) return false; break;
       case 'tyranny_lt': if (!((state.tyranny || 0) < val)) return false; break;
       case 'official_trait': if (!hasOfficialTrait(state, val)) return false; break;
+      // 君臣相得的朝臣中，有人忠誠低於門檻（死諫事件，見 turn.js remonstrance）
+      case 'bonded_loyalty_lt':
+        if (!state.officials.some((o) => isCourtOfficial(o) && isBonded(state, o.id) && o.loyalty < val)) return false;
+        break;
       default: {
         // 通用數值條件：<stat>_lt / <stat>_gt，例如 prestige_lt、commerce_gt
         const m = key.match(/^([a-z]+)_(lt|gt)$/);

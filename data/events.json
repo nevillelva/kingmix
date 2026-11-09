@@ -112,6 +112,18 @@
             "military": 3,
             "people": -20
           }
+        },
+        {
+          "key": "D",
+          "label": "仁厚之臣親往撫慰，民心稍定",
+          "tone": "仁厚",
+          "when": {
+            "official_trait": "benevolent"
+          },
+          "effects": {
+            "people": 6,
+            "treasury": -5
+          }
         }
       ]
     },
@@ -426,6 +438,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
+              "prefecture": "denglai",
               "strength": 244,
               "reward": {
                 "treasury": 30,
@@ -473,6 +486,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
+              "prefecture": "hedong",
               "strength": 396,
               "reward": {
                 "prestige": 6,
@@ -793,6 +807,18 @@
             "power": -3,
             "armament": 30
           }
+        },
+        {
+          "key": "D",
+          "label": "命清廉之臣核驗軍餉",
+          "tone": "清廉",
+          "when": {
+            "official_trait": "honest"
+          },
+          "effects": {
+            "armament": 10,
+            "treasury": 10
+          }
         }
       ]
     },
@@ -951,6 +977,18 @@
             "health": -2,
             "heaven": 2
           }
+        },
+        {
+          "key": "D",
+          "label": "勤勉之臣連夜籌措賑災",
+          "tone": "勤政",
+          "when": {
+            "official_trait": "diligent"
+          },
+          "effects": {
+            "people": 3,
+            "treasury": -10
+          }
         }
       ]
     },
@@ -1098,6 +1136,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
+              "prefecture": "jingzhao",
               "strength": 295,
               "reward": {
                 "prestige": 5,
@@ -1108,6 +1147,18 @@
                 "people": -4
               }
             }
+          }
+        },
+        {
+          "key": "D",
+          "label": "忠貞之臣願代為招撫",
+          "tone": "忠勤",
+          "when": {
+            "official_trait": "loyal"
+          },
+          "effects": {
+            "official_loyalty_add": 10,
+            "prestige": 1
           }
         }
       ]
@@ -1339,6 +1390,18 @@
           "effects": {
             "people": -5
           }
+        },
+        {
+          "key": "D",
+          "label": "以重金私賄貪財之臣，令其速辦河工",
+          "tone": "行賄",
+          "when": {
+            "official_trait": "greedy"
+          },
+          "effects": {
+            "treasury": -40,
+            "agriculture": 25
+          }
         }
       ]
     },
@@ -1374,6 +1437,18 @@
           "effects": {
             "benevolence": -2,
             "literature": 1
+          }
+        },
+        {
+          "key": "D",
+          "label": "博學之臣請開講經筵",
+          "tone": "講學",
+          "when": {
+            "official_trait": "scholarly"
+          },
+          "effects": {
+            "literature": 4,
+            "people": 1
           }
         }
       ]
@@ -1449,6 +1524,19 @@
           "effects": {
             "treasury": -40,
             "people": 10
+          }
+        },
+        {
+          "key": "D",
+          "label": "酷烈之臣請以重法彈壓",
+          "tone": "峻法",
+          "when": {
+            "official_trait": "cruel"
+          },
+          "effects": {
+            "people": -6,
+            "prestige": 2,
+            "power": 2
           }
         }
       ]
@@ -2364,6 +2452,18 @@
             "treasury": -60,
             "military": 2
           }
+        },
+        {
+          "key": "D",
+          "label": "謹慎之臣查明失火緣由，嚴加防範",
+          "tone": "穩妥",
+          "when": {
+            "official_trait": "cautious"
+          },
+          "effects": {
+            "treasury": 10,
+            "agriculture": 5
+          }
         }
       ]
     },
@@ -2728,6 +2828,18 @@
           "effects": {
             "official_loyalty_add": 2,
             "shared_event": true
+          }
+        },
+        {
+          "key": "D",
+          "label": "謙退之臣請辭，陛下准其歸田",
+          "tone": "謙退",
+          "when": {
+            "official_trait": "humble"
+          },
+          "effects": {
+            "benevolence": 4,
+            "prestige": 1
           }
         }
       ]
@@ -4119,6 +4231,18 @@
             "power": 4,
             "official_loyalty_add": -4
           }
+        },
+        {
+          "key": "D",
+          "label": "驕傲之臣恃才自專，陛下奪其票擬之權",
+          "tone": "奪權",
+          "when": {
+            "official_trait": "proud"
+          },
+          "effects": {
+            "power": 4,
+            "benevolence": -2
+          }
         }
       ]
     },
@@ -4310,6 +4434,30 @@
           "tone": "穩妥",
           "effects": {
             "benevolence": 2
+          }
+        },
+        {
+          "key": "D",
+          "label": "節儉之臣諫阻，停工省費",
+          "tone": "節用",
+          "when": {
+            "official_trait": "frugal"
+          },
+          "effects": {
+            "treasury": 30,
+            "charm": -3
+          }
+        },
+        {
+          "key": "E",
+          "label": "奢靡之臣請加速內府工程",
+          "tone": "奢靡",
+          "when": {
+            "official_trait": "extravagant"
+          },
+          "effects": {
+            "charm": 5,
+            "treasury": -40
           }
         }
       ]
@@ -5631,6 +5779,19 @@
           "effects": {
             "official_loyalty_add": 3
           }
+        },
+        {
+          "key": "D",
+          "label": "果敢之臣當廷直諫，陛下為之罷廠衛",
+          "tone": "直諫",
+          "when": {
+            "official_trait": "bold"
+          },
+          "effects": {
+            "prestige": 3,
+            "benevolence": 3,
+            "power": -2
+          }
         }
       ]
     },
@@ -5667,6 +5828,18 @@
           "tone": "奸巧",
           "effects": {
             "recruit": 1
+          }
+        },
+        {
+          "key": "D",
+          "label": "好權之臣請兼領六部，陛下許之",
+          "tone": "攬權",
+          "when": {
+            "official_trait": "ambitious"
+          },
+          "effects": {
+            "power": 3,
+            "benevolence": -3
           }
         }
       ]
@@ -5994,6 +6167,18 @@
             "treasury": 20,
             "official_loyalty_add": -3
           }
+        },
+        {
+          "key": "D",
+          "label": "機巧之臣出面周旋，案情遂得隱匿",
+          "tone": "周旋",
+          "when": {
+            "official_trait": "cunning"
+          },
+          "effects": {
+            "treasury": -30,
+            "prestige": -2
+          }
         }
       ]
     },
@@ -6194,6 +6379,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
+              "prefecture": "yizhou",
               "strength": 318,
               "reward": {
                 "prestige": 5,
@@ -6245,6 +6431,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
+              "prefecture": "denglai",
               "strength": 276,
               "reward": {
                 "treasury": 30,
@@ -6424,6 +6611,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
+              "prefecture": "hedong",
               "strength": 350,
               "reward": {
                 "military": 4,
@@ -6600,6 +6788,7 @@
           "tone": "冒險",
           "effects": {
             "war": {
+              "prefecture": "denglai",
               "strength": 378,
               "reward": {
                 "prestige": 6,
@@ -6703,6 +6892,7 @@
           "tone": "強硬",
           "effects": {
             "war": {
+              "prefecture": "yangzhou",
               "strength": 267,
               "reward": {
                 "prestige": 3
@@ -7236,6 +7426,18 @@
           "effects": {
             "heaven": -3,
             "prestige": -1
+          }
+        },
+        {
+          "key": "D",
+          "label": "篤信之臣請行祈禳之禮",
+          "tone": "祈禳",
+          "when": {
+            "official_trait": "devout"
+          },
+          "effects": {
+            "heaven": 5,
+            "people": 1
           }
         }
       ]
@@ -8967,8 +9169,8 @@
       "speaker": "太常寺卿",
       "narrative": "淮水之濱有農人掘井，得古鼎殘片數件，紋飾與典籍所載九鼎相合。太常寺請陛下定奪：或收入太廟，或歸還地方，請聖裁。",
       "when": {
-        "treasury_gt": 400,
-        "chance": 0.12
+        "treasury_gt": 100,
+        "chance": 0.4
       },
       "options": [
         {
@@ -9006,8 +9208,8 @@
       "speaker": "翰林學士",
       "narrative": "江南織造進獻一套古製文房，硯、墨、紙、筆皆出名家之手。臣等以為此物可供御覽，亦可賜予詞臣，請陛下酌定。",
       "when": {
-        "literature_gt": 150,
-        "chance": 0.12
+        "literature_gt": 110,
+        "chance": 0.1
       },
       "options": [
         {
@@ -9044,8 +9246,8 @@
       "speaker": "教坊司使",
       "narrative": "梨園班主獻上新編樂曲，詞美韻雅，足傳後世。然亦有諫官以為過於綺麗，恐非朝廷所宜。請陛下聖斷。",
       "when": {
-        "charm_gt": 150,
-        "chance": 0.12
+        "charm_gt": 120,
+        "chance": 0.15
       },
       "options": [
         {
@@ -9610,6 +9812,36 @@
           "label": "置之不理",
           "tone": "穩妥",
           "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E420",
+      "name": "死諫",
+      "speaker": "諫臣",
+      "narrative": "君臣相得之臣，近日屢諫不納，忠誠已見動搖。今叩首殿前，言若不納，願以死明志，請陛下速決。",
+      "when": {
+        "bonded_loyalty_lt": 60
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "納諫",
+          "tone": "仁厚",
+          "effects": {
+            "remonstrance": "accept",
+            "benevolence": 5,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "駁回",
+          "tone": "強硬",
+          "effects": {
+            "remonstrance": "reject",
+            "prestige": -3
+          }
         }
       ]
     }

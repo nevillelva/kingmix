@@ -3,7 +3,7 @@
 import { setStat, FACTION_BASE } from './state.js';
 import { makeRng } from './rng.js';
 import { officeHolder } from './offices.js';
-import { generateOfficial } from './officials.js';
+import { generateOfficial, isCourtOfficial } from './officials.js';
 import { attachPerson, applyTraitEffects, generateConsort } from './people.js';
 import { openInvestigationOnLowest, tickDongchang, applyTyrannyDrift } from './dongchang.js';
 import { activeMonthly } from './policy.js';
@@ -13,7 +13,7 @@ import { neighborById, diplomacyAction, recordDiplomacy, DECLARE_WAR_REWARD, DEC
 import { createHeir, advanceHeirs, tickHeirs, tickCrownPrince } from './succession.js';
 import { tickTutorTraits } from './education.js';
 import { tickTitles } from './titles.js';
-import { isLoyaltyFrozen } from './bonds.js';
+import { isLoyaltyFrozen, isBonded } from './bonds.js';
 import { collectFromSet } from './collections.js';
 import { tickEconomy, applyPrefectureYield } from './economy.js';
 import { tickCity } from './city.js';
@@ -23,7 +23,8 @@ import { scheduleChain } from './chains.js';
 import { recordSharedEvent } from './bonds.js';
 import { tickAssassination } from './assassination.js';
 
-export const MAX_OFFICIALS = 12;
+// 官員名單上限：朝臣 12 人（開局 4 人加進士招募）＋ 六府知府 6 人。
+export const MAX_OFFICIALS = 18;
 
 // 月結與政策的自然變化：越界時靜默截斷
 const drift = (state, key, value) => setStat(state, key, value, { silent: true });
@@ -33,7 +34,7 @@ export const AFTER_OPTION_KEYS = Object.freeze(['chain', 'shared_event']);
 
 export function lowestLoyaltyOfficial(officials) {
   let best = null;
-  for (const o of officials) if (!best || o.loyalty < best.loyalty) best = o;
+  for (const o of officials) if (isCourtOfficial(o) && (!best || o.loyalty < best.loyalty)) best = o;
   return best;
 }
 
@@ -102,6 +103,8 @@ function applyEffectsOnly(state, effects, rng) {
       for (const h of state.heirs) {
         for (const k of Object.keys(h.abilities)) h.abilities[k] = Math.min(100, h.abilities[k] + val);
       }
+    } else if (key === 'remonstrance') {
+      applyRemonstrance(state, val);
     } else if (key === 'war') {
       resolveWar(state, val, rng, (st, eff) => applyEffectsOnly(st, eff, rng));
     } else if (key === 'campaign') {
@@ -146,6 +149,30 @@ function applyDiplomacy(state, { action, neighbor }) {
   }
   const r = diplomacyAction(state, action, neighbor);
   recordDiplomacy(state, action, neighbor, r.ok);
+}
+
+// 死諫（E420）：君臣相得且忠誠最低的朝臣進諫。納諫則忠誠回升；駁回則殞命。結果皆寫入史記（state.chronicle）。
+export const REMONSTRANCE_ACCEPT_LOYALTY = 15;
+export function bondedRemonstrant(state) {
+  let best = null;
+  for (const o of state.officials) {
+    if (!isCourtOfficial(o) || !isBonded(state, o.id)) continue;
+    if (!best || o.loyalty < best.loyalty) best = o;
+  }
+  return best;
+}
+
+function applyRemonstrance(state, choice) {
+  const target = bondedRemonstrant(state);
+  if (!target) return;
+  const base = { kind: 'remonstrance', name: target.personName ?? target.name, year: state.year, month: state.month };
+  if (choice === 'accept') {
+    target.loyalty = Math.min(100, target.loyalty + REMONSTRANCE_ACCEPT_LOYALTY);
+    state.chronicle.push({ ...base, outcome: 'accepted' });
+  } else if (choice === 'reject') {
+    state.chronicle.push({ ...base, outcome: 'died' });
+    removeOfficial(state, target);
+  }
 }
 
 function applyPolicyEffects(state) {

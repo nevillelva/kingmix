@@ -2,6 +2,7 @@
 // 數值為 Phase 2 暫定值，見 docs/specs/phase2-court.md。
 
 import { setStat } from './state.js';
+import { isCourtOfficial } from './officials.js';
 
 export const DC_ACTIONS = ['warn', 'punish', 'prison'];
 export const MAX_ACTIVE_CASES = 2; // 東廠同時最多進行的案件數（未結案者皆計入）
@@ -49,7 +50,7 @@ export function openInvestigation(state, officialId) {
 
 export function openInvestigationOnLowest(state) {
   let target = null;
-  for (const o of state.officials) if (!target || o.loyalty < target.loyalty) target = o;
+  for (const o of state.officials) if (isCourtOfficial(o) && (!target || o.loyalty < target.loyalty)) target = o;
   return target ? openInvestigation(state, target.id) : null;
 }
 

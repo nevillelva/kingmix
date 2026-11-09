@@ -1,5 +1,6 @@
 import { attachPerson } from './people.js';
 import { createEra } from './era.js';
+import { ensureEconomy } from './economy.js';
 
 // 遊戲狀態與數值邊界。所有數值寫入都必須經過 setStat，確保越界會被截斷並記錄。
 
@@ -87,6 +88,8 @@ export function createInitialState(seed, opts = {}) {
   };
   // 人物欄位（personName / age / traits）：決定性，不改動既有欄位
   for (const o of state.officials) attachPerson(seed, o);
+  // 六府與知府（官員記錄）於開局即建立，知府與其他官員一同可見、可任免（見 economy.js）
+  ensureEconomy(state);
   return state;
 }
 

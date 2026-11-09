@@ -153,7 +153,7 @@ export function applyTraitEffects(state) {
     if (!o.traits || o.traits.length === 0) continue;
     const loyalty = isLoyaltyFrozen(state, o) ? 0 : traitSum(o, 'loyalty'); // 君臣相得者忠誠凍結
     if (loyalty) o.loyalty = Math.min(100, Math.max(0, o.loyalty + loyalty));
-    if (o.office) {
+    if (o.office && !o.prefecture) { // 知府的經手錢糧已由州府產出計入，不另計朝廷漏損
       const leak = BASE_LEAKAGE * (1 + traitSum(o, 'corruption'));
       if (leak > 0) treasuryDelta -= leak;
     }

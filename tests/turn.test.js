@@ -6,7 +6,7 @@ import { applyOption, monthlyTick, advanceMonth } from '../src/turn.js';
 test('removeOfficial removes the lowest-loyalty official', () => {
   const s = createInitialState('t');
   applyOption(s, { effects: { removeOfficial: true } });
-  assert.equal(s.officials.length, 3);
+  assert.equal(s.officials.length, 9); // 4 位朝臣與 6 位知府，僅朝臣可被選為對象
   assert.ok(!s.officials.some((o) => o.id === 'o3'));
 });
 

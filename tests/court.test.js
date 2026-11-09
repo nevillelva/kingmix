@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createInitialState } from '../src/state.js';
 import { assignOffice, officeHolder } from '../src/offices.js';
-import { applyOption, monthlyTick, advanceMonth } from '../src/turn.js';
+import { applyOption, monthlyTick, advanceMonth, MAX_OFFICIALS } from '../src/turn.js';
 import { makeRng } from '../src/rng.js';
 import { generateOfficial, unmetRequirements } from '../src/officials.js';
 
@@ -39,10 +39,11 @@ test('a vacant revenue office costs treasury every month', () => {
   assert.ok(vacant.stats.treasury < filled.stats.treasury);
 });
 
-test('recruiting adds officials and is capped at 12', () => {
+test('recruiting adds officials and is capped at MAX_OFFICIALS (court 12 + six governors)', () => {
   const s = createInitialState('t');
   applyOption(s, { effects: { recruit: 20 } }, makeRng(['r']));
-  assert.equal(s.officials.length, 12);
+  assert.equal(s.officials.length, MAX_OFFICIALS);
+  assert.equal(s.officials.filter((o) => !o.prefecture).length, MAX_OFFICIALS - 6);
 });
 
 test('recruits are deterministic for the same rng seed', () => {
