@@ -5,7 +5,7 @@ export function evaluateDynasty(state) {
   const wins = state.wars.filter((w) => w.won).length;
   const losses = state.wars.length - wins;
   const recruits = state.officials.filter((o) => String(o.id).startsWith('r')).length;
-  const military = Math.max(0, Math.min(100, Math.round(wins * 5 - losses * 3)));
+  const military = Math.max(0, Math.min(100, Math.round(wins * 4.6 - losses * 3)));
   const civil = Math.max(0, Math.min(100, Math.round(state.stats.literature / 16 + recruits * 2)));
   const benevolence = Math.max(0, Math.min(100, Math.round(state.stats.benevolence / 5 + state.stats.people / 2) / 3.5));
   // 承續權重 ×1.1（校準：事件戰爭敵方擲骰後的稱號分布，見 PR 說明）
