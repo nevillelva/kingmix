@@ -7808,6 +7808,239 @@
       "when": {
         "chance": 0.5
       }
+    },
+    {
+      "id": "E301",
+      "name": "屯田之議",
+      "speaker": "司農寺卿",
+      "narrative": "重農既行，江南諸州請仿古制設屯田，以荒地募流民耕作，可省轉運之費，亦可為備荒之積。然屯田初設，費用不小，請陛下聖裁。",
+      "when": {
+        "policy": "agrarian",
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准設屯田",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -60,
+            "agriculture": 45,
+            "people": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "先試一州",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -15,
+            "agriculture": 12
+          }
+        },
+        {
+          "key": "C",
+          "label": "以民力為重，暫緩",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 4,
+            "people": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E302",
+      "name": "市舶增稅之請",
+      "speaker": "市舶司提舉",
+      "narrative": "重商之策既行，海舶往來日盛，市舶司奏請增設稅關，以充國用。商賈或以為苛，然稅入確可倍增。請陛下定奪其制。",
+      "when": {
+        "policy": "commerce",
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "增設稅關",
+          "tone": "冒險",
+          "effects": {
+            "treasury": 80,
+            "people": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "減稅通商",
+          "tone": "仁厚",
+          "effects": {
+            "commerce": 30,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "C",
+          "label": "維持舊制",
+          "tone": "穩妥",
+          "effects": {
+            "commerce": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": "E303",
+      "name": "邊軍請餉",
+      "speaker": "兵部侍郎",
+      "narrative": "黷武之世，邊將連上奏章，言及軍士缺餉、器械陳舊，若不速補，恐生譁變。陛下欲以武定天下，當先養其士卒。",
+      "when": {
+        "policy": "militarist",
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "撥款增兵",
+          "tone": "冒險",
+          "effects": {
+            "treasury": -80,
+            "military": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "獎敘軍功，補充器械",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": 3,
+            "armament": 20
+          }
+        },
+        {
+          "key": "C",
+          "label": "罷兵休民",
+          "tone": "仁厚",
+          "effects": {
+            "people": 5,
+            "military": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E304",
+      "name": "開經筵之請",
+      "speaker": "翰林學士",
+      "narrative": "儒術為治國之本，翰林院請開經筵，每月召儒臣入宮講《論語》與《尚書》，以明禮義、正人心。有司以為費時，臣以為不可不行。",
+      "when": {
+        "policy": "confucian",
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開經筵，親聽講學",
+          "tone": "仁厚",
+          "effects": {
+            "literature": 10,
+            "benevolence": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "命儒臣代講",
+          "tone": "穩妥",
+          "effects": {
+            "literature": 4
+          }
+        },
+        {
+          "key": "C",
+          "label": "以國事為先，不必",
+          "tone": "冒險",
+          "effects": {
+            "benevolence": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E305",
+      "name": "夜襲寢殿",
+      "speaker": "禁衛統領",
+      "narrative": "深夜行宮有刺客潛入，雖為侍衛所阻，然刺客所持利刃係東廠舊物。朝野紛紛議論，皆言陛下用東廠太過，招來怨毒。",
+      "when": {
+        "tyranny_gt": 40,
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴查刺客主使",
+          "tone": "冒險",
+          "effects": {
+            "health": -8,
+            "power": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "息事寧人，不予追究",
+          "tone": "仁厚",
+          "effects": {
+            "health": -4,
+            "benevolence": 4
+          }
+        },
+        {
+          "key": "C",
+          "label": "加派禁衛，護駕自固",
+          "tone": "穩妥",
+          "effects": {
+            "health": -2,
+            "treasury": -30
+          }
+        }
+      ]
+    },
+    {
+      "id": "E306",
+      "name": "御膳有毒",
+      "speaker": "尚食局",
+      "narrative": "御膳房驗出膳食中有慢性之毒，經查係某宮人所為，而該宮人背後似有人指使。東廠日夜構陷，朝中無人敢言，陛下不可不慎。",
+      "when": {
+        "tyranny_gt": 50,
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "徹查，株連甚廣",
+          "tone": "冒險",
+          "effects": {
+            "health": -3,
+            "power": 8,
+            "people": -6
+          }
+        },
+        {
+          "key": "B",
+          "label": "賜死宮人，以儆效尤",
+          "tone": "穩妥",
+          "effects": {
+            "health": -5,
+            "prestige": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "召太醫調養",
+          "tone": "仁厚",
+          "effects": {
+            "health": 6,
+            "treasury": -15
+          }
+        }
+      ]
     }
   ]
 }

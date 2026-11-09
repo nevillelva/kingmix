@@ -135,6 +135,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
     dongchang: { open: state.dongchang.cases.filter((c) => c.status !== 'closed').length, total: state.dongchang.cases.length },
     triggered,
     policy: state.policy,
+    tyranny: state.tyranny,
     generation: state.dynasty.generation,
     dynastyEnded: state.dynasty.ended,
     consorts: state.consorts.length,
