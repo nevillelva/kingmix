@@ -78,7 +78,7 @@ export function pickEvent(state, events, rng, exclude = null) {
 
 // 早朝第 2 則奏摺：每月以 50% 機率出現（同一個 rng 先抽機率、再抽事件，確定性）。
 // 冷卻與每局上限沿用 pickEvent 的 eventAllowed；exclude 避免與第 1 則重複。
-export const SECOND_MEMORIAL_CHANCE = 0.5;
+export const SECOND_MEMORIAL_CHANCE = 0.1;
 export function pickSecondMemorial(state, events, rng, exclude = null) {
   if (!(rng() < SECOND_MEMORIAL_CHANCE)) return null;
   return pickEvent(state, events, rng, exclude);
