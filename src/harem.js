@@ -15,6 +15,13 @@ export const TAIHOU_GAIN = 0.2;
 export const TAIHOU_DECAY = 0.1;
 const MAX_DEMANDS = 30;
 
+// 寵愛值（favor，0–100）：每位妃嬪一個數值，入宮時約 40–60（見 people.js generateConsort）。
+// 未了請求滿 DEMAND_TERM 個月後由皇帝裁決：達成則寵愛 +FAVOR_STEP，拒絕則 -FAVOR_STEP。
+// 裁決機率隨寵愛而定：0.3 + 0.4 × favor/100（寵愛高者較易獲准）。
+export const FAVOR_INITIAL = 50;
+export const FAVOR_STEP = 4;
+export const DEMAND_TERM = 24;
+
 // 外戚坐大回寫派系勢力（耦合）：僅在某家族 外戚坐大期間，該家族派系勢力每月 +0.02，並止於上限。
 // 上限低於 FACTION_FORCE_THRESHOLD（50），確保耦合本身不會單獨逼迫國策。
 export const WAIJIA_FACTION_COUPLING = 0.02;
@@ -22,6 +29,32 @@ export const WAIJIA_FACTION_CAP = 40;
 
 // 太后反對時的月度懲罰（只作用於皇帝權勢），且僅在有外戚坐大時生效。
 export const TAIHOU_PENALTY = -0.3;
+
+export function consortFavor(consort) {
+  return consort?.favor ?? FAVOR_INITIAL;
+}
+
+// 寫入一則請求的裁決（達成或拒絕），並調整該妃嬪寵愛值。僅對 open 狀態的請求生效。
+export function setDemandOutcome(state, demandId, grant) {
+  const h = ensureHarem(state);
+  const d = h.demands.find((x) => x.id === demandId);
+  if (!d || d.status !== 'open') return null;
+  d.status = grant ? 'granted' : 'denied';
+  d.resolvedTurn = state.turn;
+  const c = state.consorts.find((x) => x.id === d.consortId);
+  if (c) c.favor = Math.min(100, Math.max(0, consortFavor(c) + (grant ? FAVOR_STEP : -FAVOR_STEP)));
+  return d;
+}
+
+// 每月：逾期未了的請求由皇帝裁決（確定性隨機，機率受寵愛影響）。
+function resolveDueDemands(state, h) {
+  for (const d of h.demands) {
+    if (d.status !== 'open' || state.turn - d.turn < DEMAND_TERM) continue;
+    const c = state.consorts.find((x) => x.id === d.consortId);
+    const p = 0.3 + (0.4 * consortFavor(c)) / 100;
+    setDemandOutcome(state, d.id, makeRng([state.seed, 'demand', d.id])() < p);
+  }
+}
 
 function ensureHarem(state) {
   if (!state.harem) {
@@ -107,6 +140,7 @@ export function tickHarem(state) {
   if (state.consorts.length === 0 && !state.harem) return state;
   const h = ensureHarem(state);
   proposeDemands(state, h);
+  resolveDueDemands(state, h);
   updateWaijia(state, h);
   resolveDominant(state, h);
   updateTaihou(h);

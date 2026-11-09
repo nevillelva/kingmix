@@ -117,14 +117,16 @@ export function generateConsort(seed, id) {
   const rng = makeRng([seed, 'consort', id]);
   const personality = PERSONALITIES[Math.floor(rng() * PERSONALITIES.length)].id;
   const family = FACTIONS[Math.floor(rng() * FACTIONS.length)];
-  return { personName: generateName(seed, id), personality, family };
+  const favor = 40 + Math.floor(rng() * 21); // 寵愛值 40–60（最後抽取，不改動前兩項結果）
+  return { personName: generateName(seed, id), personality, family, favor };
 }
 
 export function describeConsort(consort) {
   const p = PERSONALITY_BY_ID[consort.personality];
   const family = FACTION_NAMES[consort.family] ?? consort.family;
   const name = consort.personName ?? consort.id;
-  return p ? `${name}：${p.name}之性（${p.description}），出身${family}` : `${name}：出身${family}`;
+  const favor = consort.favor !== undefined ? `，寵愛${consort.favor}` : '';
+  return p ? `${name}：${p.name}之性（${p.description}），出身${family}${favor}` : `${name}：出身${family}${favor}`;
 }
 
 export function describeTraits(person) {

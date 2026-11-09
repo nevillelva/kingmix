@@ -11,6 +11,9 @@ const LEGACY_KEYS = ['literature', 'military', 'power', 'benevolence', 'prestige
 export const CHILD_MORTALITY = [0.0175, 0.007, 0.0035, 0.00175, 0.0009];
 // 奪嫡期間，最弱的成年皇子每月遭除名（薨逝或被貶）的機率。
 export const RIVALRY_LOSS = 0.02;
+// 立太子：清流支持（勢力加成）；其餘派系官員警覺（忠誠下降）。暫定值。
+export const CROWN_PRINCE_FACTION_BOOST = 3;
+export const CROWN_PRINCE_ALARM = 2;
 
 export function heirStrength(heir) {
   return Object.values(heir.abilities).reduce((a, b) => a + b, 0);
@@ -49,14 +52,17 @@ export function tryAccession(state) {
     return false;
   }
   candidates.sort((a, b) => heirStrength(b) - heirStrength(a) || a.id.localeCompare(b.id));
-  const heir = candidates[0];
+  // 已立太子者優先繼位，否則取最強者
+  const heir = candidates.find((h) => h.id === state.dynasty.crownPrince) ?? candidates[0];
 
   state.heirs = state.heirs.filter((h) => h !== heir);
   state.dynasty.generation += 1;
   state.alive = true;
   state.endReason = null;
   state.age = heir.age;
-  state.emperor = { name: heir.name, abilities: heir.abilities };
+  state.emperor = { name: heir.name, abilities: heir.abilities, traits: [...(heir.traits ?? [])] }; // 特質承自皇子（抓周所得）
+  state.dynasty.crownPrince = null;
+  state.dynasty.rivalrySince = null;
   setStat(state, 'health', 70);
   setStat(state, 'charm', 120);
   for (const key of LEGACY_KEYS) setStat(state, key, state.stats[key] * 0.6);
@@ -73,6 +79,7 @@ export function childMortalityRate(age) {
 
 function removeHeir(state, heir, cause) {
   state.heirs = state.heirs.filter((h) => h !== heir);
+  if (state.dynasty.crownPrince === heir.id) state.dynasty.crownPrince = null;
   state.chronicle.push({
     kind: 'heir_death',
     generation: state.dynasty.generation,
@@ -95,11 +102,43 @@ export function tickHeirs(state) {
   }
 
   const adults = state.heirs.filter((h) => h.gender === 'male' && h.age >= ADULT_AGE);
+  const wasRival = state.dynasty.rivalry;
   state.dynasty.rivalry = adults.length >= 2;
+  if (state.dynasty.rivalry && !wasRival) state.dynasty.rivalrySince = { year: state.year, month: state.month };
+  if (!state.dynasty.rivalry) state.dynasty.rivalrySince = null;
   if (state.dynasty.rivalry) {
-    const weakest = [...adults].sort((a, b) => heirStrength(a) - heirStrength(b) || a.id.localeCompare(b.id))[0];
-    if (makeRng([...base, 'rivalry'])() < RIVALRY_LOSS) removeHeir(state, weakest, 'rivalry');
+    // 太子不在奪嫡除名之列：除名對象為其餘成年皇子中最弱者
+    const rivals = adults.filter((h) => h.id !== state.dynasty.crownPrince);
+    const weakest = [...rivals].sort((a, b) => heirStrength(a) - heirStrength(b) || a.id.localeCompare(b.id))[0];
+    if (weakest && makeRng([...base, 'rivalry'])() < RIVALRY_LOSS) removeHeir(state, weakest, 'rivalry');
   }
+}
+
+// 立太子：僅成年男性皇子可立。回傳是否成功。
+export function designateCrownPrince(state, heirId) {
+  const heir = state.heirs.find((h) => h.id === heirId);
+  if (!heir || heir.gender !== 'male' || heir.age < ADULT_AGE) return false;
+  state.dynasty.crownPrince = heir.id;
+  state.factions.qingliu = Math.min(100, state.factions.qingliu + CROWN_PRINCE_FACTION_BOOST);
+  for (const o of state.officials) {
+    if (o.faction !== 'qingliu') o.loyalty = Math.max(0, o.loyalty - CROWN_PRINCE_ALARM);
+  }
+  return true;
+}
+
+// 選項以 setFlag: 'crown_prince_pending' 請求立太子（見 E125「冊立東宮」）。
+// 尚無成年皇子時請求保留，待有成年男嗣再由最強者立為太子。
+export function tickCrownPrince(state) {
+  if (!state.flags.crown_prince_pending) return state;
+  if (state.dynasty.crownPrince) {
+    delete state.flags.crown_prince_pending;
+    return state;
+  }
+  const adults = state.heirs
+    .filter((h) => h.gender === 'male' && h.age >= ADULT_AGE)
+    .sort((a, b) => heirStrength(b) - heirStrength(a) || a.id.localeCompare(b.id));
+  if (adults.length && designateCrownPrince(state, adults[0].id)) delete state.flags.crown_prince_pending;
+  return state;
 }
 
 export function heirRng(seed, generation, nonce) {
