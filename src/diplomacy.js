@@ -15,7 +15,9 @@ export const MARRIAGE_COST = 60; // 國庫
 export const MARRIAGE_TRUCE_MONTHS = 24;
 export const TRIBUTE_MIN_ATTITUDE = 40;
 export const TRIBUTE_GAIN = 20; // 國庫
-export const ALLIANCE_MIN_ATTITUDE = 60;
+// 結盟好感門檻：取好感漂移中心 50（見 monthlyDrift），中立以上即可結盟。
+// 原為 60，好感長期回歸 50，200 局僅結盟 2 次；改為 50 後約 55 次。
+export const ALLIANCE_MIN_ATTITUDE = 50;
 export const MAX_ALLIANCES = 2;
 
 // 宣戰的獎懲數值（勝利獎勵 / 戰敗損失），預設與 web/index.html 的 WAR_SPEC 相同。

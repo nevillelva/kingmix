@@ -295,7 +295,7 @@ import { eligibleCrownHeirs, heirFaction, chooseCrownPrince, CHANGE_CROWN_PRINCE
 import { pickEvent, pickSecondMemorial, autoAppoint } from './src/sim.js';
 import { tryAccession } from './src/succession.js';
 import { evaluateDynasty } from './src/ending.js';
-import { setTaxTier, ensureEconomy, administrativeEfficiency, TAX_TIERS } from './src/economy.js';
+import { setTaxTier, ensureEconomy, administrativeEfficiency, TAX_TIERS, PREFECTURE_DEFS } from './src/economy.js';
 import { repairCity, ensureCity, cityOf, REPAIR_COST } from './src/city.js';
 import { taihouOpposes, WAIJIA_THRESHOLD, TAIHOU_OPPOSE } from './src/harem.js';
 import { factionsBalanced, forcingFaction, strongFactionCount, FORCE_MONTHS, FACTION_FORCE_THRESHOLD, FACTION_POLICY, BALANCED_EFFICIENCY, suppressFaction, rallyFaction } from './src/factions.js';
@@ -324,7 +324,17 @@ const ABIL = { intellect:'智', politics:'政', martial:'武', command:'統', vi
 const DC_LABEL = { warn:'告誡', punish:'責罰', prison:'下獄' };
 const DC_HINT = { warn:'口頭告誡，收其野心，回其忠誠', punish:'降職罷黜，震懾同僚', prison:'下獄審訊，或可得其供詞' };
 const OFFICE = { chancellor:'丞相', revenue:'戶部', works:'工部', war:'兵部', prefect:'知府', tutor:'太傅' };
-const EFFECT_EXTRA = { official_loyalty_add:'官員忠誠', removeOfficial:'罷官', investigate_lowest:'東廠查察', recruit:'徵辟', add_consort:'納妃', birth:'誕育', tutor_teach:'授教', war:'征戰', population_pct:'人口', setFlag:'朝局', collect:'收藏' };
+// 官職顯示名：六府知府以 prefect:<府 id> 記錄，顯示為「京兆府知府」等；未知鍵不外露原始字串。
+function officeName(k){
+  if (OFFICE[k]) return OFFICE[k];
+  if (typeof k === 'string' && k.startsWith('prefect:')) {
+    const d = PREFECTURE_DEFS.find(p => p.id === k.slice('prefect:'.length));
+    return d ? d.name + '知府' : '知府';
+  }
+  return '閒置';
+}
+const DIPLO_LABEL = { marriage:'聯姻', tribute:'朝貢', ally:'結盟', war:'宣戰', scout:'刺探' };
+const EFFECT_EXTRA = { official_loyalty_add:'官員忠誠', removeOfficial:'罷官', investigate_lowest:'東廠查察', recruit:'徵辟', add_consort:'納妃', birth:'誕育', tutor_teach:'授教', war:'征戰', population_pct:'人口', setFlag:'朝局', collect:'收藏', campaign:'戰役進度', remonstrance:'死諫', diplomacy:'外交' };
 const EFFECT = { ...EFFECT_EXTRA, treasury:'國庫', agriculture:'農業', people:'民心', benevolence:'仁德', prestige:'威儀', charm:'聲色', literature:'文學', military:'兵力', power:'權勢', commerce:'商業', armament:'軍備', heaven:'天命', health:'健康' };
 const NEED_LABEL = { intellect:'智', politics:'政', martial:'武', command:'統', virtue:'德', loyalty:'忠誠' };
 const TOP_GAUGES = ['treasury','people','armament','heaven'];
@@ -699,6 +709,7 @@ function effChips(o){
   return Object.entries(o.effects||{}).filter(([k]) => !AFTER_OPTION_KEYS.includes(k)).map(([k,v]) => {
     if (typeof v === 'boolean') return `<span class="chip">${EFFECT[k]||k}</span>`;
     if (k === 'war') return `<span class="chip">${EFFECT[k]}</span>`;
+    if (k === 'diplomacy' && v && typeof v === 'object') return `<span class="chip">外交・${DIPLO_LABEL[v.action] || '其他'}</span>`;
     if (typeof v !== 'number') return `<span class="chip">${EFFECT[k]||k}</span>`;
     const t = effectChipText(k, v, EFFECT[k]||k);
     return t ? `<span class="chip ${v>0?'up':'down'}">${t}</span>` : '';
@@ -1074,7 +1085,7 @@ function personCard(o){
     <div class="head">${portrait(o)}
       <div style="min-width:0"><div class="name">${esc(o.personName || o.name)}<span class="age">${o.age ?? '—'} 歲</span></div>
         <div class="tags"><span class="tag" style="color:${f.c};border-color:${f.c}">${esc(f.l)}</span>
-        <span class="tag">${o.office ? esc(OFFICE[o.office] || o.office) : '閒置'}</span>${bonded ? '<span class="tag bond">君臣相得</span>' : ''}</div></div></div>
+        <span class="tag">${o.office ? esc(officeName(o.office)) : '閒置'}</span>${bonded ? '<span class="tag bond">君臣相得</span>' : ''}</div></div></div>
     <div class="loy">忠誠 <b style="color:${o.loyalty<40?'var(--gold)':'var(--green)'}">${Math.round(o.loyalty)}</b> · 野心 ${Math.round(o.ambition)}</div>
     ${safetyLine(o, bonded)}
     <div class="abil">${Object.keys(ABIL).map(k => `<div>${ABIL[k]}<b>${o.abilities?.[k] ?? '—'}</b></div>`).join('')}</div>
@@ -1091,12 +1102,12 @@ function candidatePanel(k){
   const dis = !state.alive || actionsLeft() <= 0 ? 'disabled' : '';
   const cands = state.officials.filter(o => o.office !== k);
   return `<div class="offpick">
-    <div class="sub">選擇人選任${OFFICE[k]}　<span class="hint">需求：${reqText(k)}</span></div>
+    <div class="sub">選擇人選任${officeName(k)}　<span class="hint">需求：${reqText(k)}</span></div>
     <div class="opts">` + (cands.length
       ? cands.map(o => {
           const g = officeFit(o, k);
           return `<button class="opt" data-act="assign" data-arg="${o.id}" ${dis}><span class="mark">${esc((o.personName||o.name).slice(0,1))}</span>
-            <span class="otxt"><span class="label">${esc(o.personName||o.name)}${o.office ? `（現任${OFFICE[o.office]||o.office}）` : ''}</span>
+            <span class="otxt"><span class="label">${esc(o.personName||o.name)}${o.office ? `（現任${officeName(o.office)}）` : ''}</span>
             <span class="hint">${FAC(o.faction).l}　${g.length ? '未達標：' + gapText(g) : '達標'}</span></span></button>`;
         }).join('')
       : '<p class="empty">朝中無可任之臣。</p>') + `</div>
@@ -1113,7 +1124,7 @@ function officeCard(){
     const sug = suggestCandidate(state, k);
     const sugFit = sug ? officeFit(sug, k) : null;
     return `<div class="offrow">
-      <div class="offtxt"><b style="font-weight:500">${OFFICE[k]}</b> ${status}
+      <div class="offtxt"><b style="font-weight:500">${officeName(k)}</b> ${status}
         <div class="loy">現任：${h ? esc(h.personName || h.name) : '虛位'}${gaps.length ? `　未達：${esc(gapText(gaps))}` : ''}　需求：${reqText(k)}</div>
         <div class="loy">吏部建議：${sug ? `${esc(sug.personName || sug.name)}（${sugFit.length ? '未達標' : '達標'}）` : '無閒置之臣可薦'}</div>
       </div>
@@ -1436,19 +1447,19 @@ function onAgency(e){
   if (a === 'office') { pick1 = v; panel = 'appoint2'; return render(); }
   if (a === 'dismiss') {
     const prev = dismissOffice(state, v);
-    if (!prev) { feedback = `${OFFICE[v]}本無人任職。`; return render(); }
-    return useAction(`免去${prev.personName || prev.name}之${OFFICE[v]}，官職暫缺。`);
+    if (!prev) { feedback = `${officeName(v)}本無人任職。`; return render(); }
+    return useAction(`免去${prev.personName || prev.name}之${officeName(v)}，官職暫缺。`);
   }
   if (a === 'suggest') {
     const c = suggestCandidate(state, v);
     if (!c) { feedback = '朝中無閒置之臣可薦。'; return render(); }
     const gaps = assignOffice(state, c.id, v);
-    return useAction(`依吏部建議，任命${c.personName || c.name}為${OFFICE[v]}${gaps.length ? '（未達標，效果打折）' : ''}。`);
+    return useAction(`依吏部建議，任命${c.personName || c.name}為${officeName(v)}${gaps.length ? '（未達標，效果打折）' : ''}。`);
   }
   if (a === 'assign') {
     const off = state.officials.find(o => o.id === v);
     const gaps = assignOffice(state, v, pick1);
-    const label = OFFICE[pick1] || pick1;
+    const label = officeName(pick1);
     return useAction(`任命${off ? (off.personName || off.name) : ''}為${label}${gaps.length ? '（能力未達標，效果打折）' : ''}。`);
   }
   if (a === 'dcopen') {

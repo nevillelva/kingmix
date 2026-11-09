@@ -8,7 +8,7 @@ import { makeRng } from '../src/rng.js';
 import { runSimulation } from '../src/sim.js';
 import {
   diplomacyOf, canDiplomacy, scoutNeighbor, scoutedFresh, diplomacyAction, SCOUT_COST, SCOUT_TTL,
-  MARRIAGE_COST, DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, enemyStrengthOf,
+  MARRIAGE_COST, DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, enemyStrengthOf, ALLIANCE_MIN_ATTITUDE,
 } from '../src/diplomacy.js';
 import { startCampaign, autoCampaignStep, pickTactic, MAX_ROUNDS } from '../src/campaign.js';
 import { ourStrength } from '../src/war.js';
@@ -28,9 +28,9 @@ test('tribute is gated by attitude, alliance by attitude and slot, and war by al
   d.north.attitude = 40;
   assert.equal(canDiplomacy(s, 'tribute', 'north'), true);
 
-  d.west.attitude = 59;
+  d.west.attitude = ALLIANCE_MIN_ATTITUDE - 1;
   assert.equal(canDiplomacy(s, 'ally', 'west'), false);
-  d.west.attitude = 60;
+  d.west.attitude = ALLIANCE_MIN_ATTITUDE;
   assert.equal(canDiplomacy(s, 'ally', 'west'), true);
 
   d.west.allied = true;
@@ -177,7 +177,7 @@ test('diplomacy routes apply their effects through applyOption', () => {
   assert.equal(s.diplomacyLog.at(-1).ok, true);
 });
 
-test('alliance is reachable: a neighbor at 60 or more can be allied and adds reinforcement', () => {
+test('alliance is reachable: a neighbor at the threshold (50) or more can be allied and adds reinforcement', () => {
   const s = createInitialState('ally');
   diplomacyOf(s).east.attitude = 65;
   assert.equal(diplomacyAction(s, 'ally', 'east').ok, true);
