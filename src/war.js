@@ -22,13 +22,26 @@ export function ourStrength(state, rng) {
 // 敵方強度 = 名目強度 × (1 + (2u − 1) × spread)。上限 0.3。
 export const EVENT_ENEMY_SPREAD = 0.3;
 
+// 勢均力敵的戰前刺探加成：出兵前已探知敵情（兵部偵查），敵方有效強度 × (1 − EVEN_EDGE × w(ratio))。
+// w 在 ratio 0.9–1.1 為 1，於 0.8–0.9 與 1.1–1.2 線性遞減至 0；1.2 以上（含強敵 ≥1.3）完全不受影響。
+// 連續遞減可保證敵強度單調（強敵不會因跨過區間邊界而變得較弱）。
+export const EVEN_EDGE = 0.05;
+export function evenWeight(ratio) {
+  if (!(ratio > 0.8) || ratio >= 1.2) return 0;
+  if (ratio < 0.9) return (ratio - 0.8) / 0.1;
+  if (ratio <= 1.1) return 1;
+  return (1.2 - ratio) / 0.1;
+}
+
 // spec: { strength, reward, loss }；reward/loss 為 effects 物件
 // 事件戰爭同時擲己方與敵方戰力，敵強度愈高勝率愈低（單調）。
 // 記錄的 ratio 為名目比（敵方名目強度 ÷ 己方名目戰力），供校準用。
 export function resolveWar(state, spec, rng, applyEffects) {
   const nominal = nominalStrength(state);
   const power = ourStrength(state, rng);
-  const enemy = spec.strength * (1 + (rng() * 2 - 1) * EVENT_ENEMY_SPREAD);
+  const ratio = nominal > 0 ? spec.strength / nominal : null;
+  const edge = 1 - EVEN_EDGE * (ratio === null ? 0 : evenWeight(ratio));
+  const enemy = spec.strength * (1 + (rng() * 2 - 1) * EVENT_ENEMY_SPREAD) * edge;
   const won = power >= enemy;
   const effects = won ? spec.reward : spec.loss;
   applyEffects(state, effects || {});
@@ -38,7 +51,7 @@ export function resolveWar(state, spec, rng, applyEffects) {
     strength: spec.strength,
     power: Math.round(power),
     won,
-    ratio: nominal > 0 ? Math.round((spec.strength / nominal) * 1000) / 1000 : null,
+    ratio: ratio === null ? null : Math.round(ratio * 1000) / 1000,
   });
   return won;
 }
