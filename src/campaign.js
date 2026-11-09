@@ -5,6 +5,7 @@
 import { makeRng } from './rng.js';
 import { ourStrength, resolveRound, recordWar, TACTICS, SPREAD_SCOUTED, SPREAD_UNSCOUTED } from './war.js';
 import { declareWar, enemyStrengthOf, alliedReinforcement, neighborById, diplomacyOf } from './diplomacy.js';
+import { defenseHoldMultiplier } from './city.js';
 
 export const MAX_ROUNDS = 3;
 export const WINS_NEEDED = 2;
@@ -14,7 +15,7 @@ export const RECON_GRAIN_COST = 10;
 export const PEACE_THRESHOLD = 60;
 // 平衡校正（campaign 層，不動 war.js 的戰術數值）：
 // 換戰術（與上一回合不同）時己方戰力 × SWITCH_PENALTY，固定戰術不受影響，抑制混搭戰術的最佳解。
-// 堅守戰力 × 1.03：補足純堅守低於 55% 的下限。
+// 堅守戰力 × 1.03：補足純堅守低於 55% 的下限；另乘全國城防倍率（見 city.js，預設為 1）。
 export const SWITCH_PENALTY = 0.92;
 export const TACTIC_POWER_TUNE = Object.freeze({ assault: 1, hold: 1.03, ambush: 1 });
 
@@ -91,7 +92,7 @@ export function pickTactic(state, tactic, applyEffects = defaultApply) {
     tactic,
     spread: c.intel === 'scouted' ? SPREAD_SCOUTED : SPREAD_UNSCOUTED,
     rng,
-    multiplier: (short ? GRAIN_SHORT_MULT : 1) * (TACTIC_POWER_TUNE[tactic] ?? 1) * (switched ? SWITCH_PENALTY : 1),
+    multiplier: (short ? GRAIN_SHORT_MULT : 1) * (TACTIC_POWER_TUNE[tactic] ?? 1) * (switched ? SWITCH_PENALTY : 1) * (tactic === 'hold' ? defenseHoldMultiplier(state) : 1),
   });
 
   if (res.won) c.ourWins += 1;

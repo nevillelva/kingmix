@@ -267,6 +267,7 @@ import { pickEvent, pickSecondMemorial, autoAppoint } from './src/sim.js';
 import { tryAccession } from './src/succession.js';
 import { evaluateDynasty } from './src/ending.js';
 import { setTaxTier, ensureEconomy, administrativeEfficiency, TAX_TIERS } from './src/economy.js';
+import { repairCity, ensureCity, cityOf, REPAIR_COST } from './src/city.js';
 import { taihouOpposes, WAIJIA_THRESHOLD, TAIHOU_OPPOSE } from './src/harem.js';
 import { factionsBalanced, forcingFaction, strongFactionCount, FORCE_MONTHS, FACTION_FORCE_THRESHOLD, FACTION_POLICY, BALANCED_EFFICIENCY, suppressFaction } from './src/factions.js';
 import { describeConsort, describeTraits, PERSONALITIES } from './src/people.js';
@@ -308,7 +309,7 @@ const SEASON = {1:'winter',2:'winter',3:'spring',4:'spring',5:'spring',6:'summer
 const SCEN_LABEL = { age:'年歲', power:'權勢', people:'民心', treasury:'國庫', turn:'在位月數' };
 const END_WORD = { death:'駕崩', abdicated:'高年致仕', '禪位':'禪位' };
 const SCEN_STATUS = { ongoing:'進行中', won:'已成功', failed:'已失敗' };
-const REASON = { busy:'已有戰事在進行', unknown:'無此鄰國', treasury:'國庫不足', attitude:'好感未達門檻', limit:'盟國已滿', already:'已是盟國', allied:'盟國不可宣戰', timing:'時機未到', inactive:'戰事未開', tactic:'戰術不明' };
+const REASON = { cooldown:'本府本年已修繕', busy:'已有戰事在進行', unknown:'無此鄰國', treasury:'國庫不足', attitude:'好感未達門檻', limit:'盟國已滿', already:'已是盟國', allied:'盟國不可宣戰', timing:'時機未到', inactive:'戰事未開', tactic:'戰術不明' };
 
 let state = null, seed = '', tab = 'court', events = [];
 let panel = null, pick1 = null, feedback = '', resignArmed = false, reviewedCount = 0;
@@ -1022,7 +1023,7 @@ function economyCard(){
   const eff = administrativeEfficiency(state);
   const chips = TAX_TIERS.map(t => `<span class="chip ${t === econ.tax ? 'up' : ''}">${t}稅</span>`).join('');
   const rows = (state.prefectures || []).map(p => `<div class="case"><div><b style="font-weight:500">${esc(p.name)}</b>
-    <div class="loy">知府${esc(p.governor?.name || '—')}　政 ${esc(p.governor?.abilities?.politics ?? '—')}　${p.output === 'agriculture' ? '農產' : '商產'}</div></div>
+    <div class="loy">知府${esc(p.governor?.name || '—')}　政 ${esc(p.governor?.abilities?.politics ?? '—')}　${p.output === 'agriculture' ? '農產' : '商產'}　城防 ${Math.round(p.defense ?? 50)}</div></div>
     <span class="chip">產值 ${Number(p.yield || 0).toFixed(2)}</span></div>`).join('');
   return `<section class="card"><h2>稅制與州府</h2>
     <div class="kicker">目前稅制</div><div class="eff" style="margin:0 0 6px">${chips}</div>
@@ -1098,6 +1099,7 @@ function actionsCard(){
       ['faction','拉攏派系','提升一派影響力，其他兩派會下降'],
       ['suppress','打壓派系','壓抑一派影響力，其他兩派會上升'],
       ['tax','調整稅制','三級稅制：低稅養民，高稅裕庫'],
+      ['city','修繕城池','工匠修繕州府城防，耗國庫，增民心'],
       ['diplo','外交','聯姻、朝貢、結盟，或宣戰'],
     ].map(([k,l,h]) => {
       if (k === 'exam') {
@@ -1163,6 +1165,12 @@ function actionsCard(){
     const cur = ensureEconomy(state).tax;
     body = `<div class="sub">目前稅制：${cur}稅</div><div class="opts">` + TAX_TIERS.map(t =>
       `<button class="opt" data-act="tax" data-arg="${t}" ${dis || (t===cur?'disabled':'')}><span class="mark">${t}</span><span class="label">${t}稅${t===cur?'（現行）':''}</span></button>`).join('') + `</div>`;
+  } else if (panel === 'city') {
+    body = `<div class="sub">工匠修繕城池，耗國庫 ${REPAIR_COST}，每府每年一次</div><div class="opts">` + ensureCity(state).map(p => {
+      const done = p.repairedYear === state.year;
+      return `<button class="opt" data-act="repair" data-arg="${p.id}" ${dis || (done ? 'disabled' : '')}><span class="mark">${esc(p.name.slice(0,1))}</span>
+        <span class="otxt"><span class="label">${esc(p.name)}</span><span class="hint">城防 ${Math.round(p.defense)}${done ? '　本年已修' : ''}</span></span></button>`;
+    }).join('') + `</div>`;
   } else if (panel === 'diplo') {
     const d = diplomacyOf(state);
     body = `<div class="sub">選擇鄰國</div><div class="opts">` + NEIGHBORS.map(n => {
@@ -1286,6 +1294,12 @@ function onAgency(e){
   if (a === 'tax') {
     setTaxTier(state, v);
     return useAction(`稅制改為${v}稅。`);
+  }
+  if (a === 'repair') {
+    const nm = cityOf(state, v)?.name || '';
+    const r = repairCity(state, v);
+    if (!r.ok) { feedback = `此舉未成：${REASON[r.reason] || '條件未符'}。`; return render(); }
+    return useAction(`工匠修繕${nm}城池，城防提升。`);
   }
   if (a === 'dneigh') { pick1 = v; panel = 'diplo2'; return render(); }
   if (a === 'dpath') {
