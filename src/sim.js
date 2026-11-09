@@ -106,9 +106,10 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
     if (pending) {
       const pick = makeRng([seed, year, month, 'dongchang'])();
       const action = DC_ACTIONS[Math.floor(pick * DC_ACTIONS.length)];
-      applyDongchangAction(state, pending.id, action);
+      const applied = applyDongchangAction(state, pending.id, action);
       bump('DC');
-      log.push({ year, month, event: 'DC', case: pending.id, option: action });
+      const capped = applied.cappedFrom !== undefined;
+      log.push({ year, month, event: 'DC', case: pending.id, option: capped ? 'warn' : action, ...(capped ? { requested: action } : {}) });
     } else {
       const chained = chainId ? findChained(events, chainId, state) : null;
       const rng = makeRng([seed, year, month, 'events']);
