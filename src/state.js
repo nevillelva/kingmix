@@ -1,4 +1,5 @@
 import { attachPerson } from './people.js';
+import { createEra } from './era.js';
 
 // 遊戲狀態與數值邊界。所有數值寫入都必須經過 setStat，確保越界會被截斷並記錄。
 
@@ -77,6 +78,7 @@ export function createInitialState(seed, opts = {}) {
     emperor: { name: '皇帝', abilities: null },
     dynasty: { generation: 1, nextHeirId: 1, nextConsortId: 1, ended: false, rivalry: false },
     chronicle: [],
+    era: createEra(opts.era), // 年號：純展示資料，不進入 RNG
     dongchang: { cases: [], nextId: 1 },
     tyranny: 0, // 東廠暴政：責罰、下獄累積，見 dongchang.js
     policyMeta: { lastChangeTurn: null, changes: 0 }, // 國策變更紀錄，見 policy.js

@@ -249,6 +249,7 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 
 <script type="module">
 import { createInitialState, setStat } from './src/state.js';
+import { validateEra, eraName, eraYearText, changeEra, eraCooldownRemaining, ERA_REASON_TEXT, PRESET_ERAS, ERA_CHANGE_PRESTIGE_COST, ERA_CHANGE_COOLDOWN_MONTHS } from './src/era.js';
 import { isAvailable, recordEvent, EVENT_MAX_PER_RUN } from './src/events.js';
 import { makeRng } from './src/rng.js';
 import { applyOption, afterOption, monthlyTick, advanceMonth, AFTER_OPTION_KEYS } from './src/turn.js';
@@ -396,12 +397,13 @@ function inkFlash(key){
   ink.classList.remove('go'); void ink.offsetWidth; ink.classList.add('go');
 }
 
-function newGame(s, scenId){
+function newGame(s, scenId, eraRaw){
   seed = s || String(Math.floor(Math.random()*1e9));
+  const opts = { policy:'agrarian', era: eraRaw };
   try {
-    state = scenId ? createScenarioState(seed, scenId, { policy:'agrarian' }) : createInitialState(seed, { policy:'agrarian' });
+    state = scenId ? createScenarioState(seed, scenId, opts) : createInitialState(seed, opts);
   } catch (e) {
-    state = createInitialState(seed, { policy:'agrarian' });
+    state = createInitialState(seed, opts);
     feedback = '本紀劇本載入失敗，已改為一般開局。';
   }
   reviewedCount = 0;
@@ -556,7 +558,7 @@ function actionsSection(){
   return (!pendingCase() && state.alive) ? actionsCard() + slotsCard() : '';
 }
 function calendar(){
-  document.getElementById('when').textContent = `第${state.dynasty.generation}世 · ${state.year}年${state.month}月 · ${state.age}歲`;
+  document.getElementById('when').textContent = `第${state.dynasty.generation}世 · ${eraYearText(state)}${state.month}月 · ${state.age}歲`;
 }
 // 頂欄四項國勢：只示意高低，不顯示數值
 function topGauges(){
@@ -632,6 +634,10 @@ function renderStart(){
       <h2>開啟新局</h2>
       <label class="lbl" for="seed">種子（相同種子與相同選擇，結果一致）</label>
       <input class="seed" id="seed" placeholder="留空即隨機">
+      <label class="lbl" for="era">年號（1–4 字，留空為「永和」）</label>
+      <input class="seed" id="era" placeholder="自訂年號，或點選下方預設">
+      <div class="opts" id="era-presets" style="grid-template-columns:repeat(3,1fr);margin:8px 0 0">${PRESET_ERAS.map(n => `<button type="button" class="btn ghost" data-era="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+      <p class="sub" id="era-err" style="color:var(--vermilion);margin:8px 0 0" hidden></p>
       <label class="lbl" for="scen">本紀劇本（選用）</label>
       <select class="seed" id="scen"><option value="">一般開局（不選劇本）</option>${scenOpts}</select>
       <p class="sub" id="scen-desc" style="margin:8px 0 0">不選劇本，即為自由治國的一般開局。</p>
@@ -644,7 +650,16 @@ function renderStart(){
     const d = SCENARIOS[scenSel.value];
     document.getElementById('scen-desc').textContent = d ? `${d.summary}　${d.goalText}` : '不選劇本，即為自由治國的一般開局。';
   };
-  document.getElementById('start').onclick = () => newGame(document.getElementById('seed').value.trim(), scenSel.value);
+  const eraIn = document.getElementById('era'), eraErr = document.getElementById('era-err');
+  app.querySelectorAll('[data-era]').forEach(b => b.onclick = () => { eraIn.value = b.dataset.era; eraErr.hidden = true; });
+  document.getElementById('start').onclick = () => {
+    const raw = eraIn.value.trim();
+    if (raw !== '') {
+      const v = validateEra(raw);
+      if (!v.ok) { eraErr.textContent = ERA_REASON_TEXT[v.reason]; eraErr.hidden = false; return; }
+    }
+    newGame(document.getElementById('seed').value.trim(), scenSel.value, raw);
+  };
   const c = document.getElementById('cont');
   if (c) c.onclick = () => { seed = saved.seed; state = saved.state; reviewedCount = (state.annals||[]).length; render(); };
   const cc = document.getElementById('ccont');
@@ -975,6 +990,7 @@ function actionsCard(){
       ['appoint','任命官員','把閒置之臣派往空缺官職'],
       ['dc','東廠開案','對一位官員展開調查，之後可在東廠頁處置'],
       ['policy','變更國策','改變每月的施政修正'],
+      ['era','改元','更改年號，耗威儀 2 點，每 12 個月一次'],
       ['faction','拉攏派系','提升一派影響力，其他兩派會下降'],
       ['suppress','打壓派系','壓抑一派影響力，其他兩派會上升'],
       ['tax','調整稅制','三級稅制：低稅養民，高稅裕庫'],
@@ -1002,6 +1018,17 @@ function actionsCard(){
     const hint = lock > 0 ? `換策後一年內不可再換，尚餘 ${lock} 月。` : `換策需耗威儀 ${POLICY_CHANGE_PRESTIGE_COST} 點（目前 ${Math.round(state.stats.prestige)}）。`;
     body = `<div class="sub">目前國策：${POLICIES[state.policy]?.name || state.policy}　<span class="hint">${hint}</span></div><div class="opts">` + POLICY_KEYS.map(k =>
       `<button class="opt" data-act="policy" data-arg="${k}" ${dis || ((locked || k===state.policy) ? 'disabled' : '')}><span class="mark">${POLICIES[k].name.slice(0,1)}</span><span class="label">${POLICIES[k].name}${k===state.policy?'（現行）':''}</span></button>`).join('') + `</div>`;
+  } else if (panel === 'era') {
+    const cd = eraCooldownRemaining(state);
+    const cur = eraName(state);
+    const blocked = cd > 0 || state.stats.prestige < ERA_CHANGE_PRESTIGE_COST;
+    const hint = cd > 0 ? `改元每 ${ERA_CHANGE_COOLDOWN_MONTHS} 個月一次，尚餘 ${cd} 月。` : `改元需耗威儀 ${ERA_CHANGE_PRESTIGE_COST} 點（目前 ${Math.round(state.stats.prestige)}）。`;
+    const off = (dis || (blocked ? 'disabled' : ''));
+    body = `<div class="sub">現行年號：${esc(cur)}　<span class="hint">${hint}</span></div><div class="opts">` + PRESET_ERAS.filter(n => n !== cur).map(n =>
+      `<button class="opt" data-act="eraset" data-arg="${esc(n)}" ${off}><span class="mark">${esc(n.slice(0,1))}</span><span class="label">${esc(n)}</span></button>`).join('') + `</div>
+      <label class="lbl" for="era-new">或自訂年號（1–4 字）</label>
+      <input class="seed" id="era-new" placeholder="自訂年號">
+      <button class="btn zhu" data-act="eraconfirm" ${off} style="margin-top:8px">以此改元</button>`;
   } else if (panel === 'faction') {
     body = `<div class="sub">選擇要拉攏的一派</div><div class="opts">` + Object.keys(FACTION).map(k =>
       `<button class="opt" data-act="faction" data-arg="${k}" ${dis}><span class="mark" style="color:${FACTION[k].c};border-color:${FACTION[k].c}">${FACTION[k].l.slice(0,1)}</span><span class="label">${FACTION[k].l}　<span class="sub" style="margin:0">目前 ${Math.round(state.factions[k])}</span></span></button>`).join('') + `</div>`;
@@ -1066,6 +1093,19 @@ function onAgency(e){
       feedback = why; panel = null; pick1 = null; save(); return render();
     }
     return useAction(`國策改為${POLICIES[v].name}，耗威儀 ${POLICY_CHANGE_PRESTIGE_COST} 點。`);
+  }
+  if (a === 'eraset' || a === 'eraconfirm') {
+    const raw = a === 'eraset' ? v : (document.getElementById('era-new')?.value ?? '');
+    const r = changeEra(state, raw);
+    if (!r.ok) {
+      feedback = r.reason === 'cooldown' ? `改元每 ${ERA_CHANGE_COOLDOWN_MONTHS} 個月一次，尚餘 ${r.remaining} 月。`
+        : r.reason === 'prestige' ? `威儀不足，改元需 ${ERA_CHANGE_PRESTIGE_COST} 點。` : ERA_REASON_TEXT[r.reason];
+      if (r.reason === 'cooldown' || r.reason === 'prestige') panel = null;
+      pick1 = null; save(); return render();
+    }
+    markNewYearShown();
+    openNianhao(eraYearText(state), '改元詔下，萬象更新。');
+    return useAction(`改元為「${r.name}」，耗威儀 ${ERA_CHANGE_PRESTIGE_COST} 點。`);
   }
   if (a === 'suppress') {
     suppressFaction(state, v);
@@ -1180,26 +1220,24 @@ function wireMemorialSwipe(n){
   paint();
 }
 
-// ── 新年年號覆蓋層（gap-ui-slots）：每逢一月第一次進入時顯示，點擊或 Esc 關閉；每局每年一次 ──
-// 年號名稱尚未定案，未設定時顯示「新歲」。
-const NIAN_HAO = {};
+// ── 新年年號覆蓋層：每逢一月第一次進入時顯示，點擊或 Esc 關閉；每局每年一次。改元時亦即時顯示 ──
 const shownNewYear = new Set();
-function showNewYear(){
-  if (!state || !state.alive || state.month !== 1) return;
-  const key = `kingmix.newyear.${seed}.${state.year}`;
-  if (shownNewYear.has(key)) return;
+function newYearKey(){ return `kingmix.newyear.${seed}.${state.year}`; }
+function markNewYearShown(){
+  const key = newYearKey();
   shownNewYear.add(key);
-  try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) {}
-  const nh = NIAN_HAO[state.dynasty.generation] || '新歲';
+  try { localStorage.setItem(key, '1'); } catch (e) {}
+}
+function openNianhao(title, sub){
   const ov = document.createElement('div');
   ov.className = 'nianhao';
   ov.setAttribute('role', 'dialog');
   ov.setAttribute('aria-modal', 'true');
-  ov.setAttribute('aria-label', '新年年號');
+  ov.setAttribute('aria-label', '年號');
   ov.innerHTML = `<div class="nh-card">
       <div class="nh-kicker">第${state.dynasty.generation}世 · ${state.year}年</div>
-      <div class="nh-title">${esc(nh)}</div>
-      <div class="nh-sub">元旦改元，萬象更新。</div>
+      <div class="nh-title">${esc(title)}</div>
+      <div class="nh-sub">${esc(sub)}</div>
       <button type="button" class="btn zhu nh-close">點擊繼續</button></div>`;
   const onKey = e => { if (e.key === 'Escape') close(); };
   const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); };
@@ -1207,6 +1245,14 @@ function showNewYear(){
   document.addEventListener('keydown', onKey);
   document.body.appendChild(ov);
   ov.querySelector('.nh-close').focus();
+}
+function showNewYear(){
+  if (!state || !state.alive || state.month !== 1) return;
+  const key = newYearKey();
+  if (shownNewYear.has(key)) return;
+  shownNewYear.add(key);
+  try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) {}
+  openNianhao(eraYearText(state), '新歲伊始，萬象更新。');
 }
 
 const VIEWS = { court: renderCourt, palace: renderPalace, officials: renderOfficials, harem: renderHarem, dc: renderDC, throne: renderThrone };
