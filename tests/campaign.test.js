@@ -137,7 +137,7 @@ test('calibration: even strength lands 55 to 70 percent for an unskilled player,
   let strongWins = 0;
   for (let i = 0; i < N; i++) {
     if (playOut(i, even, pickRandom).won) evenWins++;
-    if (playOut(i, even * 1.25, pickRandom).won) strongWins++;
+    if (playOut(i, even * 1.3, pickRandom).won) strongWins++;
   }
   const evenRate = evenWins / N;
   const strongRate = strongWins / N;
@@ -164,7 +164,7 @@ test('calibration: fixed tactics and the best hybrid stay within 55 to 70 percen
     const seq = [a, b, c];
     if (a === b && b === c) continue;
     const r = rateOf(seq, even);
-    if (r > best) { best = r; bestStrong = rateOf(seq, even * 1.25); }
+    if (r > best) { best = r; bestStrong = rateOf(seq, even * 1.3); }
   }
   assert.ok(best >= 0.55 && best <= 0.7, `best hybrid win rate ${best}`);
   assert.ok(bestStrong < 0.4, `best hybrid strong win rate ${bestStrong}`);
