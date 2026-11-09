@@ -17,6 +17,7 @@ import { tickHarem, applyWaijiaCoupling, taihouPenalty } from './harem.js';
 import { applyFactionPressure } from './factions.js';
 import { scheduleChain } from './chains.js';
 import { recordSharedEvent } from './bonds.js';
+import { tickAssassination } from './assassination.js';
 
 export const MAX_OFFICIALS = 12;
 
@@ -182,6 +183,12 @@ export function monthlyTick(state, rng) {
   if (g('health') <= 0) {
     state.alive = false;
     state.endReason = 'death';
+  }
+
+  // 刺殺：在月末死亡判定之後結算，皇帝遇刺身亡時 endReason 為 'assassinated'。
+  if (state.alive) {
+    const attempt = tickAssassination(state);
+    if (attempt?.official) removeOfficial(state, attempt.official);
   }
   return state;
 }

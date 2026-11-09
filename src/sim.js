@@ -60,6 +60,8 @@ export function eventWeight(e) {
 function chainTargetIds(events) {
   const ids = new Set();
   for (const e of events) for (const o of e.options || []) if (o.effects && o.effects.chain) ids.add(o.effects.chain);
+  // 刺殺奏摺只能經由刺殺引擎排入（chain），不進入一般隨機抽選。
+  for (const e of events) if (e.kind === 'assassination') ids.add(e.id);
   return ids;
 }
 

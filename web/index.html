@@ -1054,7 +1054,7 @@ function renderThrone(){
         <div class="meter"><div class="row1"><span>征戰</span><b>${state.wars.length} 次 · 勝 ${wins}</b></div></div>
         <div class="meter"><div class="row1"><span>暴政</span><b>${tyrannyStatus(state).value} / ${tyrannyStatus(state).max}</b></div>
           <div class="track"><div class="fill ${tyrannyStatus(state).qingliuDrainOn ? 'warn' : ''}" style="width:${tyrannyStatus(state).value}%"></div></div>
-          <div class="sub" style="margin:6px 0 0">責罰、下獄會累積暴政。暴政達 ${tyrannyStatus(state).threshold}，清流勢力每月下降 1${tyrannyStatus(state).qingliuDrainOn ? '（目前生效）' : ''}。刺殺事件尚未實作，高暴政目前不會觸發刺殺。</div></div>
+          <div class="sub" style="margin:6px 0 0">責罰、下獄會累積暴政。暴政達 ${tyrannyStatus(state).threshold}，清流勢力每月下降 1${tyrannyStatus(state).qingliuDrainOn ? '（目前生效）' : ''}。暴政逾 40 者，另有遇刺之險。</div></div>
       </div>
       <div style="margin-top:16px"><button class="btn ${resignArmed ? 'zhu' : 'ghost'}" id="resign">${resignArmed ? "再按一次，確定禪位" : "禪位予皇子"}</button></div>
     </section>
