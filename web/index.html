@@ -249,7 +249,7 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 
 <script type="module">
 import { createInitialState, setStat } from './src/state.js';
-import { validateEra, eraName, eraYearText, changeEra, eraCooldownRemaining, ERA_REASON_TEXT, PRESET_ERAS, ERA_CHANGE_PRESTIGE_COST, ERA_CHANGE_COOLDOWN_MONTHS } from './src/era.js';
+import { validateEra, eraName, eraYearText, changeEra, eraCooldownRemaining, migrateEraLog, ERA_REASON_TEXT, PRESET_ERAS, ERA_CHANGE_PRESTIGE_COST, ERA_CHANGE_COOLDOWN_MONTHS } from './src/era.js';
 import { isAvailable, recordEvent, EVENT_MAX_PER_RUN } from './src/events.js';
 import { makeRng } from './src/rng.js';
 import { applyOption, afterOption, monthlyTick, advanceMonth, AFTER_OPTION_KEYS } from './src/turn.js';
@@ -672,9 +672,9 @@ function renderStart(){
     newGame(document.getElementById('seed').value.trim(), scenSel.value, raw);
   };
   const c = document.getElementById('cont');
-  if (c) c.onclick = () => { seed = saved.seed; state = saved.state; reviewedCount = (state.annals||[]).length; render(); };
+  if (c) c.onclick = () => { seed = saved.seed; state = saved.state; migrateEraLog(state); reviewedCount = (state.annals||[]).length; render(); };
   const cc = document.getElementById('ccont');
-  if (cc) cc.onclick = () => { seed = cs.seed; state = cs.state; reviewedCount = (state.annals||[]).length; save(); render(); };
+  if (cc) cc.onclick = () => { seed = cs.seed; state = cs.state; migrateEraLog(state); reviewedCount = (state.annals||[]).length; save(); render(); };
 }
 
 // 結局：以諡號卷軸呈現，含諡號、四軸評分與生平紀事（含皇子夭折等紀錄）。
@@ -685,7 +685,9 @@ function renderEnding(){
   // 引擎的仁德分數可能帶小數（ending.js 的除法順序），此處僅於顯示時取整
   const axes = sc.axes.map(a => { const v = Math.round(a.score); return `<div class="meter"><div class="row1"><span>${esc(a.label)}</span><b>${v}</b></div>
     <div class="track"><div class="fill ${a.key==='military'?'warn':''}" style="width:${v}%"></div></div></div>`; }).join('');
-  const chron = (state.chronicle || []).map(c => c.kind === 'heir_death'
+  const chron = (state.chronicle || []).map(c => c.kind === 'era'
+    ? `<li><span>${esc(c.text)}</span><span class="loy">改元</span></li>`
+    : c.kind === 'heir_death'
     ? `<li><span>皇子${esc(c.name)} · ${c.year}年${c.month}月</span><span class="loy">${c.cause === 'rivalry' ? '奪嫡失勢' : '幼年夭折'}</span></li>`
     : `<li><span>第${c.generation}世 · ${c.endedInYear}年 · ${c.age}歲</span><span class="loy">${esc(END_WORD[c.endReason] || c.endReason || '駕崩')}</span></li>`).join('');
   const scen = state.scenario && SCENARIOS[state.scenario.id]
@@ -1001,7 +1003,9 @@ function collectionsCard(){
 
 function renderThrone(){
   const wins = state.wars.filter(w => w.won).length;
-  const chron = (state.chronicle || []).map(c => `<li><span>第${c.generation}世 · ${c.endedInYear}年</span><span class="loy">${esc(c.endReason||'駕崩')}</span></li>`).join('');
+  const chron = (state.chronicle || []).map(c => c.kind === 'era'
+    ? `<li><span>${esc(c.text)}</span><span class="loy">改元</span></li>`
+    : `<li><span>第${c.generation}世 · ${c.endedInYear}年</span><span class="loy">${esc(c.endReason||'駕崩')}</span></li>`).join('');
   const annals = (state.annals || []).slice().reverse().map(a =>
     `<li><span>第${a.generation}世 ${a.year}年</span><span class="loy">國庫 ${a.treasury}　民心 ${a.people}　兵力 ${a.military}　勝 ${a.wins}/${a.wars}</span></li>`).join('');
   app.innerHTML = `

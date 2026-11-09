@@ -30,7 +30,7 @@ export const ERA_REASON_TEXT = {
 // 建立 state.era；輸入無效或為空時採預設「永和」。
 export function createEra(raw, startYear = 1) {
   const v = validateEra(raw);
-  return { name: v.ok ? v.name : DEFAULT_ERA, since: startYear, changedAt: null, log: [] };
+  return { name: v.ok ? v.name : DEFAULT_ERA, since: startYear, changedAt: null, log: [] }; // log 已停用，恆為空陣列（相容舊存檔）
 }
 
 export function eraName(state) {
@@ -70,7 +70,25 @@ export function eraCooldownRemaining(state) {
   return Math.max(0, ERA_CHANGE_COOLDOWN_MONTHS - (monthIndex(state) - at));
 }
 
-// 改元：耗威儀、每 12 個月最多一次，寫入 state.era.log（起居注紀錄）。
+// 改元紀錄格式（寫入 state.chronicle，與立儲／駕崩紀錄並列於御書房與結局頁）。
+export function eraChronicleEntry({ year, month, from, to }) {
+  return { kind: 'era', year, month, from, to, text: `改元為${to}，於 ${year} 年 ${month} 月` };
+}
+
+// 舊存檔遷移：將 state.era.log 內的改元紀錄移入 state.chronicle（kind 轉為 'era'），並清空 log。
+// 冪等：log 清空後再次呼叫不會重複寫入。回傳遷入筆數。
+export function migrateEraLog(state) {
+  if (!state || typeof state !== 'object') return 0;
+  if (!Array.isArray(state.chronicle)) state.chronicle = [];
+  const legacy = Array.isArray(state.era?.log) ? state.era.log : [];
+  for (const e of legacy) {
+    state.chronicle.push(eraChronicleEntry({ year: e.year, month: e.month, from: e.from, to: e.to }));
+  }
+  if (state.era) state.era.log = [];
+  return legacy.length;
+}
+
+// 改元：耗威儀、每 12 個月最多一次，寫入 state.chronicle（kind 為 'era'）。
 export function changeEra(state, raw) {
   if (!state.era) state.era = createEra(null, state.year);
   const v = validateEra(raw);
@@ -82,6 +100,7 @@ export function changeEra(state, raw) {
   state.era.name = v.name;
   state.era.since = state.year;
   state.era.changedAt = monthIndex(state);
-  state.era.log.push({ year: state.year, month: state.month, from, to: v.name, kind: 'change' });
+  if (!Array.isArray(state.chronicle)) state.chronicle = [];
+  state.chronicle.push(eraChronicleEntry({ year: state.year, month: state.month, from, to: v.name }));
   return { ok: true, name: v.name };
 }
