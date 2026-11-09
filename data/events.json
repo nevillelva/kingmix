@@ -9056,6 +9056,130 @@
           }
         }
       ]
+    },
+    {
+      "id": "E901",
+      "name": "賑濟之議",
+      "speaker": "戶部尚書",
+      "narrative": "京畿連月旱澇，流民聚於城外，饑者日眾。賑濟之策議而未決，請陛下定奪施行之法與經辦之人。",
+      "options": [
+        {
+          "key": "A",
+          "label": "照常例發粟賑濟",
+          "tone": "仁厚",
+          "effects": {
+            "people": 4,
+            "treasury": -25
+          }
+        },
+        {
+          "key": "B",
+          "label": "減賑以省國用",
+          "tone": "強硬",
+          "effects": {
+            "treasury": 15,
+            "people": -5
+          }
+        },
+        {
+          "key": "C",
+          "label": "命清廉之臣親理賑務",
+          "tone": "穩妥",
+          "when": {
+            "official_trait": "honest"
+          },
+          "effects": {
+            "people": 8,
+            "treasury": -10
+          }
+        }
+      ],
+      "when": {
+        "chance": 0.3
+      }
+    },
+    {
+      "id": "E902",
+      "name": "邊將請餉",
+      "speaker": "兵部侍郎",
+      "narrative": "北境將士久戍苦寒，軍餉屢遲，邊將上書請增撥糧餉，朝中議論不一。兵部請陛下示下如何處置。",
+      "options": [
+        {
+          "key": "A",
+          "label": "增撥軍餉",
+          "tone": "穩妥",
+          "effects": {
+            "armament": 15,
+            "treasury": -30
+          }
+        },
+        {
+          "key": "B",
+          "label": "令其自籌糧餉",
+          "tone": "強硬",
+          "effects": {
+            "military": 1,
+            "people": -4
+          }
+        },
+        {
+          "key": "C",
+          "label": "命果敢之將率部先行",
+          "tone": "冒險",
+          "when": {
+            "official_trait": "bold"
+          },
+          "effects": {
+            "military": 4,
+            "armament": -10,
+            "prestige": 1
+          }
+        }
+      ],
+      "when": {
+        "chance": 0.3
+      }
+    },
+    {
+      "id": "E903",
+      "name": "市舶之弊",
+      "speaker": "戶部侍郎",
+      "narrative": "東南市舶司吏員舞弊，私販之風漸盛，商稅歲入短絀。戶部奏請整飭，眾議紛紜，請陛下裁定。",
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴查私販",
+          "tone": "強硬",
+          "effects": {
+            "treasury": 15,
+            "prestige": 1
+          }
+        },
+        {
+          "key": "B",
+          "label": "聽其通融",
+          "tone": "仁厚",
+          "effects": {
+            "commerce": 10,
+            "treasury": -5
+          }
+        },
+        {
+          "key": "C",
+          "label": "薦貪財之臣掌市舶",
+          "tone": "冒險",
+          "when": {
+            "official_trait": "greedy"
+          },
+          "effects": {
+            "treasury": 35,
+            "people": -6
+          }
+        }
+      ],
+      "when": {
+        "chance": 0.3
+      }
     }
   ]
 }

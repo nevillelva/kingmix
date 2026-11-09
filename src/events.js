@@ -25,6 +25,7 @@ export function isEligible(state, event, rng) {
       case 'policy': if (state.policy !== val) return false; break;
       case 'tyranny_gt': if (!((state.tyranny || 0) > val)) return false; break;
       case 'tyranny_lt': if (!((state.tyranny || 0) < val)) return false; break;
+      case 'official_trait': if (!hasOfficialTrait(state, val)) return false; break;
       default: {
         // 通用數值條件：<stat>_lt / <stat>_gt，例如 prestige_lt、commerce_gt
         const m = key.match(/^([a-z]+)_(lt|gt)$/);
@@ -40,6 +41,21 @@ export function isEligible(state, event, rng) {
 
 // Phase 1 只開放 phase <= 1 的事件與選項；其餘留待後續階段。
 export const isAvailable = (node) => !node.phase || node.phase <= 1;
+
+// 特質條件：現任或在任官員中，是否有人持有該特質（id 見 people.js 的 TRAITS）。
+export function hasOfficialTrait(state, traitId) {
+  return state.officials.some((o) => (o.traits || []).includes(traitId));
+}
+
+// 選項層級的條件（選項物件的 when 欄位）：目前支援 official_trait；不認得的條件一律視為不成立。
+// 與 isAvailable 並用：選項需「可用且條件成立」才會呈現給玩家。沒有 when 的選項永遠開放。
+export function optionOpen(state, option) {
+  const when = option.when || {};
+  return Object.entries(when).every(([key, val]) => {
+    if (key === 'official_trait') return hasOfficialTrait(state, val);
+    return false;
+  });
+}
 
 // 事件冷卻與每局上限（方案：24 個月冷卻；任一事件每局不超過 8 次）。
 export const EVENT_COOLDOWN = 24;

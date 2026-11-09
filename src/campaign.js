@@ -18,6 +18,9 @@ export const PEACE_THRESHOLD = 60;
 // 堅守戰力 × 1.03：補足純堅守低於 55% 的下限；另乘全國城防倍率（見 city.js，預設為 1）。
 export const SWITCH_PENALTY = 0.92;
 export const TACTIC_POWER_TUNE = Object.freeze({ assault: 1, hold: 1.03, ambush: 1 });
+// 偵察成功後掌握敵軍破綻：己方戰力 × SCOUT_POWER_BONUS（僅影響偵察後的回合，並非只是顯示文字）。
+// 偵察只縮小敵強度不確定幅度時，勝率方向會隨敵我強弱而反覆，故另給固定加成，使刺探有穩定的正向效果。
+export const SCOUT_POWER_BONUS = 1.04;
 
 function defaultApply(state, effects) {
   for (const [k, v] of Object.entries(effects || {})) {
@@ -92,7 +95,7 @@ export function pickTactic(state, tactic, applyEffects = defaultApply) {
     tactic,
     spread: c.intel === 'scouted' ? SPREAD_SCOUTED : SPREAD_UNSCOUTED,
     rng,
-    multiplier: (short ? GRAIN_SHORT_MULT : 1) * (TACTIC_POWER_TUNE[tactic] ?? 1) * (switched ? SWITCH_PENALTY : 1) * (tactic === 'hold' ? defenseHoldMultiplier(state) : 1),
+    multiplier: (short ? GRAIN_SHORT_MULT : 1) * (TACTIC_POWER_TUNE[tactic] ?? 1) * (switched ? SWITCH_PENALTY : 1) * (tactic === 'hold' ? defenseHoldMultiplier(state) : 1) * (c.intel === 'scouted' ? SCOUT_POWER_BONUS : 1),
   });
 
   if (res.won) c.ourWins += 1;

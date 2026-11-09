@@ -2,7 +2,7 @@
 // 東廠有待處置的把柄時，該月的奏摺改為「東廠密報」。
 
 import { createInitialState } from './state.js';
-import { isEligible, isAvailable, eventAllowed, recordEvent, EVENT_MAX_PER_RUN } from './events.js';
+import { isEligible, isAvailable, optionOpen, eventAllowed, recordEvent, EVENT_MAX_PER_RUN } from './events.js';
 import { makeRng } from './rng.js';
 import { applyOption, afterOption, monthlyTick, advanceMonth } from './turn.js';
 import { takeChain } from './chains.js';
@@ -34,7 +34,7 @@ const findChained = (events, id, state) => {
   const e = events.find((x) => x.id === id);
   if (!e || !isAvailable(e)) return null;
   if ((state.eventHistory?.counts?.[id] || 0) >= EVENT_MAX_PER_RUN) return null;
-  return e.options.some(isAvailable) ? e : null;
+  return e.options.some((o) => isAvailable(o) && optionOpen(state, o)) ? e : null;
 };
 
 // 吏部最適任建議：僅在候選人完全達標時自動任命，避免強迫不合格者上任。
@@ -117,7 +117,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
       const rng = makeRng([seed, year, month, 'events']);
       const event = chained ?? pickEvent(state, events, rng);
       if (event) {
-        const options = event.options.filter(isAvailable);
+        const options = event.options.filter((o) => isAvailable(o) && optionOpen(state, o));
         const pick = makeRng([seed, year, month, 'choice'])();
         const option = options[Math.floor(pick * options.length)];
         applyOption(state, option, makeRng([seed, year, month, 'recruit']));
@@ -129,7 +129,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
       // 早朝第 2 則：第 1 則若已記錄，冷卻與上限已生效；此處另以 exclude 排除同一事件。
       const second = pickSecondMemorial(state, events, makeRng([seed, year, month, 'morning2']), event?.id ?? null);
       if (second) {
-        const options = second.options.filter(isAvailable);
+        const options = second.options.filter((o) => isAvailable(o) && optionOpen(state, o));
         const pick = makeRng([seed, year, month, 'morning2', 'choice'])();
         const option = options[Math.floor(pick * options.length)];
         applyOption(state, option, makeRng([seed, year, month, 'morning2', 'recruit']));

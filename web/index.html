@@ -275,7 +275,7 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 import { createInitialState, setStat } from './src/state.js';
 import { chronicleLine } from './src/chronicle.js';
 import { validateEra, eraName, eraYearText, changeEra, eraCooldownRemaining, migrateEraLog, ERA_REASON_TEXT, PRESET_ERAS, ERA_CHANGE_PRESTIGE_COST, ERA_CHANGE_COOLDOWN_MONTHS } from './src/era.js';
-import { isAvailable, recordEvent, EVENT_MAX_PER_RUN } from './src/events.js';
+import { isAvailable, optionOpen, recordEvent, EVENT_MAX_PER_RUN } from './src/events.js';
 import { makeRng } from './src/rng.js';
 import { applyOption, afterOption, monthlyTick, advanceMonth, AFTER_OPTION_KEYS } from './src/turn.js';
 import { takeChain } from './src/chains.js';
@@ -497,7 +497,7 @@ function chainEvent(id){
   const e = id ? events.find(x => x.id === id) : null;
   if (!e || !isAvailable(e)) return null;
   if ((state.eventHistory?.counts?.[id] || 0) >= EVENT_MAX_PER_RUN) return null;
-  return e.options.some(isAvailable) ? e : null;
+  return e.options.some((o) => isAvailable(o) && optionOpen(state, o)) ? e : null;
 }
 // 早朝兩則奏摺：第 1 則必出（連鎖優先），第 2 則 50%（與 sim.js 同一 rng 路徑）。
 // 每月開始時一次決定並存於 state.monthChain，同月重繪、行動後不改變。
@@ -829,7 +829,7 @@ function renderEnding(){
 }
 
 function secondMemorialCard(ev){
-  const opts = ev.options.filter(isAvailable);
+  const opts = ev.options.filter((o) => isAvailable(o) && optionOpen(state, o));
   return memorialCard(`次奏・${esc(ev.name)}`, `
       <div class="kicker">次奏　・　可略過</div>
       <h3>${esc(ev.name)}</h3>
@@ -863,7 +863,7 @@ function skipSecond(){
   save(); render();
 }
 function wireSecond(ev){
-  const opts = ev.options.filter(isAvailable);
+  const opts = ev.options.filter((o) => isAvailable(o) && optionOpen(state, o));
   app.querySelectorAll('[data-m2]').forEach(b => b.onclick = () => stampThen(b, () => chooseSecond(opts[+b.dataset.m2], ev)));
   const sk = document.getElementById('m2skip');
   if (sk) sk.onclick = skipSecond;
@@ -900,7 +900,7 @@ function renderCourt(){
     document.getElementById('next').onclick = () => finishMonth();
     return;
   }
-  const opts = ev.options.filter(isAvailable);
+  const opts = ev.options.filter((o) => isAvailable(o) && optionOpen(state, o));
   app.innerHTML = sb + memorialCard(`御覽・${esc(ev.name)}`, `
       <div class="kicker">奏摺</div>
       <h3>${esc(ev.name)}</h3>
