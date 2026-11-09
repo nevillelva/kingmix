@@ -3,7 +3,7 @@
 // 所有隨機皆來自 makeRng([seed, year, month, 'campaign', ...])，同存檔同結果。
 
 import { makeRng } from './rng.js';
-import { ourStrength, resolveRound, recordWar, TACTICS, SPREAD_SCOUTED, SPREAD_UNSCOUTED } from './war.js';
+import { ourStrength, nominalStrength, resolveRound, recordWar, TACTICS, SPREAD_SCOUTED, SPREAD_UNSCOUTED } from './war.js';
 import { declareWar, enemyStrengthOf, alliedReinforcement, neighborById, diplomacyOf } from './diplomacy.js';
 import { defenseHoldMultiplier } from './city.js';
 
@@ -142,10 +142,14 @@ export function finishCampaign(state, outcome, applyEffects = defaultApply) {
 
   const powers = c.rounds.map((r) => r.ours);
   const avg = powers.length ? Math.round(powers.reduce((a, b) => a + b, 0) / powers.length) : 0;
+  // ratio 與 resolveWar 相同定義：敵方基準強度 ÷ 己方名目戰力，供平衡稽核分段。
+  const nominal = nominalStrength(state);
+  const ratio = nominal > 0 ? Math.round((c.baseStrength / nominal) * 1000) / 1000 : null;
   const record = recordWar(state, {
     strength: c.baseStrength,
     power: avg,
     won,
+    ratio,
     mode: 'campaign',
     outcome,
     rounds: c.rounds.length,
