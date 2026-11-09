@@ -100,6 +100,7 @@ body{
 .opt.zhu .mark{border-color:var(--vermilion);color:var(--vermilion)}
 .opt .otxt{min-width:0;display:flex;flex-direction:column;gap:2px}
 .opt .label{font-weight:500}
+.narr{margin:6px 0 10px;line-height:1.75;color:var(--ink-soft)}
 .opt .hint{font-size:12px;color:var(--ink-soft)}
 .eff{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .chip{font-size:12px;padding:1px 8px;border-radius:99px;background:var(--line);color:var(--ink-soft);font-variant-numeric:tabular-nums}
@@ -294,6 +295,8 @@ import { repairCity, ensureCity, cityOf, REPAIR_COST } from './src/city.js';
 import { taihouOpposes, WAIJIA_THRESHOLD, TAIHOU_OPPOSE } from './src/harem.js';
 import { factionsBalanced, forcingFaction, strongFactionCount, FORCE_MONTHS, FACTION_FORCE_THRESHOLD, FACTION_POLICY, BALANCED_EFFICIENCY, suppressFaction, rallyFaction } from './src/factions.js';
 import { describeConsort, describeTraits, PERSONALITIES } from './src/people.js';
+import { pickSpeaker } from './src/speaker.js';
+import { effectChipText } from './src/effect-display.js';
 import { SCENARIOS, createScenarioState, evaluateScenario } from './src/scenarios.js';
 import { isBonded, sharedCount, remonstrate, BOND_THRESHOLD } from './src/bonds.js';
 import { COLLECTIONS, collectionProgress } from './src/collections.js';
@@ -686,10 +689,21 @@ function portrait(o){
 function memorialCard(vt, inner){
   return `<section class="memorial"><div class="vtitle">${vt}</div><div class="mbody">${inner}</div></section>`;
 }
+// 選項只顯示方向與大小（小／中／大），不列精確數字；數值仍以 events.json 為準。
 function effChips(o){
-  return Object.entries(o.effects||{}).filter(([k]) => !AFTER_OPTION_KEYS.includes(k)).map(([k,v]) => typeof v === 'boolean'
-    ? `<span class="chip">${EFFECT[k]||k}</span>`
-    : (k === 'war' ? `<span class="chip">${EFFECT[k]}</span>` : `<span class="chip ${v>0?'up':v<0?'down':''}">${EFFECT[k]||k} ${v>0?'+':''}${v}</span>`)).join('') || '<span class="chip">無直接效果</span>';
+  return Object.entries(o.effects||{}).filter(([k]) => !AFTER_OPTION_KEYS.includes(k)).map(([k,v]) => {
+    if (typeof v === 'boolean') return `<span class="chip">${EFFECT[k]||k}</span>`;
+    if (k === 'war') return `<span class="chip">${EFFECT[k]}</span>`;
+    if (typeof v !== 'number') return `<span class="chip">${EFFECT[k]||k}</span>`;
+    const t = effectChipText(k, v, EFFECT[k]||k);
+    return t ? `<span class="chip ${v>0?'up':'down'}">${t}</span>` : '';
+  }).join('') || '<span class="chip">無直接效果</span>';
+}
+// 奏摺的發言大臣與敘事（發言者由既有官員池決定，見 src/speaker.js）。
+function narrHtml(ev){
+  const sp = pickSpeaker(state, ev);
+  const who = sp.name === sp.role ? esc(sp.role) : `${esc(sp.role)}　${esc(sp.name)}`;
+  return `<div class="sub">${who} 進言</div><p class="narr">${esc(ev.narrative || '')}</p>`;
 }
 function fbLine(){ return `<div class="fbline" role="status">${feedback ? esc(feedback) : ''}</div>`; }
 function scenarioBanner(){
@@ -819,6 +833,7 @@ function secondMemorialCard(ev){
   return memorialCard(`次奏・${esc(ev.name)}`, `
       <div class="kicker">次奏　・　可略過</div>
       <h3>${esc(ev.name)}</h3>
+      ${narrHtml(ev)}
       <div class="sub">${opts.length} 項處置可選；略過則不作處置，亦不計入行動次數。</div>
       <div class="opts">${opts.map((o,i) => `
         <button class="opt zhu" data-m2="${i}"><span class="mark">${esc(o.key)}</span>
@@ -889,6 +904,7 @@ function renderCourt(){
   app.innerHTML = sb + memorialCard(`御覽・${esc(ev.name)}`, `
       <div class="kicker">奏摺</div>
       <h3>${esc(ev.name)}</h3>
+      ${narrHtml(ev)}
       <div class="sub">${opts.length} 項處置可選</div>
       <div class="opts">${opts.map((o,i) => `
         <button class="opt zhu" data-i="${i}"><span class="mark">${esc(o.key)}</span>
