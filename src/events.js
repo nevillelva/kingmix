@@ -1,5 +1,7 @@
 // 事件資格判斷。條件以 AND 組合；chance 會消耗 rng，順序固定以維持確定性。
 
+import { canDiplomacy } from './diplomacy.js';
+
 export function isEligible(state, event, rng) {
   const when = event.when || {};
   const s = state.stats;
@@ -47,12 +49,14 @@ export function hasOfficialTrait(state, traitId) {
   return state.officials.some((o) => (o.traits || []).includes(traitId));
 }
 
-// 選項層級的條件（選項物件的 when 欄位）：目前支援 official_trait；不認得的條件一律視為不成立。
+// 選項層級的條件（選項物件的 when 欄位）：支援 official_trait 與 diplomacy；不認得的條件一律視為不成立。
 // 與 isAvailable 並用：選項需「可用且條件成立」才會呈現給玩家。沒有 when 的選項永遠開放。
 export function optionOpen(state, option) {
   const when = option.when || {};
   return Object.entries(when).every(([key, val]) => {
     if (key === 'official_trait') return hasOfficialTrait(state, val);
+    // 外交路線前置條件：{ action, neighbor }，與 diplomacy.js 的 canDiplomacy 相同。
+    if (key === 'diplomacy') return canDiplomacy(state, val.action, val.neighbor);
     return false;
   });
 }

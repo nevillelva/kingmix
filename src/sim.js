@@ -13,6 +13,8 @@ import { tryAccession } from './succession.js';
 import { evaluateDynasty } from './ending.js';
 import { unmetRequirements } from './officials.js';
 import { OFFICES } from './offices.js';
+import { autoCampaignStep } from './campaign.js';
+import { monthlyDrift } from './diplomacy.js';
 
 const AUTO_OFFICES = ['chancellor', 'revenue', 'works', 'war', 'tutor'];
 
@@ -92,11 +94,13 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
     ? createScenarioState(seed, resolveScenarioId(scenario), { policy })
     : createInitialState(seed, { policy });
   const triggered = {};
+  const campaignSteps = {};
   const log = [];
   const bump = (id) => { triggered[id] = (triggered[id] || 0) + 1; };
 
   for (let i = 0; i < months; i++) {
     if (!state.alive) {
+      state.campaign = null; // 皇帝駕崩時親征中止（不記入戰績）
       if (!tryAccession(state)) break;
     }
     const { year, month } = state;
@@ -140,6 +144,14 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
       }
     }
 
+    // 親征：每月自動走一步（與奏摺並行，不改變事件抽選）；當月才開戰者留待下月。
+    if (state.campaign?.status === 'active' && state.alive && state.campaign.id !== String(state.turn)) {
+      const step = autoCampaignStep(state);
+      campaignSteps[step.action] = (campaignSteps[step.action] || 0) + 1;
+      log.push({ year, month, event: 'CAMPAIGN', ...step });
+    }
+
+    monthlyDrift(state, year, month); // 鄰國好感月度漂移（與 web 的月結相同）
     monthlyTick(state, makeRng([seed, year, month, 'tick']));
     advanceMonth(state);
   }
@@ -166,8 +178,22 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
     chronicle: state.chronicle,
     ending: evaluateDynasty(state),
     wars: state.wars,
+    campaignSteps,
+    diplomacy: countDiplomacy(state.diplomacyLog),
     warningCount: state.warnings.length,
     warningBreakdown: state.warnings.reduce((acc, w) => { const k = `${w.key}:${w.reason}`; acc[k] = (acc[k] || 0) + 1; return acc; }, {}),
     log,
   };
+}
+
+// 外交路線統計：各路線成功 / 嘗試次數（供無頭模擬驗證可達性）。
+export function countDiplomacy(log = []) {
+  const out = {};
+  for (const r of log) {
+    const k = r.action;
+    out[k] = out[k] || { tried: 0, ok: 0 };
+    out[k].tried += 1;
+    if (r.ok) out[k].ok += 1;
+  }
+  return out;
 }

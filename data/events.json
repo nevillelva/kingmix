@@ -504,6 +504,26 @@
             "agriculture": -40,
             "people": -4
           }
+        },
+        {
+          "key": "D",
+          "label": "親征迎擊",
+          "tone": "強硬",
+          "effects": {
+            "campaign": {
+              "strength": 396,
+              "reward": {
+                "prestige": 6,
+                "treasury": 60,
+                "armament": 20
+              },
+              "loss": {
+                "armament": -120,
+                "people": -8,
+                "benevolence": -5
+              }
+            }
+          }
         }
       ]
     },
@@ -9180,6 +9200,418 @@
       "when": {
         "chance": 0.3
       }
+    },
+    {
+      "id": "E416",
+      "name": "北狄遣使",
+      "speaker": "鴻臚寺卿",
+      "narrative": "北狄可汗遣使入朝，言辭恭順，然其騎兵屯於邊境，似在試探我朝虛實，請陛下定奪應對之策。",
+      "when": {
+        "every_years": 3,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遣使聯姻",
+          "tone": "仁厚",
+          "effects": {
+            "diplomacy": {
+              "action": "marriage",
+              "neighbor": "north"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "marriage",
+              "neighbor": "north"
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "接受朝貢",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "tribute",
+              "neighbor": "north"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "tribute",
+              "neighbor": "north"
+            }
+          }
+        },
+        {
+          "key": "C",
+          "label": "締結盟約",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "ally",
+              "neighbor": "north"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "ally",
+              "neighbor": "north"
+            }
+          }
+        },
+        {
+          "key": "D",
+          "label": "遣人刺探",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "scout",
+              "neighbor": "north"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "scout",
+              "neighbor": "north"
+            }
+          }
+        },
+        {
+          "key": "E",
+          "label": "興兵宣戰",
+          "tone": "強硬",
+          "effects": {
+            "diplomacy": {
+              "action": "war",
+              "neighbor": "north"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "war",
+              "neighbor": "north"
+            }
+          }
+        },
+        {
+          "key": "F",
+          "label": "置之不理",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E417",
+      "name": "西羌求和",
+      "speaker": "鴻臚寺卿",
+      "narrative": "西羌諸部酋長遣使求見，願獻良馬以結善緣，然其部眾近來屢犯邊寨，陛下欲如何處置，請陛下定奪。",
+      "when": {
+        "every_years": 3,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遣使聯姻",
+          "tone": "仁厚",
+          "effects": {
+            "diplomacy": {
+              "action": "marriage",
+              "neighbor": "west"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "marriage",
+              "neighbor": "west"
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "接受朝貢",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "tribute",
+              "neighbor": "west"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "tribute",
+              "neighbor": "west"
+            }
+          }
+        },
+        {
+          "key": "C",
+          "label": "締結盟約",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "ally",
+              "neighbor": "west"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "ally",
+              "neighbor": "west"
+            }
+          }
+        },
+        {
+          "key": "D",
+          "label": "遣人刺探",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "scout",
+              "neighbor": "west"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "scout",
+              "neighbor": "west"
+            }
+          }
+        },
+        {
+          "key": "E",
+          "label": "興兵宣戰",
+          "tone": "強硬",
+          "effects": {
+            "diplomacy": {
+              "action": "war",
+              "neighbor": "west"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "war",
+              "neighbor": "west"
+            }
+          }
+        },
+        {
+          "key": "F",
+          "label": "置之不理",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E418",
+      "name": "南詔奉表",
+      "speaker": "鴻臚寺卿",
+      "narrative": "南詔王遣使奉表，請修舊好，並獻南海珍貨，朝中對其誠意看法不一，請陛下定奪應對之策。",
+      "when": {
+        "every_years": 3,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遣使聯姻",
+          "tone": "仁厚",
+          "effects": {
+            "diplomacy": {
+              "action": "marriage",
+              "neighbor": "south"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "marriage",
+              "neighbor": "south"
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "接受朝貢",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "tribute",
+              "neighbor": "south"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "tribute",
+              "neighbor": "south"
+            }
+          }
+        },
+        {
+          "key": "C",
+          "label": "締結盟約",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "ally",
+              "neighbor": "south"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "ally",
+              "neighbor": "south"
+            }
+          }
+        },
+        {
+          "key": "D",
+          "label": "遣人刺探",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "scout",
+              "neighbor": "south"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "scout",
+              "neighbor": "south"
+            }
+          }
+        },
+        {
+          "key": "E",
+          "label": "興兵宣戰",
+          "tone": "強硬",
+          "effects": {
+            "diplomacy": {
+              "action": "war",
+              "neighbor": "south"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "war",
+              "neighbor": "south"
+            }
+          }
+        },
+        {
+          "key": "F",
+          "label": "置之不理",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E419",
+      "name": "東越通商",
+      "speaker": "鴻臚寺卿",
+      "narrative": "東越王世子遣使來朝，欲求通商結好，沿海諸州亦有私下交易之議，陛下欲如何應對，請陛下定奪。",
+      "when": {
+        "every_years": 3,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "遣使聯姻",
+          "tone": "仁厚",
+          "effects": {
+            "diplomacy": {
+              "action": "marriage",
+              "neighbor": "east"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "marriage",
+              "neighbor": "east"
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "接受朝貢",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "tribute",
+              "neighbor": "east"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "tribute",
+              "neighbor": "east"
+            }
+          }
+        },
+        {
+          "key": "C",
+          "label": "締結盟約",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "ally",
+              "neighbor": "east"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "ally",
+              "neighbor": "east"
+            }
+          }
+        },
+        {
+          "key": "D",
+          "label": "遣人刺探",
+          "tone": "穩妥",
+          "effects": {
+            "diplomacy": {
+              "action": "scout",
+              "neighbor": "east"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "scout",
+              "neighbor": "east"
+            }
+          }
+        },
+        {
+          "key": "E",
+          "label": "興兵宣戰",
+          "tone": "強硬",
+          "effects": {
+            "diplomacy": {
+              "action": "war",
+              "neighbor": "east"
+            }
+          },
+          "when": {
+            "diplomacy": {
+              "action": "war",
+              "neighbor": "east"
+            }
+          }
+        },
+        {
+          "key": "F",
+          "label": "置之不理",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
     }
   ]
 }

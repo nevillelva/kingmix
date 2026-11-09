@@ -4,7 +4,7 @@
 
 import { makeRng } from './rng.js';
 import { ourStrength, nominalStrength, resolveRound, recordWar, TACTICS, SPREAD_SCOUTED, SPREAD_UNSCOUTED } from './war.js';
-import { declareWar, enemyStrengthOf, alliedReinforcement, neighborById, diplomacyOf } from './diplomacy.js';
+import { declareWar, enemyStrengthOf, alliedReinforcement, neighborById, diplomacyOf, scoutedFresh } from './diplomacy.js';
 import { defenseHoldMultiplier } from './city.js';
 
 export const MAX_ROUNDS = 3;
@@ -61,6 +61,12 @@ export function startCampaign(state, spec, { neighborId = null } = {}) {
     round: 0,
     rounds: [],
   };
+  // 出兵前已遣使刺探（SCOUT_TTL 月內）：本役直接取得偵察情報，不再需要戰前偵察。
+  if (neighborId && scoutedFresh(state, neighborId)) {
+    campaign.intel = 'scouted';
+    campaign.estimate = Math.round(enemyStrength);
+    diplomacyOf(state)[neighborId].scoutedUntil = 0;
+  }
   state.campaign = campaign;
   return { ok: true, campaign };
 }
@@ -163,4 +169,24 @@ function scaleEffects(effects, k) {
   const out = {};
   for (const [key, v] of Object.entries(effects || {})) out[key] = typeof v === 'number' ? v * k : v;
   return out;
+}
+
+// 無頭模擬用的自動出戰（玩家不在場時）：每月走一步，與 UI 的親征卡片同一組行動。
+// 優先戰前偵察（未有情報且粮草足），其次於領先時議和（約一半機率，和議是否成立依好感與勝負差），其餘依 rng 選一個戰術。
+// 同一 (seed, 年, 月) 結果固定。回傳 { action, ... } 或 null（無進行中的戰役）。
+export const AUTO_TACTICS = Object.freeze(['assault', 'hold', 'ambush']);
+export function autoCampaignStep(state) {
+  const c = state.campaign;
+  if (!c || c.status !== 'active') return null;
+  const rng = makeRng([state.seed, state.year, state.month, 'campaign-auto', c.id]);
+  if (c.round === 0 && c.intel === 'none' && c.grain >= RECON_GRAIN_COST) {
+    return { action: 'recon', ...reconnoiter(state) };
+  }
+  if (c.round >= 1 && c.ourWins > c.enemyWins && rng() < 0.5) {
+    const r = offerPeace(state);
+    return { action: 'peace', outcome: r.finished?.outcome ?? null, ok: r.ok };
+  }
+  const tactic = AUTO_TACTICS[Math.floor(rng() * AUTO_TACTICS.length)];
+  const r = pickTactic(state, tactic);
+  return { action: 'tactic', tactic, won: r.round?.won ?? null, finished: r.finished?.outcome ?? null, ok: r.ok };
 }
