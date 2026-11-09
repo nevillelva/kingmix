@@ -63,9 +63,9 @@ function chainTargetIds(events) {
   return ids;
 }
 
-export function pickEvent(state, events, rng) {
+export function pickEvent(state, events, rng, exclude = null) {
   const targets = chainTargetIds(events);
-  const eligible = events.filter((e) => !targets.has(e.id) && isAvailable(e) && eventAllowed(state, e.id) && isEligible(state, e, rng));
+  const eligible = events.filter((e) => !targets.has(e.id) && e.id !== exclude && isAvailable(e) && eventAllowed(state, e.id) && isEligible(state, e, rng));
   if (eligible.length === 0) return null;
   const total = eligible.reduce((sum, e) => sum + eventWeight(e), 0);
   let r = rng() * total;
@@ -74,6 +74,14 @@ export function pickEvent(state, events, rng) {
     if (r < 0) return e;
   }
   return eligible[eligible.length - 1];
+}
+
+// 早朝第 2 則奏摺：每月以 50% 機率出現（同一個 rng 先抽機率、再抽事件，確定性）。
+// 冷卻與每局上限沿用 pickEvent 的 eventAllowed；exclude 避免與第 1 則重複。
+export const SECOND_MEMORIAL_CHANCE = 0.5;
+export function pickSecondMemorial(state, events, rng, exclude = null) {
+  if (!(rng() < SECOND_MEMORIAL_CHANCE)) return null;
+  return pickEvent(state, events, rng, exclude);
 }
 
 // scenario 為選用：省略時行為與原本相同（標準開局、回傳不含 scenario 欄位）。
@@ -114,6 +122,18 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
         bump(event.id);
         recordEvent(state, event.id);
         log.push({ year, month, event: event.id, option: option.key, ...(chained ? { chained: true } : {}) });
+      }
+      // 早朝第 2 則：第 1 則若已記錄，冷卻與上限已生效；此處另以 exclude 排除同一事件。
+      const second = pickSecondMemorial(state, events, makeRng([seed, year, month, 'morning2']), event?.id ?? null);
+      if (second) {
+        const options = second.options.filter(isAvailable);
+        const pick = makeRng([seed, year, month, 'morning2', 'choice'])();
+        const option = options[Math.floor(pick * options.length)];
+        applyOption(state, option, makeRng([seed, year, month, 'morning2', 'recruit']));
+        afterOption(state, second, option);
+        bump(second.id);
+        recordEvent(state, second.id);
+        log.push({ year, month, event: second.id, option: option.key, morning2: true });
       }
     }
 
