@@ -10,19 +10,19 @@ const { events } = JSON.parse(readFileSync(new URL('../data/events.json', import
 
 const SEEDS = Array.from({ length: 20 }, (_, i) => `m2-${i}`);
 
-test('第 2 則機率為 50%', () => {
-  assert.equal(SECOND_MEMORIAL_CHANCE, 0.5);
+test('第 2 則機率為 10%（平衡調整，見 PR）', () => {
+  assert.equal(SECOND_MEMORIAL_CHANCE, 0.1);
 });
 
 test('第 2 則的機率閘門只用 [seed,year,month,morning2] 的第一個亂數', () => {
-  // 閘門值小於 0.5 才有第 2 則；大於等於 0.5 必定沒有（與事件抽選無關）
+  // 閘門值小於機率才有第 2 則；否則必定沒有（與事件抽選無關）
   for (const seed of SEEDS.slice(0, 5)) {
     for (let m = 1; m <= 12; m++) {
       const s = createInitialState(seed);
       s.month = m;
       const gate = makeRng([seed, s.year, m, 'morning2'])();
       const r = pickSecondMemorial(s, events, makeRng([seed, s.year, m, 'morning2']), null);
-      if (gate >= 0.5) assert.equal(r, null);
+      if (gate >= SECOND_MEMORIAL_CHANCE) assert.equal(r, null);
     }
   }
 });
