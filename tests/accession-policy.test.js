@@ -45,3 +45,12 @@ test('國策：首次開局選定免費，之後換策依既有規則（扣威�
   assert.equal(st.stats.prestige, p0 - 1);
   assert.equal(changePolicy(st, 'militarist').reason, 'locked');
 });
+
+test('第二國策比例：權重為校準後的 0.1，且輔策修正恰為主策同項目的 0.1 倍', () => {
+  assert.equal(SECONDARY_POLICY_WEIGHT, 0.1);
+  const st = createInitialState('pol-6');
+  setAccessionPolicies(st, ['agrarian', 'commerce']);
+  const m = activeMonthly(st);
+  assert.ok(Math.abs(m.treasury - POLICIES.commerce.monthly.treasury * 0.1) < 1e-12);
+  assert.ok(Math.abs(m.agriculture - POLICIES.agrarian.monthly.agriculture) < 1e-12);
+});

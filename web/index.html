@@ -219,6 +219,7 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 .swipe-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 .swipe-bar .swipe-hint{flex:1 1 90px;font-size:12px;color:var(--ink-soft);text-align:center}
 .slot-kicker{font-size:13px;color:var(--ink-soft);letter-spacing:.1em;margin:0 0 6px}
+.slot-note{font-size:13px;margin:8px 0 0;color:var(--ink-soft)}
 .nianhao{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(31,26,23,.72);padding:16px;cursor:pointer}
 .nh-card{background:var(--paper);border:2px solid var(--gold);border-radius:6px;padding:28px 20px;text-align:center;max-width:320px;width:100%;box-sizing:border-box;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 .nh-kicker{font-size:14px;color:var(--ink-soft);letter-spacing:.15em}
@@ -260,6 +261,7 @@ import { assignOffice, OFFICES } from './src/offices.js';
 import { POLICIES, POLICY_KEYS, changePolicy, policyLockRemaining, POLICY_CHANGE_PRESTIGE_COST, setAccessionPolicies, ACCESSION_POLICY_MAX } from './src/policy.js';
 import { holdExam, examRemaining, EXAM_INTERVAL_TURNS } from './src/exam.js';
 import { loyaltySafeInfluence } from './src/officials.js';
+import { SLOTS } from './src/slots.js';
 import { eligibleCrownHeirs, heirFaction, chooseCrownPrince, CHANGE_CROWN_PRINCE_PRESTIGE_COST } from './src/heirs-choice.js';
 import { pickEvent, pickSecondMemorial, autoAppoint } from './src/sim.js';
 import { tryAccession } from './src/succession.js';
@@ -1309,25 +1311,14 @@ function onAgency(e){
 }
 app.addEventListener('click', onAgency);
 
-// ── 時段（gap-ui-slots）：早朝為奏摺卡；午後、夜間各一張擇一卡。
+// ── 時段（gap-ui-slots）：早朝為奏摺卡；午後三擇一、夜間二選一（設定見 src/slots.js）。
 // 每個選項只映射到既有分頁或朝政行動面板，不消耗行動次數、不改引擎。
-const SLOTS = {
-  afternoon: { name: '午後', pick: '三擇一', opts: [
-    ['audience', '召見大臣', '前往朝臣，面見在朝諸臣', { tab: 'officials' }],
-    ['review', '校閱軍務', '開啟朝政行動的外交面板（宣戰、結盟）', { panel: 'diplo' }],
-    ['garden', '幸御花園', '前往後宮，見諸嬪妃', { tab: 'harem' }],
-  ] },
-  night: { name: '夜間', opts: [
-    ['harem', '後宮', '前往後宮，安排侍寢與嬪妃', { tab: 'harem' }],
-    ['dc', '東廠密報', '前往東廠，閱覽密報與案件', { tab: 'dc' }],
-    ['rest', '休息', '陛下安寢，夜間無事', { feedback: '陛下安寢，夜間無事。' }],
-  ] },
-};
 function slotsCard(){
   return Object.entries(SLOTS).map(([k, s]) => `<section class="card" data-slot-card="${k}">
     <h2>${s.name}</h2><p class="slot-kicker">${s.name}時段　・　${s.pick || '擇一而行'}</p>
     <div class="opts">${s.opts.map(([id, l, h]) => `<button class="opt" data-slot="${k}" data-arg="${id}"><span class="mark">${l.slice(0,1)}</span>
       <span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span></span></button>`).join('')}</div>
+    ${s.note ? `<p class="hint slot-note">${s.note}</p>` : ''}
   </section>`).join('');
 }
 function onSlot(e){
