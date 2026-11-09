@@ -6,7 +6,7 @@ import { officeHolder } from './offices.js';
 import { generateOfficial } from './officials.js';
 import { attachPerson, applyTraitEffects, generateConsort } from './people.js';
 import { openInvestigationOnLowest, tickDongchang, applyTyrannyDrift } from './dongchang.js';
-import { POLICIES } from './policy.js';
+import { activeMonthly } from './policy.js';
 import { resolveWar } from './war.js';
 import { createHeir, advanceHeirs, tickHeirs, tickCrownPrince } from './succession.js';
 import { tickTutorTraits } from './education.js';
@@ -18,7 +18,7 @@ import { applyFactionPressure } from './factions.js';
 import { scheduleChain } from './chains.js';
 import { recordSharedEvent } from './bonds.js';
 
-const MAX_OFFICIALS = 12;
+export const MAX_OFFICIALS = 12;
 
 // 月結與政策的自然變化：越界時靜默截斷
 const drift = (state, key, value) => setStat(state, key, value, { silent: true });
@@ -119,9 +119,7 @@ function applyEffectsOnly(state, effects, rng) {
 }
 
 function applyPolicyEffects(state) {
-  const policy = POLICIES[state.policy];
-  if (!policy) return;
-  for (const [key, val] of Object.entries(policy.monthly)) {
+  for (const [key, val] of Object.entries(activeMonthly(state))) {
     drift(state, key, state.stats[key] + val);
   }
 }

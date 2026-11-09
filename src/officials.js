@@ -36,3 +36,10 @@ export function unmetRequirements(official, requires) {
   }
   return gaps;
 }
+
+// 忠誠安全線：本派勢力達此值時，月結的派系影響與野心抵銷、忠誠不再下滑。
+// 與 turn.js 的忠誠漂移式一致：(勢力 − FACTION_BASE)/100 − 野心/200 ≥ 0 ⇔ 勢力 ≥ FACTION_BASE + 野心/2。
+export const FACTION_NEUTRAL = 33; // 同 state.js FACTION_BASE，此處獨立定義以避免循環匯入
+export function loyaltySafeInfluence(ambition) {
+  return FACTION_NEUTRAL + ambition / 2;
+}

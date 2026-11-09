@@ -111,3 +111,14 @@ export function applyDongchangAction(state, caseId, action) {
   }
   return c;
 }
+
+// 暴政量表資料（介面顯示用，不改變任何數值）。
+export function tyrannyStatus(state) {
+  const v = state.tyranny || 0;
+  return {
+    value: Math.round(v),
+    max: TYRANNY_MAX,
+    threshold: TYRANNY_QINGLIU_THRESHOLD,
+    qingliuDrainOn: v >= TYRANNY_QINGLIU_THRESHOLD,
+  };
+}
