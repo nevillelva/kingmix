@@ -18,7 +18,15 @@ test('夜間：選項映射到既有分頁，且註明未選即休息、不耗�
   assert.match(SLOTS.night.note, /不耗行動/);
 });
 
-test('午後維持三擇一（不動）', () => {
-  assert.equal(SLOTS.afternoon.pick, '三擇一');
-  assert.equal(SLOTS.afternoon.opts.length, 3);
+test('午後為二選一：僅召見大臣、校閱軍務，不再含幸御花園', () => {
+  assert.equal(SLOTS.afternoon.pick, '二選一');
+  assert.deepEqual(SLOTS.afternoon.opts.map((o) => o[0]), ['audience', 'review']);
+  assert.deepEqual(SLOTS.afternoon.opts.map((o) => o[1]), ['召見大臣', '校閱軍務']);
+  assert.ok(!SLOTS.afternoon.opts.some((o) => o[0] === 'garden'));
+});
+
+test('午後選項映射到既有分頁或外交面板', () => {
+  const byId = Object.fromEntries(SLOTS.afternoon.opts.map((o) => [o[0], o[3]]));
+  assert.deepEqual(byId.audience, { tab: 'officials' });
+  assert.deepEqual(byId.review, { panel: 'diplo' });
 });

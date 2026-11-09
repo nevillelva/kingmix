@@ -26,8 +26,8 @@
 
 ## 技術與版面約定
 
-- 單檔、內嵌 CSS，無外部腳本；字型僅用 Google Fonts（LXGW WenKai Mono TC，備援 Noto Serif TC）。
-- 楷體版本註記：提案原寫 LXGW WenKai TC，現行實作（web/index.html）已改用 LXGW WenKai Mono TC。Mono 版為 Google Fonts 上最接近霹鹜文楷的版本，楷書字形同源，僅取其字形用於標題與朱批，非等寬用途；與提案所用的 TC 版在字距與字重上可能略有差異。
+- 單檔、內嵌 CSS，無外部腳本；字型為內嵌 base64 之 LXGW WenKai TC 子集（標題與朱批），正文用 Noto Serif TC（Google Fonts）。
+- 楷體版本註記：現行實作（web/index.html）使用 LXGW WenKai TC 比例版（取自 @fontsource/lxgw-wenkai-tc，SIL OFL），以 fontTools 子集化為 woff2 內嵌，子集涵蓋頁面與 src 文案之漢字；未涵蓋之字退回 Noto Serif TC。字重僅內嵌 400，粗體標題由瀏覽器合成。
 - `:root` 定義色彩變數，並提供 `prefers-color-scheme: dark` 與 `[data-theme=dark]` 兩組深色設定。
 - 375px 寬、16px 側邊距，已驗證無水平捲動。
 - 影響程度以「小／中／大」表示，不顯示精確數值。
