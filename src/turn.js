@@ -8,6 +8,8 @@ import { attachPerson, applyTraitEffects, generateConsort } from './people.js';
 import { openInvestigationOnLowest, tickDongchang, applyTyrannyDrift } from './dongchang.js';
 import { activeMonthly } from './policy.js';
 import { resolveWar } from './war.js';
+import { startCampaign } from './campaign.js';
+import { neighborById, diplomacyAction, recordDiplomacy, DECLARE_WAR_REWARD, DECLARE_WAR_LOSS } from './diplomacy.js';
 import { createHeir, advanceHeirs, tickHeirs, tickCrownPrince } from './succession.js';
 import { tickTutorTraits } from './education.js';
 import { tickTitles } from './titles.js';
@@ -102,6 +104,11 @@ function applyEffectsOnly(state, effects, rng) {
       }
     } else if (key === 'war') {
       resolveWar(state, val, rng, (st, eff) => applyEffectsOnly(st, eff, rng));
+    } else if (key === 'campaign') {
+      // 事件型三回合戰役（無鄰國，敵強由 spec.strength 給定）；規格同 startCampaign。
+      startCampaign(state, val);
+    } else if (key === 'diplomacy') {
+      applyDiplomacy(state, val);
     } else if (key === 'collect') {
       collectFromSet(state, val, rng); // 收藏（見 collections.js）：自該套未收得者抽件
     } else if (key === 'investigate_lowest') {
@@ -121,6 +128,24 @@ function applyEffectsOnly(state, effects, rng) {
       setStat(state, key, state.stats[key] + val);
     }
   }
+}
+
+// 外交路線：{ action: marriage | tribute | ally | scout | war, neighbor }。
+// war 開啟對該鄰國的三回合戰役（敵強取自外交狀態），其餘路線即時結算。
+function applyDiplomacy(state, { action, neighbor }) {
+  const n = neighborById(neighbor);
+  if (!n) return;
+  if (action === 'war') {
+    const r = startCampaign(
+      state,
+      { strength: n.strength, reward: { ...DECLARE_WAR_REWARD }, loss: { ...DECLARE_WAR_LOSS } },
+      { neighborId: neighbor },
+    );
+    recordDiplomacy(state, action, neighbor, r.ok);
+    return;
+  }
+  const r = diplomacyAction(state, action, neighbor);
+  recordDiplomacy(state, action, neighbor, r.ok);
 }
 
 function applyPolicyEffects(state) {

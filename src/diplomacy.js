@@ -15,7 +15,7 @@ export const MARRIAGE_COST = 60; // 國庫
 export const MARRIAGE_TRUCE_MONTHS = 24;
 export const TRIBUTE_MIN_ATTITUDE = 40;
 export const TRIBUTE_GAIN = 20; // 國庫
-export const ALLIANCE_MIN_ATTITUDE = 70;
+export const ALLIANCE_MIN_ATTITUDE = 60;
 export const MAX_ALLIANCES = 2;
 
 // 宣戰的獎懲數值（勝利獎勵 / 戰敗損失），預設與 web/index.html 的 WAR_SPEC 相同。
@@ -125,6 +125,57 @@ export function pickWarTarget(state, rng) {
     if (rng() < p) return n.id;
   }
   return null;
+}
+
+// ---- 可達性：事件選項可直接觸發四條路線與刺探（以 state.diplomacyLog 記錄） ----
+
+export const SCOUT_COST = 10; // 國庫：遣使刺探的花費
+export const SCOUT_TTL = 12; // 刺探情報的有效月數（以 state.turn 計）
+
+export function scoutedFresh(state, id) {
+  const d = diplomacyOf(state)[id];
+  return !!d && (d.scoutedUntil ?? -1) > state.turn;
+}
+
+// 刺探：花費國庫，於 SCOUT_TTL 個月內，該國下一場戰役自動取得偵察情報（見 campaign.js）。
+export function scoutNeighbor(state, id) {
+  if (!neighborById(id)) return { ok: false, reason: 'unknown' };
+  if (scoutedFresh(state, id)) return { ok: false, reason: 'already' };
+  if (state.stats.treasury < SCOUT_COST) return { ok: false, reason: 'treasury' };
+  state.stats.treasury -= SCOUT_COST;
+  diplomacyOf(state)[id].scoutedUntil = state.turn + SCOUT_TTL;
+  return { ok: true };
+}
+
+// 前置條件（不改動狀態）：選項是否可選。war 需無進行中的戰役，且非盟國。
+export function canDiplomacy(state, action, id) {
+  if (!neighborById(id)) return false;
+  const d = diplomacyOf(state)[id];
+  switch (action) {
+    case 'marriage': return state.stats.treasury >= MARRIAGE_COST;
+    case 'tribute': return d.attitude >= TRIBUTE_MIN_ATTITUDE;
+    case 'ally': return !d.allied && d.attitude >= ALLIANCE_MIN_ATTITUDE && alliedCount(state) < MAX_ALLIANCES;
+    case 'scout': return !scoutedFresh(state, id) && state.stats.treasury >= SCOUT_COST;
+    case 'war': return !d.allied && !(state.campaign && state.campaign.status === 'active');
+    default: return false;
+  }
+}
+
+// 非戰爭路線的統一入口（war 由 turn.js 交給 campaign.js 的 startCampaign）。
+export function diplomacyAction(state, action, id) {
+  switch (action) {
+    case 'marriage': return arrangeMarriage(state, id);
+    case 'tribute': return acceptTribute(state, id);
+    case 'ally': return formAlliance(state, id);
+    case 'scout': return scoutNeighbor(state, id);
+    default: return { ok: false, reason: 'unknown' };
+  }
+}
+
+export function recordDiplomacy(state, action, id, ok) {
+  state.diplomacyLog = state.diplomacyLog || [];
+  state.diplomacyLog.push({ turn: state.turn, action, neighbor: id, ok });
+  return state.diplomacyLog.at(-1);
 }
 
 // 每月好感漂移：朝 50 回歸 1 點，並以確定性小幅抖動；聯姻期間倒數。
