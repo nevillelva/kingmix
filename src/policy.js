@@ -55,9 +55,11 @@ export function changePolicy(state, key) {
 
 // 即位國策（方案：即位時選 1–2 條）。第一條為主策（state.policy，沿用既有換策與逼迫規則）；
 // 第二條為輔策（state.policySecondary），其月修正以 SECONDARY_POLICY_WEIGHT 折算。
-// 權重為暫定值，待模擬校準；僅選一條時與舊行為完全相同。
+// 權重為暫定值，已以無頭模擬校準（見 docs 校準紀錄 / PR 說明）：
+// 0.1 為校準集（big1..200）最佳，驗證集（hold1..200）與補充集（ext1..200）通過全部指標。
+// 0.5 在驗證集與補充集皆使承續軸稱號跌破 15%、仁德軸超過 35%。僅選一條時與舊行為完全相同。
 export const ACCESSION_POLICY_MAX = 2;
-export const SECONDARY_POLICY_WEIGHT = 0.5;
+export const SECONDARY_POLICY_WEIGHT = 0.1;
 
 // 開局設定國策；keys 須為 1–2 條不重複的既有國策。失敗時不改動狀態。
 export function setAccessionPolicies(state, keys) {
