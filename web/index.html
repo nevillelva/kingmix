@@ -271,6 +271,7 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
       <div class="save-tools"><button class="snd" id="exp" type="button">匯出存檔</button><button class="snd" id="imp" type="button">匯入存檔</button><input type="file" id="imp-file" accept=".json,application/json" hidden></div>
     </div>
     <p class="save-msg" id="save-msg" role="status" aria-live="polite"></p>
+    <div class="slot-tools" id="slot-tools" aria-label="多存檔欄位"></div>
     <div class="gauges" id="gauges" aria-label="國勢概況"></div>
   </header>
   <main id="app"></main>
@@ -284,6 +285,12 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 .save-msg{margin:4px 0 0;font-size:12px;color:var(--ink-soft);min-height:0}
 .save-msg:empty{display:none}
 @media (max-width:480px){.save-tools .snd{padding:3px 8px}}
+.slot-tools{display:flex;flex-direction:column;gap:4px;margin:4px 0 0;font-size:12px}
+.slot-tools:empty{display:none}
+.slot-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.slot-name{min-width:9em;color:var(--ink-soft)}
+.slot-confirm{display:inline-flex;gap:6px;align-items:center;color:var(--vermilion)}
+@media (max-width:480px){.slot-row{gap:4px}.slot-name{min-width:0;width:100%}.slot-row .snd{padding:3px 8px;flex:1 1 auto}}
 </style>
 <script type="module">
 import { createInitialState, setStat } from '../src/state.js';
@@ -322,7 +329,7 @@ import { buildScroll } from '../src/posthumous.js';
 import { startCampaign, reconnoiter, pickTactic, offerPeace, MAX_ROUNDS, WINS_NEEDED, RECON_GRAIN_COST } from '../src/campaign.js';
 import { TACTICS } from '../src/war.js';
 import { DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, NEIGHBORS, arrangeMarriage, acceptTribute, formAlliance, diplomacyOf, monthlyDrift, neighborById, MARRIAGE_COST, TRIBUTE_MIN_ATTITUDE, TRIBUTE_GAIN, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES } from '../src/diplomacy.js';
-import { exportSave, importSave } from '../src/save.js';
+import { exportSave, importSave, serializeSave, parseSave } from '../src/save.js';
 
 const SAVE_KEY = 'kingmix-save-v1';
 const SOUND_KEY = 'kingmix-sound';
@@ -1759,6 +1766,66 @@ document.getElementById('imp-file').onchange = e => {
   e.target.value = '';
   if (f) importGame(f);
 };
+// ── 多存檔欄位（3 格）：每格鍵為 kingmix-save-slot-N，格式同 src/save.js；自動存檔 kingmix-save-v1 不變。
+const SLOT_COUNT = 3;
+const slotKey = n => `kingmix-save-slot-${n}`;
+let slotPending = null; // 等待確認覆寫的欄位編號
+const slotRaw = n => { try { return localStorage.getItem(slotKey(n)); } catch (e) { return null; } };
+function slotLabel(n){
+  const raw = slotRaw(n);
+  if (raw === null) return '空';
+  const r = parseSave(raw);
+  if (!r.ok) return '無法讀取';
+  try { return eraYearText(r.state); } catch (e) { return '無法讀取'; }
+}
+function paintSlots(){
+  const box = document.getElementById('slot-tools');
+  if (!box) return;
+  const rows = [];
+  for (let n = 1; n <= SLOT_COUNT; n++) {
+    const occupied = slotRaw(n) !== null;
+    const confirm = slotPending === n
+      ? `<span class="slot-confirm">覆寫欄位 ${n}？<button type="button" class="snd" data-slot-ok="${n}">確定覆寫</button><button type="button" class="snd" data-slot-cancel="${n}">取消</button></span>`
+      : '';
+    rows.push(`<div class="slot-row"><span class="slot-name">欄位 ${n}：${esc(slotLabel(n))}</span>`
+      + `<button type="button" class="snd" data-slot-save="${n}">存到欄位 ${n}</button>`
+      + `<button type="button" class="snd" data-slot-load="${n}"${occupied ? '' : ' disabled'}>讀取欄位 ${n}</button>${confirm}</div>`);
+  }
+  box.innerHTML = rows.join('');
+}
+function slotWrite(n){
+  try {
+    const obj = serializeSave({ ...state, seed });
+    localStorage.setItem(slotKey(n), JSON.stringify(obj));
+    slotPending = null; paintSlots();
+    saveMsg(`已存到欄位 ${n}。`);
+  } catch (e) { slotPending = null; paintSlots(); saveMsg('存檔失敗，瀏覽器可能拒絕寫入。'); }
+}
+function slotLoad(n){
+  const raw = slotRaw(n);
+  if (raw === null) return saveMsg(`欄位 ${n} 是空的。`);
+  const r = parseSave(raw);
+  if (!r.ok) return saveMsg(`欄位 ${n} 無法讀取（${SAVE_ERR[r.error] || '存檔損毀'}）。`);
+  seed = r.seed; state = r.state; migrateEraLog(state);
+  reviewedCount = (state.annals || []).length;
+  panel = null; pick1 = null; feedback = ''; reviewPage = 'score'; tab = 'palace';
+  save(); render(); paintSlots(); saveMsg(`已讀取欄位 ${n}。`);
+}
+document.getElementById('slot-tools').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b || b.disabled) return;
+  const d = b.dataset;
+  if (d.slotSave) {
+    const n = Number(d.slotSave);
+    if (!state) return saveMsg('尚無進行中的局，無法存檔。');
+    if (slotRaw(n) !== null) { slotPending = n; return paintSlots(); }
+    return slotWrite(n);
+  }
+  if (d.slotOk) return slotWrite(Number(d.slotOk));
+  if (d.slotCancel) { slotPending = null; return paintSlots(); }
+  if (d.slotLoad) { slotPending = null; return slotLoad(Number(d.slotLoad)); }
+});
+paintSlots();
 // ── 快進（太和殿按鈕）：連續推進至多 12 個月；奏摺由系統代為批閱，遇停止條件即停並短訊告知 ──
 const FF_MONTHS = 12;
 const FF_REASON_TEXT = { death: '駕崩', campaign: '親征中', leverage: '東廠把柄', treasury: '國庫過低', people: '民心過低', power: '皇權過低' };
