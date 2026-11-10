@@ -4,6 +4,7 @@
 import { createInitialState } from './state.js';
 import { isEligible, isAvailable, optionOpen, eventAllowed, recordEvent, EVENT_MAX_PER_RUN } from './events.js';
 import { makeRng } from './rng.js';
+import { autoDecideMemorial } from './autodecide.js';
 import { applyOption, afterOption, monthlyTick, advanceMonth } from './turn.js';
 import { takeChain } from './chains.js';
 import { createScenarioState, evaluateScenario, SCENARIOS } from './scenarios.js';
@@ -125,9 +126,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
       const rng = makeRng([seed, year, month, 'events']);
       const event = chained ?? pickEvent(state, events, rng);
       if (event) {
-        const options = event.options.filter((o) => isAvailable(o) && optionOpen(state, o));
-        const pick = makeRng([seed, year, month, 'choice'])();
-        const option = options[Math.floor(pick * options.length)];
+        const option = autoDecideMemorial(state, event, seed, year, month)?.option;
         applyOption(state, option, makeRng([seed, year, month, 'recruit']));
         afterOption(state, event, option);
         bump(event.id);
