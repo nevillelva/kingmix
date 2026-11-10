@@ -266,7 +266,9 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
       <div class="seal" aria-hidden="true">帝</div>
       <div><h1>皇帝養成綜合版</h1><div class="when" id="when"></div></div>
       <button class="snd" id="snd" type="button" aria-pressed="false">音效：關</button>
+      <div class="save-tools"><button class="snd" id="exp" type="button">匯出存檔</button><button class="snd" id="imp" type="button">匯入存檔</button><input type="file" id="imp-file" accept=".json,application/json" hidden></div>
     </div>
+    <p class="save-msg" id="save-msg" role="status" aria-live="polite"></p>
     <div class="gauges" id="gauges" aria-label="國勢概況"></div>
   </header>
   <main id="app"></main>
@@ -275,6 +277,12 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 <div class="snow" id="snow" hidden aria-hidden="true"></div>
 <div id="ink" aria-hidden="true"></div>
 
+<style>
+.save-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.save-msg{margin:4px 0 0;font-size:12px;color:var(--ink-soft);min-height:0}
+.save-msg:empty{display:none}
+@media (max-width:480px){.save-tools .snd{padding:3px 8px}}
+</style>
 <script type="module">
 import { createInitialState, setStat } from './src/state.js';
 import { chronicleLine } from './src/chronicle.js';
@@ -309,6 +317,7 @@ import { buildScroll } from './src/posthumous.js';
 import { startCampaign, reconnoiter, pickTactic, offerPeace, MAX_ROUNDS, WINS_NEEDED, RECON_GRAIN_COST } from './src/campaign.js';
 import { TACTICS } from './src/war.js';
 import { DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, NEIGHBORS, arrangeMarriage, acceptTribute, formAlliance, diplomacyOf, monthlyDrift, neighborById, MARRIAGE_COST, TRIBUTE_MIN_ATTITUDE, TRIBUTE_GAIN, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES } from './src/diplomacy.js';
+import { exportSave, importSave } from './src/save.js';
 
 const SAVE_KEY = 'kingmix-save-v1';
 const SOUND_KEY = 'kingmix-sound';
@@ -1665,8 +1674,51 @@ function render(){
   inkFlash(tab);
 }
 
+// ── 存檔匯出／匯入：引擎在 src/save.js；此處只負責下載、讀檔與中文訊息。
+const SAVE_ERR = {
+  invalid_json: '檔案不是存檔（無法解析）',
+  future_version: '版本過新，請更新遊戲後再匯入',
+  missing_seed: '存檔不完整（缺少種子）',
+  invalid_shape: '檔案不是存檔（格式不符）',
+  invalid_version: '檔案不是存檔（版本號無效）',
+  invalid_alive: '存檔內容不完整（存活狀態無效）',
+};
+function saveMsg(text){ const m = document.getElementById('save-msg'); if (m) m.textContent = text; }
+function exportGame(){
+  if (!state) return saveMsg('尚無進行中的局，無法匯出。');
+  try {
+    const text = exportSave({ ...state, seed });
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = `kingmix-save-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    saveMsg('已匯出存檔。');
+  } catch (e) { saveMsg('匯出失敗，請再試一次。'); }
+}
+function importGame(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    const r = importSave(String(reader.result));
+    if (!r.ok) return saveMsg(SAVE_ERR[r.error] || '匯入失敗：無法讀取存檔。');
+    seed = r.seed; state = r.state; migrateEraLog(state);
+    reviewedCount = (state.annals || []).length;
+    panel = null; pick1 = null; feedback = ''; reviewPage = 'score'; tab = 'palace';
+    save(); render(); saveMsg('已匯入存檔。');
+  };
+  reader.onerror = () => saveMsg('匯入失敗：無法讀取檔案。');
+  reader.readAsText(file);
+}
+document.getElementById('exp').onclick = exportGame;
+document.getElementById('imp').onclick = () => document.getElementById('imp-file').click();
+document.getElementById('imp-file').onchange = e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (f) importGame(f);
+};
 paintSnd();
-try { events = (await (await fetch('data/events.json')).json()).events; } catch (e) { events = []; }
+try { events =(await (await fetch('data/events.json')).json()).events; } catch (e) { events = []; }
 render();
 initCloud();
 </script>
