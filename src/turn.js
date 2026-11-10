@@ -22,6 +22,7 @@ import { applyFactionPressure } from './factions.js';
 import { scheduleChain } from './chains.js';
 import { recordSharedEvent } from './bonds.js';
 import { tickAssassination } from './assassination.js';
+import { DEFAULT_MODE, modeMonths } from './mode.js';
 
 // 官員名單上限：朝臣 12 人（開局 4 人加進士招募）＋ 六府知府 6 人。
 export const MAX_OFFICIALS = 18;
@@ -262,6 +263,11 @@ export function advanceMonth(state) {
   if (state.alive && state.age >= 62) {
     state.alive = false;
     state.endReason = 'abdicated';
+  }
+  // 短局：滿 144 月即終局（不經繼位），結局評價沿用 evaluateDynasty。長局不在此處限制。
+  if (state.alive && (state.mode ?? DEFAULT_MODE) === 'short' && state.turn >= modeMonths('short')) {
+    state.alive = false;
+    state.endReason = 'short_end';
   }
   return state;
 }

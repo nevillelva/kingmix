@@ -1,6 +1,7 @@
 import { attachPerson } from './people.js';
 import { createEra } from './era.js';
 import { ensureEconomy } from './economy.js';
+import { DEFAULT_MODE, modeMonths } from './mode.js';
 
 // 遊戲狀態與數值邊界。所有數值寫入都必須經過 setStat，確保越界會被截斷並記錄。
 
@@ -31,6 +32,7 @@ export function createInitialState(seed, opts = {}) {
   const state = {
     seed,
     policy: opts.policy ?? 'agrarian',
+    mode: opts.mode ?? DEFAULT_MODE, // 局長模式：long（600 月）或 short（144 月），見 mode.js
     wars: [],
     year: 1,
     month: 1,
@@ -90,6 +92,7 @@ export function createInitialState(seed, opts = {}) {
   for (const o of state.officials) attachPerson(seed, o);
   // 六府與知府（官員記錄）於開局即建立，知府與其他官員一同可見、可任免（見 economy.js）
   ensureEconomy(state);
+  modeMonths(state.mode); // 驗證模式鍵，未知模式即拋錯
   return state;
 }
 
