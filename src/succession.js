@@ -9,9 +9,9 @@ export const ADULT_AGE = 15;
 const LEGACY_KEYS = ['literature', 'military', 'power', 'benevolence', 'prestige'];
 
 // 幼子月死亡率（依年齡，0–4 歲；5 歲以上不受此項影響）。暫定值，見模擬校準。
-export const CHILD_MORTALITY = [0.0175, 0.007, 0.0035, 0.00175, 0.0009];
+export const CHILD_MORTALITY = [0.012, 0.005, 0.0025, 0.0012, 0.0006];
 // 幼兒疾病：0–4 歲皇子每月有機率患病，病中數月內夭折率加倍（倍數見下）。暫定值，見模擬校準。
-export const CHILD_ILLNESS_CHANCE = 0.02;
+export const CHILD_ILLNESS_CHANCE = 0.01;
 export const CHILD_ILLNESS_MONTHS = 6;
 export const CHILD_ILLNESS_MORTALITY_MULT = 2;
 // 奪嫡期間，最弱的成年皇子每月遭除名（薨逝或被貶）的機率。
