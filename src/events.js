@@ -87,3 +87,22 @@ export function recordEvent(state, id) {
   h.counts[id] = (h.counts[id] || 0) + 1;
   h.last[id] = monthIndex(state);
 }
+
+// 處境觸發：某項數值過低時，對「能正向拉升該數值」的事件加權（最多 x1.25，確定性，不耗 rng）。
+export const SITUATION_THRESHOLDS = Object.freeze({ treasury: 60, people: 50, power: 40 });
+export const SITUATION_BOOST = 1.25;
+
+// 事件是否有任一選項對該數值產生正向效果。
+export function raisesStat(event, stat) {
+  return (event.options || []).some((o) => (o.effects?.[stat] ?? 0) > 0);
+}
+
+// 回傳處境倍率：任一低於門檻的數值，若事件能正向拉升它，則為 SITUATION_BOOST；否則為 1。
+export function situationMultiplier(state, event) {
+  const s = state?.stats;
+  if (!s) return 1;
+  for (const [stat, threshold] of Object.entries(SITUATION_THRESHOLDS)) {
+    if (s[stat] < threshold && raisesStat(event, stat)) return SITUATION_BOOST;
+  }
+  return 1;
+}
