@@ -305,6 +305,8 @@ import { effectChipText } from './src/effect-display.js';
 import { SCENARIOS, createScenarioState, evaluateScenario } from './src/scenarios.js';
 import { isBonded, sharedCount, remonstrate, BOND_THRESHOLD } from './src/bonds.js';
 import { COLLECTIONS, collectionProgress } from './src/collections.js';
+import { fastForwardPause } from './src/fastforward.js';
+import { autoDecideMemorial } from './src/autodecide.js';
 import { buildScroll } from './src/posthumous.js';
 import { startCampaign, reconnoiter, pickTactic, offerPeace, MAX_ROUNDS, WINS_NEEDED, RECON_GRAIN_COST } from './src/campaign.js';
 import { TACTICS } from './src/war.js';
@@ -1661,8 +1663,92 @@ function render(){
   renderNav();
   if (reviewPending()) { renderReview(); return inkFlash('review'); }
   VIEWS[tab]();
+  if (tab === 'court') ffMount();
   showNewYear();
   inkFlash(tab);
+}
+
+// ── 快進（太和殿按鈕）：連續推進至多 12 個月；奏摺由系統代為批閱，遇停止條件即停並短訊告知 ──
+const FF_MONTHS = 12;
+const FF_REASON_TEXT = { death: '駕崩', campaign: '親征中', leverage: '東廠把柄', treasury: '國庫過低', people: '民心過低', power: '皇權過低' };
+function ffToast(msg){
+  let el = document.getElementById('ff-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'ff-toast';
+    el.setAttribute('role', 'status');
+    el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:90vw;padding:10px 16px;border-radius:4px;background:var(--ink);color:var(--paper);font-size:14px;z-index:60;box-shadow:0 6px 18px var(--shadow)';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.hidden = false;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.hidden = true; }, 2600);
+}
+// 代為批閱本月奏摺（早朝第一則與次奏），以 autoDecideMemorial 挑選。
+function ffDecideMonth(){
+  const pair = morningPair();
+  if (pair.first) {
+    const d = autoDecideMemorial(state, pair.first, seed, state.year, state.month);
+    if (d) {
+      recordEvent(state, pair.first.id);
+      applyOption(state, d.option, rng('recruit', state.year, state.month));
+      afterOption(state, pair.first, d.option);
+    }
+  }
+  const p2 = morningPair();
+  if (p2.second && !p2.secondDone) {
+    const d = autoDecideMemorial(state, p2.second, seed, state.year, state.month);
+    if (d) {
+      recordEvent(state, p2.second.id);
+      applyOption(state, d.option, rng(state.year, state.month, 'morning2', 'recruit'));
+      afterOption(state, p2.second, d.option);
+    }
+    state.monthChain.secondDone = true;
+  }
+}
+// 單月推進：與 finishMonth 相同的月末流程，但不存檔、不重繪（由快進結束時一次處理）。
+function ffAdvanceMonth(){
+  const endingYear = state.month === 12 ? state.year : null;
+  try { monthlyDrift(state, state.year, state.month); } catch(e) {}
+  monthlyTick(state, rng('tick', state.year, state.month));
+  advanceMonth(state);
+  if (state.scenario) { try { evaluateScenario(state); } catch(e) {} }
+  if (endingYear !== null && state.alive) {
+    state.annals = state.annals || [];
+    state.annals.push({
+      year: endingYear, generation: state.dynasty.generation,
+      treasury: Math.round(state.stats.treasury), people: Math.round(state.stats.people),
+      military: Math.round(state.stats.military), agriculture: Math.round(state.stats.agriculture),
+      wars: state.wars.length, wins: state.wars.filter(w => w.won).length,
+      officials: state.officials.length, consorts: (state.consorts||[]).length,
+      dc: state.dongchang.cases.filter(c => c.status !== 'closed').length
+    });
+  }
+  autoAppoint(state);
+  if (!state.alive) tryAccession(state);
+}
+function fastForward(){
+  if (!state || !state.alive) return;
+  let reason = null, done = 0;
+  for (; done < FF_MONTHS; done++) {
+    reason = fastForwardPause(state);
+    if (reason) break;
+    ffDecideMonth();
+    ffAdvanceMonth();
+  }
+  feedback = '';
+  save();
+  render();
+  ffToast(reason ? `快進中止：${FF_REASON_TEXT[reason]}（已推進 ${done} 個月）` : `已快進 ${done} 個月`);
+}
+function ffMount(){
+  if (!state || !state.alive) return;
+  const card = document.createElement('section');
+  card.className = 'card';
+  card.innerHTML = `<h2>快進</h2><p class="sub">系統代為批閱奏摺；遇駕崩、親征、東廠把柄，或國庫、民心、皇權告急即停。</p><button class="btn ghost" id="ff-btn" type="button">快進 12 個月</button>`;
+  app.appendChild(card);
+  document.getElementById('ff-btn').onclick = fastForward;
 }
 
 paintSnd();
