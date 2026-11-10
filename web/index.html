@@ -282,6 +282,7 @@ import { validateEra, eraName, eraYearText, changeEra, eraCooldownRemaining, mig
 import { isAvailable, optionOpen, recordEvent, EVENT_MAX_PER_RUN } from './src/events.js';
 import { makeRng } from './src/rng.js';
 import { applyOption, afterOption, monthlyTick, advanceMonth, AFTER_OPTION_KEYS } from './src/turn.js';
+import { snapshotStats, summarizeQuarter } from './src/quarterly.js';
 import { takeChain } from './src/chains.js';
 import { applyDongchangAction, DC_ACTIONS, openInvestigation, MAX_ACTIVE_CASES, activeCaseCount, tyrannyStatus } from './src/dongchang.js';
 import { assignOffice, OFFICES, dismissOffice, officeFit, officeHolder, suggestCandidate } from './src/offices.js';
@@ -537,6 +538,7 @@ function finishMonth(keepFeedback){
   const endingYear = state.month === 12 ? state.year : null;
   try { monthlyDrift(state, state.year, state.month); } catch(e) {} // 鄰國好感月度漂移（外交）
   monthlyTick(state, rng('tick', state.year, state.month));
+  recordQuarterSnapshot(); // 季度結算：月底快照（須在 advanceMonth 之前，此時 state.month 為剛結束之月）
   advanceMonth(state);
   if (state.scenario) { try { evaluateScenario(state); } catch(e) {} }
   if (endingYear !== null && state.alive) {
@@ -984,6 +986,32 @@ function renderPalace(){
     g.onclick = go;
     g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
   });
+}
+
+// ── 季度結算（階段 B）：每月月底記錄 stats 快照（存於 state.quarterSnaps，隨存檔保存）；
+// 3/6/9/12 月結束時產生結算卡，於下一次繪製時置於頁首，收卷即清除（卡片本身只存在記憶體）。
+let quarterCard = null;
+function recordQuarterSnapshot(){
+  if (!state || !state.alive) return;
+  state.quarterSnaps = (state.quarterSnaps || []).concat([{ year: state.year, month: state.month, stats: snapshotStats(state) }]).slice(-4);
+  if (state.month % 3 !== 0) return;
+  // 視窗 = 上季最後一個月底（若有）＋本季三個月底，使 delta 涵蓋完整三個月。
+  const summary = summarizeQuarter(state.quarterSnaps.map(s => s.stats), state.year, state.month);
+  if (summary) quarterCard = summary;
+}
+function showQuarterCard(){
+  if (!quarterCard || !state || !state.alive) return;
+  const c = quarterCard;
+  const lab = k => (STAT[k] ? STAT[k].l : k);
+  const fmt = d => { const r = Math.round(d); return (r > 0 ? '+' : '') + r; };
+  const rows = Object.keys(c.delta).map(k => `<div class="case"><span>${esc(lab(k))}</span><span class="loy">${fmt(c.delta[k])}</span></div>`).join('');
+  const word = x => x ? `${esc(lab(x.key))} ${fmt(x.amount)}` : '無';
+  app.insertAdjacentHTML('afterbegin', `<section class="card" id="qcard"><div class="kicker">${c.year} 年</div>
+    <h2>第 ${c.quarter} 季結算</h2>
+    <div class="sub">本季最大增益：${word(c.biggestGain)}；最大損失：${word(c.biggestDrop)}</div>
+    ${rows}
+    <button class="btn ghost" id="qclose">收卷</button></section>`);
+  document.getElementById('qclose').onclick = () => { quarterCard = null; render(); };
 }
 
 // ── 年終考評（史冊卷軸）：歲末結算後於朝堂展開，收卷即回朝堂 ──
@@ -1661,6 +1689,7 @@ function render(){
   renderNav();
   if (reviewPending()) { renderReview(); return inkFlash('review'); }
   VIEWS[tab]();
+  showQuarterCard();
   showNewYear();
   inkFlash(tab);
 }
