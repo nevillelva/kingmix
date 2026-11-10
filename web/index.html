@@ -286,43 +286,43 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 @media (max-width:480px){.save-tools .snd{padding:3px 8px}}
 </style>
 <script type="module">
-import { createInitialState, setStat } from './src/state.js';
-import { chronicleLine } from './src/chronicle.js';
-import { validateEra, eraName, eraYearText, changeEra, eraCooldownRemaining, migrateEraLog, ERA_REASON_TEXT, PRESET_ERAS, ERA_CHANGE_PRESTIGE_COST, ERA_CHANGE_COOLDOWN_MONTHS } from './src/era.js';
-import { isAvailable, optionOpen, recordEvent, EVENT_MAX_PER_RUN } from './src/events.js';
-import { makeRng } from './src/rng.js';
-import { applyOption, afterOption, monthlyTick, advanceMonth, AFTER_OPTION_KEYS } from './src/turn.js';
-import { snapshotStats, summarizeQuarter } from './src/quarterly.js';
-import { takeChain } from './src/chains.js';
-import { applyDongchangAction, DC_ACTIONS, openInvestigation, MAX_ACTIVE_CASES, activeCaseCount, tyrannyStatus } from './src/dongchang.js';
-import { assignOffice, OFFICES, dismissOffice, officeFit, officeHolder, suggestCandidate } from './src/offices.js';
-import { POLICIES, POLICY_KEYS, changePolicy, policyLockRemaining, POLICY_CHANGE_PRESTIGE_COST, setAccessionPolicies, ACCESSION_POLICY_MAX } from './src/policy.js';
-import { holdExam, examRemaining, EXAM_INTERVAL_TURNS } from './src/exam.js';
-import { loyaltySafetyStatus } from './src/officials.js';
-import { buildGazette } from './src/gazette.js';
-import { SLOTS, slotCost, canTakeSlot } from './src/slots.js';
-import { illnessLabel } from './src/heir-status.js';
-import { eligibleCrownHeirs, heirFaction, chooseCrownPrince, CHANGE_CROWN_PRINCE_PRESTIGE_COST } from './src/heirs-choice.js';
-import { pickEvent, pickSecondMemorial, autoAppoint } from './src/sim.js';
-import { tryAccession } from './src/succession.js';
-import { evaluateDynasty } from './src/ending.js';
-import { setTaxTier, ensureEconomy, administrativeEfficiency, TAX_TIERS, PREFECTURE_DEFS } from './src/economy.js';
-import { repairCity, ensureCity, cityOf, REPAIR_COST } from './src/city.js';
-import { taihouOpposes, WAIJIA_THRESHOLD, TAIHOU_OPPOSE } from './src/harem.js';
-import { factionsBalanced, forcingFaction, strongFactionCount, FORCE_MONTHS, FACTION_FORCE_THRESHOLD, FACTION_POLICY, BALANCED_EFFICIENCY, suppressFaction, rallyFaction } from './src/factions.js';
-import { describeConsort, describeTraits, PERSONALITIES } from './src/people.js';
-import { pickSpeaker } from './src/speaker.js';
-import { effectChipText } from './src/effect-display.js';
-import { SCENARIOS, createScenarioState, evaluateScenario } from './src/scenarios.js';
-import { isBonded, sharedCount, remonstrate, BOND_THRESHOLD } from './src/bonds.js';
-import { COLLECTIONS, collectionProgress } from './src/collections.js';
-import { fastForwardPause } from './src/fastforward.js';
-import { autoDecideMemorial } from './src/autodecide.js';
-import { buildScroll } from './src/posthumous.js';
-import { startCampaign, reconnoiter, pickTactic, offerPeace, MAX_ROUNDS, WINS_NEEDED, RECON_GRAIN_COST } from './src/campaign.js';
-import { TACTICS } from './src/war.js';
-import { DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, NEIGHBORS, arrangeMarriage, acceptTribute, formAlliance, diplomacyOf, monthlyDrift, neighborById, MARRIAGE_COST, TRIBUTE_MIN_ATTITUDE, TRIBUTE_GAIN, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES } from './src/diplomacy.js';
-import { exportSave, importSave } from './src/save.js';
+import { createInitialState, setStat } from '../src/state.js';
+import { chronicleLine } from '../src/chronicle.js';
+import { validateEra, eraName, eraYearText, changeEra, eraCooldownRemaining, migrateEraLog, ERA_REASON_TEXT, PRESET_ERAS, ERA_CHANGE_PRESTIGE_COST, ERA_CHANGE_COOLDOWN_MONTHS } from '../src/era.js';
+import { isAvailable, optionOpen, recordEvent, EVENT_MAX_PER_RUN } from '../src/events.js';
+import { makeRng } from '../src/rng.js';
+import { applyOption, afterOption, monthlyTick, advanceMonth, AFTER_OPTION_KEYS } from '../src/turn.js';
+import { snapshotStats, summarizeQuarter } from '../src/quarterly.js';
+import { takeChain } from '../src/chains.js';
+import { applyDongchangAction, DC_ACTIONS, openInvestigation, MAX_ACTIVE_CASES, activeCaseCount, tyrannyStatus } from '../src/dongchang.js';
+import { assignOffice, OFFICES, dismissOffice, officeFit, officeHolder, suggestCandidate } from '../src/offices.js';
+import { POLICIES, POLICY_KEYS, changePolicy, policyLockRemaining, POLICY_CHANGE_PRESTIGE_COST, setAccessionPolicies, ACCESSION_POLICY_MAX } from '../src/policy.js';
+import { holdExam, examRemaining, EXAM_INTERVAL_TURNS } from '../src/exam.js';
+import { loyaltySafetyStatus } from '../src/officials.js';
+import { buildGazette } from '../src/gazette.js';
+import { SLOTS, slotCost, canTakeSlot } from '../src/slots.js';
+import { illnessLabel } from '../src/heir-status.js';
+import { eligibleCrownHeirs, heirFaction, chooseCrownPrince, CHANGE_CROWN_PRINCE_PRESTIGE_COST } from '../src/heirs-choice.js';
+import { pickEvent, pickSecondMemorial, autoAppoint } from '../src/sim.js';
+import { tryAccession } from '../src/succession.js';
+import { evaluateDynasty } from '../src/ending.js';
+import { setTaxTier, ensureEconomy, administrativeEfficiency, TAX_TIERS, PREFECTURE_DEFS } from '../src/economy.js';
+import { repairCity, ensureCity, cityOf, REPAIR_COST } from '../src/city.js';
+import { taihouOpposes, WAIJIA_THRESHOLD, TAIHOU_OPPOSE } from '../src/harem.js';
+import { factionsBalanced, forcingFaction, strongFactionCount, FORCE_MONTHS, FACTION_FORCE_THRESHOLD, FACTION_POLICY, BALANCED_EFFICIENCY, suppressFaction, rallyFaction } from '../src/factions.js';
+import { describeConsort, describeTraits, PERSONALITIES } from '../src/people.js';
+import { pickSpeaker } from '../src/speaker.js';
+import { effectChipText } from '../src/effect-display.js';
+import { SCENARIOS, createScenarioState, evaluateScenario } from '../src/scenarios.js';
+import { isBonded, sharedCount, remonstrate, BOND_THRESHOLD } from '../src/bonds.js';
+import { COLLECTIONS, collectionProgress } from '../src/collections.js';
+import { fastForwardPause } from '../src/fastforward.js';
+import { autoDecideMemorial } from '../src/autodecide.js';
+import { buildScroll } from '../src/posthumous.js';
+import { startCampaign, reconnoiter, pickTactic, offerPeace, MAX_ROUNDS, WINS_NEEDED, RECON_GRAIN_COST } from '../src/campaign.js';
+import { TACTICS } from '../src/war.js';
+import { DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, NEIGHBORS, arrangeMarriage, acceptTribute, formAlliance, diplomacyOf, monthlyDrift, neighborById, MARRIAGE_COST, TRIBUTE_MIN_ATTITUDE, TRIBUTE_GAIN, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES } from '../src/diplomacy.js';
+import { exportSave, importSave } from '../src/save.js';
 
 const SAVE_KEY = 'kingmix-save-v1';
 const SOUND_KEY = 'kingmix-sound';
@@ -1843,7 +1843,7 @@ function ffMount(){
 }
 
 paintSnd();
-try { events =(await (await fetch('data/events.json')).json()).events; } catch (e) { events = []; }
+try { events =(await (await fetch('../data/events.json')).json()).events; } catch (e) { events = []; }
 render();
 initCloud();
 </script>
