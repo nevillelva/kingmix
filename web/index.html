@@ -225,6 +225,8 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 .swipe-bar .swipe-hint{flex:1 1 90px;font-size:12px;color:var(--ink-soft);text-align:center}
 .slot-kicker{font-size:13px;color:var(--ink-soft);letter-spacing:.1em;margin:0 0 6px}
 .slot-note{font-size:13px;margin:8px 0 0;color:var(--ink-soft)}
+.slot-cost{display:inline-block;font-size:12px;color:var(--gold);letter-spacing:.06em;margin-top:2px}
+.slot-why{font-size:13px;color:var(--ink-soft);margin:8px 0 0}
 .nianhao{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(31,26,23,.72);padding:16px;cursor:pointer}
 .nh-card{background:var(--paper);border:2px solid var(--gold);border-radius:6px;padding:28px 20px;text-align:center;max-width:320px;width:100%;box-sizing:border-box;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 .nh-kicker{font-size:14px;color:var(--ink-soft);letter-spacing:.15em}
@@ -266,7 +268,9 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
       <div class="seal" aria-hidden="true">帝</div>
       <div><h1>皇帝養成綜合版</h1><div class="when" id="when"></div></div>
       <button class="snd" id="snd" type="button" aria-pressed="false">音效：關</button>
+      <div class="save-tools"><button class="snd" id="exp" type="button">匯出存檔</button><button class="snd" id="imp" type="button">匯入存檔</button><input type="file" id="imp-file" accept=".json,application/json" hidden></div>
     </div>
+    <p class="save-msg" id="save-msg" role="status" aria-live="polite"></p>
     <div class="gauges" id="gauges" aria-label="國勢概況"></div>
   </header>
   <main id="app"></main>
@@ -275,40 +279,50 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 <div class="snow" id="snow" hidden aria-hidden="true"></div>
 <div id="ink" aria-hidden="true"></div>
 
+<style>
+.save-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.save-msg{margin:4px 0 0;font-size:12px;color:var(--ink-soft);min-height:0}
+.save-msg:empty{display:none}
+@media (max-width:480px){.save-tools .snd{padding:3px 8px}}
+</style>
 <script type="module">
-import { createInitialState, setStat } from './src/state.js';
-import { chronicleLine } from './src/chronicle.js';
-import { validateEra, eraName, eraYearText, changeEra, eraCooldownRemaining, migrateEraLog, ERA_REASON_TEXT, PRESET_ERAS, ERA_CHANGE_PRESTIGE_COST, ERA_CHANGE_COOLDOWN_MONTHS } from './src/era.js';
-import { isAvailable, optionOpen, recordEvent, EVENT_MAX_PER_RUN } from './src/events.js';
-import { makeRng } from './src/rng.js';
-import { applyOption, afterOption, monthlyTick, advanceMonth, AFTER_OPTION_KEYS } from './src/turn.js';
-import { takeChain } from './src/chains.js';
-import { applyDongchangAction, DC_ACTIONS, openInvestigation, MAX_ACTIVE_CASES, activeCaseCount, tyrannyStatus } from './src/dongchang.js';
-import { assignOffice, OFFICES, dismissOffice, officeFit, officeHolder, suggestCandidate } from './src/offices.js';
-import { POLICIES, POLICY_KEYS, changePolicy, policyLockRemaining, POLICY_CHANGE_PRESTIGE_COST, setAccessionPolicies, ACCESSION_POLICY_MAX } from './src/policy.js';
-import { holdExam, examRemaining, EXAM_INTERVAL_TURNS } from './src/exam.js';
-import { loyaltySafetyStatus } from './src/officials.js';
-import { buildGazette } from './src/gazette.js';
-import { SLOTS } from './src/slots.js';
-import { illnessLabel } from './src/heir-status.js';
-import { eligibleCrownHeirs, heirFaction, chooseCrownPrince, CHANGE_CROWN_PRINCE_PRESTIGE_COST } from './src/heirs-choice.js';
-import { pickEvent, pickSecondMemorial, autoAppoint } from './src/sim.js';
-import { tryAccession } from './src/succession.js';
-import { evaluateDynasty } from './src/ending.js';
-import { setTaxTier, ensureEconomy, administrativeEfficiency, TAX_TIERS, PREFECTURE_DEFS } from './src/economy.js';
-import { repairCity, ensureCity, cityOf, REPAIR_COST } from './src/city.js';
-import { taihouOpposes, WAIJIA_THRESHOLD, TAIHOU_OPPOSE } from './src/harem.js';
-import { factionsBalanced, forcingFaction, strongFactionCount, FORCE_MONTHS, FACTION_FORCE_THRESHOLD, FACTION_POLICY, BALANCED_EFFICIENCY, suppressFaction, rallyFaction } from './src/factions.js';
-import { describeConsort, describeTraits, PERSONALITIES } from './src/people.js';
-import { pickSpeaker } from './src/speaker.js';
-import { effectChipText } from './src/effect-display.js';
-import { SCENARIOS, createScenarioState, evaluateScenario } from './src/scenarios.js';
-import { isBonded, sharedCount, remonstrate, BOND_THRESHOLD } from './src/bonds.js';
-import { COLLECTIONS, collectionProgress } from './src/collections.js';
-import { buildScroll } from './src/posthumous.js';
-import { startCampaign, reconnoiter, pickTactic, offerPeace, MAX_ROUNDS, WINS_NEEDED, RECON_GRAIN_COST } from './src/campaign.js';
-import { TACTICS } from './src/war.js';
-import { DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, NEIGHBORS, arrangeMarriage, acceptTribute, formAlliance, diplomacyOf, monthlyDrift, neighborById, MARRIAGE_COST, TRIBUTE_MIN_ATTITUDE, TRIBUTE_GAIN, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES } from './src/diplomacy.js';
+import { createInitialState, setStat } from '../src/state.js';
+import { chronicleLine } from '../src/chronicle.js';
+import { validateEra, eraName, eraYearText, changeEra, eraCooldownRemaining, migrateEraLog, ERA_REASON_TEXT, PRESET_ERAS, ERA_CHANGE_PRESTIGE_COST, ERA_CHANGE_COOLDOWN_MONTHS } from '../src/era.js';
+import { isAvailable, optionOpen, recordEvent, EVENT_MAX_PER_RUN } from '../src/events.js';
+import { makeRng } from '../src/rng.js';
+import { applyOption, afterOption, monthlyTick, advanceMonth, AFTER_OPTION_KEYS } from '../src/turn.js';
+import { snapshotStats, summarizeQuarter } from '../src/quarterly.js';
+import { takeChain } from '../src/chains.js';
+import { applyDongchangAction, DC_ACTIONS, openInvestigation, MAX_ACTIVE_CASES, activeCaseCount, tyrannyStatus } from '../src/dongchang.js';
+import { assignOffice, OFFICES, dismissOffice, officeFit, officeHolder, suggestCandidate } from '../src/offices.js';
+import { POLICIES, POLICY_KEYS, changePolicy, policyLockRemaining, POLICY_CHANGE_PRESTIGE_COST, setAccessionPolicies, ACCESSION_POLICY_MAX } from '../src/policy.js';
+import { holdExam, examRemaining, EXAM_INTERVAL_TURNS } from '../src/exam.js';
+import { loyaltySafetyStatus } from '../src/officials.js';
+import { buildGazette } from '../src/gazette.js';
+import { SLOTS, slotCost, canTakeSlot } from '../src/slots.js';
+import { illnessLabel } from '../src/heir-status.js';
+import { eligibleCrownHeirs, heirFaction, chooseCrownPrince, CHANGE_CROWN_PRINCE_PRESTIGE_COST } from '../src/heirs-choice.js';
+import { pickEvent, pickSecondMemorial, autoAppoint } from '../src/sim.js';
+import { tryAccession } from '../src/succession.js';
+import { evaluateDynasty } from '../src/ending.js';
+import { setTaxTier, ensureEconomy, administrativeEfficiency, TAX_TIERS, PREFECTURE_DEFS } from '../src/economy.js';
+import { repairCity, ensureCity, cityOf, REPAIR_COST } from '../src/city.js';
+import { taihouOpposes, WAIJIA_THRESHOLD, TAIHOU_OPPOSE } from '../src/harem.js';
+import { factionsBalanced, forcingFaction, strongFactionCount, FORCE_MONTHS, FACTION_FORCE_THRESHOLD, FACTION_POLICY, BALANCED_EFFICIENCY, suppressFaction, rallyFaction } from '../src/factions.js';
+import { describeConsort, describeTraits, PERSONALITIES } from '../src/people.js';
+import { pickSpeaker } from '../src/speaker.js';
+import { effectChipText } from '../src/effect-display.js';
+import { SCENARIOS, createScenarioState, evaluateScenario } from '../src/scenarios.js';
+import { isBonded, sharedCount, remonstrate, BOND_THRESHOLD } from '../src/bonds.js';
+import { COLLECTIONS, collectionProgress } from '../src/collections.js';
+import { fastForwardPause } from '../src/fastforward.js';
+import { autoDecideMemorial } from '../src/autodecide.js';
+import { buildScroll } from '../src/posthumous.js';
+import { startCampaign, reconnoiter, pickTactic, offerPeace, MAX_ROUNDS, WINS_NEEDED, RECON_GRAIN_COST } from '../src/campaign.js';
+import { TACTICS } from '../src/war.js';
+import { DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, NEIGHBORS, arrangeMarriage, acceptTribute, formAlliance, diplomacyOf, monthlyDrift, neighborById, MARRIAGE_COST, TRIBUTE_MIN_ATTITUDE, TRIBUTE_GAIN, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES } from '../src/diplomacy.js';
+import { exportSave, importSave } from '../src/save.js';
 
 const SAVE_KEY = 'kingmix-save-v1';
 const SOUND_KEY = 'kingmix-sound';
@@ -537,6 +551,7 @@ function finishMonth(keepFeedback){
   const endingYear = state.month === 12 ? state.year : null;
   try { monthlyDrift(state, state.year, state.month); } catch(e) {} // 鄰國好感月度漂移（外交）
   monthlyTick(state, rng('tick', state.year, state.month));
+  recordQuarterSnapshot(); // 季度結算：月底快照（須在 advanceMonth 之前，此時 state.month 為剛結束之月）
   advanceMonth(state);
   if (state.scenario) { try { evaluateScenario(state); } catch(e) {} }
   if (endingYear !== null && state.alive) {
@@ -984,6 +999,32 @@ function renderPalace(){
     g.onclick = go;
     g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
   });
+}
+
+// ── 季度結算（階段 B）：每月月底記錄 stats 快照（存於 state.quarterSnaps，隨存檔保存）；
+// 3/6/9/12 月結束時產生結算卡，於下一次繪製時置於頁首，收卷即清除（卡片本身只存在記憶體）。
+let quarterCard = null;
+function recordQuarterSnapshot(){
+  if (!state || !state.alive) return;
+  state.quarterSnaps = (state.quarterSnaps || []).concat([{ year: state.year, month: state.month, stats: snapshotStats(state) }]).slice(-4);
+  if (state.month % 3 !== 0) return;
+  // 視窗 = 上季最後一個月底（若有）＋本季三個月底，使 delta 涵蓋完整三個月。
+  const summary = summarizeQuarter(state.quarterSnaps.map(s => s.stats), state.year, state.month);
+  if (summary) quarterCard = summary;
+}
+function showQuarterCard(){
+  if (!quarterCard || !state || !state.alive) return;
+  const c = quarterCard;
+  const lab = k => (STAT[k] ? STAT[k].l : k);
+  const fmt = d => { const r = Math.round(d); return (r > 0 ? '+' : '') + r; };
+  const rows = Object.keys(c.delta).map(k => `<div class="case"><span>${esc(lab(k))}</span><span class="loy">${fmt(c.delta[k])}</span></div>`).join('');
+  const word = x => x ? `${esc(lab(x.key))} ${fmt(x.amount)}` : '無';
+  app.insertAdjacentHTML('afterbegin', `<section class="card" id="qcard"><div class="kicker">${c.year} 年</div>
+    <h2>第 ${c.quarter} 季結算</h2>
+    <div class="sub">本季最大增益：${word(c.biggestGain)}；最大損失：${word(c.biggestDrop)}</div>
+    ${rows}
+    <button class="btn ghost" id="qclose">收卷</button></section>`);
+  document.getElementById('qclose').onclick = () => { quarterCard = null; render(); };
 }
 
 // ── 年終考評（史冊卷軸）：歲末結算後於朝堂展開，收卷即回朝堂 ──
@@ -1550,10 +1591,15 @@ app.addEventListener('click', onAgency);
 // ── 時段（gap-ui-slots）：早朝為奏摺卡；午後三選一、夜間二選一（設定見 src/slots.js）。
 // 每個選項只映射到既有分頁或朝政行動面板，不消耗行動次數、不改引擎。
 function slotsCard(){
+  const exhausted = actionsLeft() <= 0;
   return Object.entries(SLOTS).map(([k, s]) => `<section class="card" data-slot-card="${k}">
     <h2>${s.name}</h2><p class="slot-kicker">${s.name}時段　・　${s.pick || '擇一而行'}</p>
-    <div class="opts">${s.opts.map(([id, l, h]) => `<button class="opt" data-slot="${k}" data-arg="${id}"><span class="mark">${l.slice(0,1)}</span>
-      <span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span></span></button>`).join('')}</div>
+    <div class="opts">${s.opts.map(([id, l, h]) => {
+      const ok = !!state && canTakeSlot(state, k, agency().used);
+      return `<button class="opt" data-slot="${k}" data-arg="${id}" ${ok ? '' : 'disabled'}><span class="mark">${l.slice(0,1)}</span>
+      <span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span><span class="slot-cost">耗 ${slotCost(k, id)} 行動</span></span></button>`;
+    }).join('')}</div>
+    ${exhausted ? `<p class="slot-why">本月行動已用盡，待下月再議。</p>` : ''}
     ${s.note ? `<p class="hint slot-note">${s.note}</p>` : ''}
   </section>`).join('');
 }
@@ -1563,6 +1609,9 @@ function onSlot(e){
   const s = SLOTS[b.dataset.slot];
   const o = s && s.opts.find(x => x[0] === b.dataset.arg);
   if (!o) return;
+  if (!canTakeSlot(state, b.dataset.slot, agency().used)) return;
+  agency().used += slotCost(b.dataset.slot, o[0]);
+  save();
   const t = o[3];
   panel = null; pick1 = null; feedback = t.feedback || '';
   if (t.tab) tab = t.tab;
@@ -1661,12 +1710,140 @@ function render(){
   renderNav();
   if (reviewPending()) { renderReview(); return inkFlash('review'); }
   VIEWS[tab]();
+  if (tab === 'court') ffMount();
+  showQuarterCard();
   showNewYear();
   inkFlash(tab);
 }
 
+// ── 存檔匯出／匯入：引擎在 src/save.js；此處只負責下載、讀檔與中文訊息。
+const SAVE_ERR = {
+  invalid_json: '檔案不是存檔（無法解析）',
+  future_version: '版本過新，請更新遊戲後再匯入',
+  missing_seed: '存檔不完整（缺少種子）',
+  invalid_shape: '檔案不是存檔（格式不符）',
+  invalid_version: '檔案不是存檔（版本號無效）',
+  invalid_alive: '存檔內容不完整（存活狀態無效）',
+};
+function saveMsg(text){ const m = document.getElementById('save-msg'); if (m) m.textContent = text; }
+function exportGame(){
+  if (!state) return saveMsg('尚無進行中的局，無法匯出。');
+  try {
+    const text = exportSave({ ...state, seed });
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = `kingmix-save-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    saveMsg('已匯出存檔。');
+  } catch (e) { saveMsg('匯出失敗，請再試一次。'); }
+}
+function importGame(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    const r = importSave(String(reader.result));
+    if (!r.ok) return saveMsg(SAVE_ERR[r.error] || '匯入失敗：無法讀取存檔。');
+    seed = r.seed; state = r.state; migrateEraLog(state);
+    reviewedCount = (state.annals || []).length;
+    panel = null; pick1 = null; feedback = ''; reviewPage = 'score'; tab = 'palace';
+    save(); render(); saveMsg('已匯入存檔。');
+  };
+  reader.onerror = () => saveMsg('匯入失敗：無法讀取檔案。');
+  reader.readAsText(file);
+}
+document.getElementById('exp').onclick = exportGame;
+document.getElementById('imp').onclick = () => document.getElementById('imp-file').click();
+document.getElementById('imp-file').onchange = e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (f) importGame(f);
+};
+// ── 快進（太和殿按鈕）：連續推進至多 12 個月；奏摺由系統代為批閱，遇停止條件即停並短訊告知 ──
+const FF_MONTHS = 12;
+const FF_REASON_TEXT = { death: '駕崩', campaign: '親征中', leverage: '東廠把柄', treasury: '國庫過低', people: '民心過低', power: '皇權過低' };
+function ffToast(msg){
+  let el = document.getElementById('ff-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'ff-toast';
+    el.setAttribute('role', 'status');
+    el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:90vw;padding:10px 16px;border-radius:4px;background:var(--ink);color:var(--paper);font-size:14px;z-index:60;box-shadow:0 6px 18px var(--shadow)';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.hidden = false;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.hidden = true; }, 2600);
+}
+// 代為批閱本月奏摺（早朝第一則與次奏），以 autoDecideMemorial 挑選。
+function ffDecideMonth(){
+  const pair = morningPair();
+  if (pair.first) {
+    const d = autoDecideMemorial(state, pair.first, seed, state.year, state.month);
+    if (d) {
+      recordEvent(state, pair.first.id);
+      applyOption(state, d.option, rng('recruit', state.year, state.month));
+      afterOption(state, pair.first, d.option);
+    }
+  }
+  const p2 = morningPair();
+  if (p2.second && !p2.secondDone) {
+    const d = autoDecideMemorial(state, p2.second, seed, state.year, state.month);
+    if (d) {
+      recordEvent(state, p2.second.id);
+      applyOption(state, d.option, rng(state.year, state.month, 'morning2', 'recruit'));
+      afterOption(state, p2.second, d.option);
+    }
+    state.monthChain.secondDone = true;
+  }
+}
+// 單月推進：與 finishMonth 相同的月末流程，但不存檔、不重繪（由快進結束時一次處理）。
+function ffAdvanceMonth(){
+  const endingYear = state.month === 12 ? state.year : null;
+  try { monthlyDrift(state, state.year, state.month); } catch(e) {}
+  monthlyTick(state, rng('tick', state.year, state.month));
+  advanceMonth(state);
+  if (state.scenario) { try { evaluateScenario(state); } catch(e) {} }
+  if (endingYear !== null && state.alive) {
+    state.annals = state.annals || [];
+    state.annals.push({
+      year: endingYear, generation: state.dynasty.generation,
+      treasury: Math.round(state.stats.treasury), people: Math.round(state.stats.people),
+      military: Math.round(state.stats.military), agriculture: Math.round(state.stats.agriculture),
+      wars: state.wars.length, wins: state.wars.filter(w => w.won).length,
+      officials: state.officials.length, consorts: (state.consorts||[]).length,
+      dc: state.dongchang.cases.filter(c => c.status !== 'closed').length
+    });
+  }
+  autoAppoint(state);
+  if (!state.alive) tryAccession(state);
+}
+function fastForward(){
+  if (!state || !state.alive) return;
+  let reason = null, done = 0;
+  for (; done < FF_MONTHS; done++) {
+    reason = fastForwardPause(state);
+    if (reason) break;
+    ffDecideMonth();
+    ffAdvanceMonth();
+  }
+  feedback = '';
+  save();
+  render();
+  ffToast(reason ? `快進中止：${FF_REASON_TEXT[reason]}（已推進 ${done} 個月）` : `已快進 ${done} 個月`);
+}
+function ffMount(){
+  if (!state || !state.alive) return;
+  const card = document.createElement('section');
+  card.className = 'card';
+  card.innerHTML = `<h2>快進</h2><p class="sub">系統代為批閱奏摺；遇駕崩、親征、東廠把柄，或國庫、民心、皇權告急即停。</p><button class="btn ghost" id="ff-btn" type="button">快進 12 個月</button>`;
+  app.appendChild(card);
+  document.getElementById('ff-btn').onclick = fastForward;
+}
+
 paintSnd();
-try { events = (await (await fetch('data/events.json')).json()).events; } catch (e) { events = []; }
+try { events =(await (await fetch('../data/events.json')).json()).events; } catch (e) { events = []; }
 render();
 initCloud();
 </script>
