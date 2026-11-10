@@ -417,8 +417,8 @@ const PHRASE = [0,2,4,2,5,4,2,0, 3,1,4,6,4,2,1,0, 0,2,3,5,4,2,0,null];
 function bgmTick(){
   if (!soundOn || !audioCtx) return;
   const idx = PHRASE[bgmStep % PHRASE.length]; bgmStep++;
-  if (idx !== null) qin(PENTA[idx], 0, 0.035);
-  if (bgmStep % 8 === 1) qin(PENTA[0] / 2, 0, 0.03);
+  if (idx !== null) qin(PENTA[idx], 0, 0.055);
+  if (bgmStep % 8 === 1) qin(PENTA[0] / 2, 0, 0.047);
 }
 function startBgm(){ if (!bgmTimer && soundOn) bgmTimer = setInterval(bgmTick, 900); }
 function stopBgm(){ if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = null; } }
