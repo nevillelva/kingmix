@@ -14,3 +14,29 @@ export const SLOTS = Object.freeze({
     Object.freeze(['dc', '東廠密報', '前往東廠，閱覽密報與案件', { tab: 'dc' }]),
   ]) }),
 });
+
+// ── 時段行動成本（引擎端；web/index.html 尚未接線，見 docs/design/slot-cost.md）──
+// 每月行動上限，與 web/index.html 的 ACTION_LIMIT 相同（兩處須同步）。
+export const ACTION_LIMIT = 2;
+// 總開關：false 時所有時段選項成本為 0，行為等同舊版（僅為分頁捷徑）。
+export const SLOT_COST_ENABLED = true;
+// 每個時段選項的預設成本（整數行動數）。
+const DEFAULT_SLOT_COST = 1;
+
+// 回傳選擇某時段某選項所需的行動數（整數，≥0）。未知時段或選項視為 0。
+export function slotCost(slotName, choiceKey) {
+  if (!SLOT_COST_ENABLED) return 0;
+  const s = SLOTS[slotName];
+  if (!s || !s.opts.some((o) => o[0] === choiceKey)) return 0;
+  return DEFAULT_SLOT_COST;
+}
+
+// 純函式：目前已用行動 usedActions 下，能否再選此時段（以首個選項的成本判定，
+// 夜間與午後的預設成本相同）。state 僅用於排除已結束的局（state.alive === false）。
+export function canTakeSlot(state, slotName, usedActions) {
+  if (state && state.alive === false) return false;
+  const s = SLOTS[slotName];
+  if (!s) return false;
+  const cost = slotCost(slotName, s.opts[0][0]);
+  return usedActions + cost <= ACTION_LIMIT;
+}
