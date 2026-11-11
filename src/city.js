@@ -5,11 +5,12 @@
 import { setStat } from './state.js';
 import { ensureEconomy } from './economy.js';
 import { officeHolder } from './offices.js';
+import { BALANCE } from './balance.js';
 
 export const CITY_DEFENSE_INIT = 50;
 export const CITY_DEFENSE_MAX = 100;
 export const CITY_DECAY = 0.3; // 每月風化
-export const REPAIR_COST = 20; // 國庫
+export const REPAIR_COST = BALANCE.REPAIR_COST; // 國庫
 export const REPAIR_BASE = 12; // 無工部尚書時的基礎修繕量
 export const REPAIR_PEOPLE = 1; // 民心
 export const DEFENSE_HOLD_SCALE = 500; // 堅守戰力倍率 = 1 + (平均城防 − 50) / 500，範圍 0.9–1.1
