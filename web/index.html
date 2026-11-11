@@ -292,6 +292,15 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 .slot-confirm{display:inline-flex;gap:6px;align-items:center;color:var(--vermilion)}
 @media (max-width:480px){.slot-row{gap:4px}.slot-name{min-width:0;width:100%}.slot-row .snd{padding:3px 8px;flex:1 1 auto}}
 </style>
+<style>
+/* 底部分頁遮擋：朝臣等長頁底部預留分頁列高度 */
+#app{padding-bottom:calc(48px + env(safe-area-inset-bottom,0px))}
+/* 新手提要（首月，可關閉；關閉後寫入 kingmix-guide-v1） */
+.guide{border-color:var(--gold)}
+.guide ul{margin:0;padding-left:1.2em;font-size:14px;line-height:1.7;color:var(--ink-soft)}
+.guide li{margin:4px 0}
+.guide .btn{margin-top:10px}
+</style>
 <script type="module">
 import { createInitialState, setStat } from '../src/state.js';
 import { chronicleLine } from '../src/chronicle.js';
@@ -512,6 +521,31 @@ function inkFlash(key){
   ink.classList.remove('go'); void ink.offsetWidth; ink.classList.add('go');
 }
 
+// ── 新手提要：僅新局首月顯示；關閉後寫入 localStorage（失敗則本次工作階段內隱藏）
+const GUIDE_KEY = 'kingmix-guide-v1';
+let guideArmed = false;
+function guideDismissed(){ try { return localStorage.getItem(GUIDE_KEY) !== null; } catch (e) { return false; } }
+function guideMount(){
+  if (!guideArmed || !state) return;
+  if (!state.alive || state.month !== 1 || guideDismissed()) { guideArmed = false; return; }
+  const app = document.getElementById('app');
+  if (!app || app.querySelector('.guide')) return;
+  app.insertAdjacentHTML('afterbegin', `<section class="card guide" role="region" aria-label="新手提要">
+    <h2>初入宮城・御前提要</h2>
+    <ul>
+      <li><b>奏摺</b>：早朝臣子呈上奏摺，點選或左右滑動即可裁決，每一道批示都會留下後果。</li>
+      <li><b>太和殿</b>：朝政奏摺處理之所，待批件數顯示於此，亦可在此快進。</li>
+      <li><b>快進</b>：於太和殿連續推進至多 12 個月，奏摺由系統代為批閱，遇大事即停。</li>
+      <li><b>時段</b>：一日分早朝、午後與夜間。早朝批閱奏摺；午後三選一、夜間二選一，行動有限，不可盡取。</li>
+    </ul>
+    <button type="button" class="btn ghost guide-x">知道了</button></section>`);
+  app.querySelector('.guide-x').onclick = () => {
+    try { localStorage.setItem(GUIDE_KEY, '1'); } catch (e) {}
+    guideArmed = false;
+    app.querySelector('.guide')?.remove();
+  };
+}
+
 function newGame(s, scenId, eraRaw, pols){
   seed = s || String(Math.floor(Math.random()*1e9));
   const list = pols && pols.length ? pols : ['agrarian'];
@@ -524,6 +558,7 @@ function newGame(s, scenId, eraRaw, pols){
   }
   setAccessionPolicies(state, list);
   reviewedCount = 0;
+  guideArmed = true;
   save(); tab = 'palace'; panel = null; pick1 = null; render();
 }
 function pendingCase(){ return (state.dongchang?.cases || []).find(c => c.status === 'leverage'); }
@@ -1717,6 +1752,7 @@ function render(){
   renderNav();
   if (reviewPending()) { renderReview(); return inkFlash('review'); }
   VIEWS[tab]();
+  guideMount();
   if (tab === 'court') ffMount();
   showQuarterCard();
   showNewYear();
