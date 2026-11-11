@@ -387,7 +387,10 @@ function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({seed, state
 // ── 雲端存檔（Phase 6）：每位玩家的私有文件，跨裝置可用；無法連線時退回本機存檔 ──
 const useCap = n => (window.claude && window.claude.use) ? window.claude.use(n) : Promise.resolve(null);
 let cloud = { db: null, uid: null, snap: null, queue: Promise.resolve() };
+// 旗標：雲端存檔尚未做衝突處理（多裝置同時寫入會互相覆蓋），完成衝突處理前預設關閉。
+const CLOUD_SAVE_ENABLED = false;
 async function initCloud(){
+  if (!CLOUD_SAVE_ENABLED) return;
   try {
     const [dbns, user] = await Promise.all([useCap('db'), useCap('user')]);
     if (!dbns || !user) return;
@@ -400,7 +403,7 @@ async function initCloud(){
 }
 function cloudDoc(){ return cloud.db.collection('data/users/' + cloud.uid).doc('save'); }
 function cloudPush(){
-  if (!cloud.db || !cloud.uid || !state) return;
+  if (!CLOUD_SAVE_ENABLED || !cloud.db || !cloud.uid || !state) return;
   const body = { savedAt: Date.now(), seed, state: JSON.parse(JSON.stringify(state)) };
   // 寫入依序排隊，同一文件同時只有一筆寫入
   cloud.queue = cloud.queue.then(() => cloudDoc().set(body)).catch(() => {});
