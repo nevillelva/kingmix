@@ -2,7 +2,7 @@
 // 東廠有待處置的把柄時，該月的奏摺改為「東廠密報」。
 
 import { createInitialState } from './state.js';
-import { isEligible, isAvailable, optionOpen, eventAllowed, recordEvent, EVENT_MAX_PER_RUN } from './events.js';
+import { isEligible, isAvailable, optionOpen, eventAllowed, recordEvent, EVENT_MAX_PER_RUN, situationMultiplier } from './events.js';
 import { makeRng } from './rng.js';
 import { autoDecideMemorial } from './autodecide.js';
 import { applyOption, afterOption, monthlyTick, advanceMonth } from './turn.js';
@@ -58,9 +58,11 @@ export function autoAppoint(state) {
 
 // 從所有符合條件的事件中，以種子隨機挑一則；避免清單前段事件長期壟斷。
 // 加權抽選：時序事件（every_years / months）權重 3，避免被大量一般事件稀釋；其餘權重 1。
-export function eventWeight(e) {
+// 處境觸發：傳入 state 時，數值過低的處境會對正向拉升該數值的事件乘上 SITUATION_BOOST（見 events.js）。
+export function eventWeight(e, state = null) {
   const w = e.when || {};
-  return ('every_years' in w || 'months' in w) ? 3 : 1;
+  const base = ('every_years' in w || 'months' in w) ? 3 : 1;
+  return state ? base * situationMultiplier(state, e) : base;
 }
 
 // 被連鎖指向的事件只能經由連鎖觸發，不進入一般隨機抽選。
@@ -76,10 +78,10 @@ export function pickEvent(state, events, rng, exclude = null) {
   const targets = chainTargetIds(events);
   const eligible = events.filter((e) => !targets.has(e.id) && e.id !== exclude && isAvailable(e) && eventAllowed(state, e.id) && isEligible(state, e, rng));
   if (eligible.length === 0) return null;
-  const total = eligible.reduce((sum, e) => sum + eventWeight(e), 0);
+  const total = eligible.reduce((sum, e) => sum + eventWeight(e, state), 0);
   let r = rng() * total;
   for (const e of eligible) {
-    r -= eventWeight(e);
+    r -= eventWeight(e, state);
     if (r < 0) return e;
   }
   return eligible[eligible.length - 1];
