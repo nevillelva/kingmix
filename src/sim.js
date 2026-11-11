@@ -19,6 +19,7 @@ import { monthlyDrift } from './diplomacy.js';
 import { COLLECTIONS, collectionProgress } from './collections.js';
 import { autoRepairCities, ensureCity } from './city.js';
 import { PREFECTURE_DEFS, prefectOfficeKey } from './economy.js';
+import { DEFAULT_MODE } from './mode.js';
 
 const AUTO_OFFICES = ['chancellor', 'revenue', 'works', 'war', 'tutor', ...PREFECTURE_DEFS.map((d) => prefectOfficeKey(d.id))];
 
@@ -93,10 +94,10 @@ export function pickSecondMemorial(state, events, rng, exclude = null) {
 }
 
 // scenario 為選用：省略時行為與原本相同（標準開局、回傳不含 scenario 欄位）。
-export function runSimulation({ seed, months, events, policy = 'agrarian', scenario }) {
+export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE }) {
   const state = scenario
-    ? createScenarioState(seed, resolveScenarioId(scenario), { policy })
-    : createInitialState(seed, { policy });
+    ? createScenarioState(seed, resolveScenarioId(scenario), { policy, mode })
+    : createInitialState(seed, { policy, mode });
   const triggered = {};
   const campaignSteps = {};
   const log = [];
@@ -105,7 +106,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
   for (let i = 0; i < months; i++) {
     if (!state.alive) {
       state.campaign = null; // 皇帝駕崩時親征中止（不記入戰績）
-      if (!tryAccession(state)) break;
+      if (state.endReason === 'short_end' || !tryAccession(state)) break; // 短局終局不繼位
     }
     const { year, month } = state;
     autoAppoint(state);
