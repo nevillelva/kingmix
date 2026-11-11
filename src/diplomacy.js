@@ -2,6 +2,7 @@
 // 外交狀態採延遲建立（state.diplomacy），不改動 createInitialState。
 
 import { makeRng } from './rng.js';
+import { BALANCE } from './balance.js';
 
 // 四個鄰國：strength 為基礎兵力（與 ourStrength 同尺度，初始己方約 196）。
 export const NEIGHBORS = Object.freeze([
@@ -17,7 +18,7 @@ export const TRIBUTE_MIN_ATTITUDE = 40;
 export const TRIBUTE_GAIN = 20; // 國庫
 // 結盟好感門檻：取好感漂移中心 50（見 monthlyDrift），中立以上即可結盟。
 // 原為 60，好感長期回歸 50，200 局僅結盟 2 次；改為 50 後約 55 次。
-export const ALLIANCE_MIN_ATTITUDE = 50;
+export const ALLIANCE_MIN_ATTITUDE = BALANCE.ALLIANCE_MIN_ATTITUDE;
 export const MAX_ALLIANCES = 2;
 
 // 宣戰的獎懲數值（勝利獎勵 / 戰敗損失），預設與 web/index.html 的 WAR_SPEC 相同。

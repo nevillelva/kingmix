@@ -95,8 +95,16 @@ export function pickSecondMemorial(state, events, rng, exclude = null) {
   return pickEvent(state, events, rng, exclude);
 }
 
+// 策略選項：choose 為選用的玩家策略（見 strategy.js）；省略或回傳 null 時走預設種子隨機選擇。
+function strategyOption(choose, state, event, seed, year, month) {
+  if (!choose) return null;
+  const options = event.options.filter((o) => isAvailable(o) && optionOpen(state, o));
+  if (options.length === 0) return null;
+  return choose(options, { state, event, seed, year, month }) ?? null;
+}
+
 // scenario 為選用：省略時行為與原本相同（標準開局、回傳不含 scenario 欄位）。
-export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE }) {
+export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE, choose }) {
   const state = scenario
     ? createScenarioState(seed, resolveScenarioId(scenario), { policy, mode })
     : createInitialState(seed, { policy, mode });
@@ -129,7 +137,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
       const rng = makeRng([seed, year, month, 'events']);
       const event = chained ?? pickEvent(state, events, rng);
       if (event) {
-        const option = autoDecideMemorial(state, event, seed, year, month)?.option;
+        const option = strategyOption(choose, state, event, seed, year, month) ?? autoDecideMemorial(state, event, seed, year, month)?.option;
         applyOption(state, option, makeRng([seed, year, month, 'recruit']));
         afterOption(state, event, option);
         bump(event.id);
@@ -141,7 +149,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
       if (second) {
         const options = second.options.filter((o) => isAvailable(o) && optionOpen(state, o));
         const pick = makeRng([seed, year, month, 'morning2', 'choice'])();
-        const option = options[Math.floor(pick * options.length)];
+        const option = strategyOption(choose, state, second, seed, year, month) ?? options[Math.floor(pick * options.length)];
         applyOption(state, option, makeRng([seed, year, month, 'morning2', 'recruit']));
         afterOption(state, second, option);
         bump(second.id);
