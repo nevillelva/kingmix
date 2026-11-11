@@ -1,15 +1,17 @@
 // 結局評價：多軸評分（武功 / 文治 / 仁德 / 傳承），取代單一稱號。
 // 門檻為 Phase 5 暫定值，待模擬校準。
 
+import { BALANCE } from './balance.js';
+
 export function evaluateDynasty(state) {
   const wins = state.wars.filter((w) => w.won).length;
   const losses = state.wars.length - wins;
   const recruits = state.officials.filter((o) => String(o.id).startsWith('r')).length;
   const military = Math.max(0, Math.min(100, Math.round(wins * 4.6 - losses * 3)));
-  const civil = Math.max(0, Math.min(100, Math.round(state.stats.literature / 18 + recruits * 2)));
+  const civil = Math.max(0, Math.min(100, Math.round(state.stats.literature / BALANCE.CIVIL_DIVISOR + recruits * 2)));
   const benevolence = Math.max(0, Math.min(100, Math.round(state.stats.benevolence / 5 + state.stats.people / 2) / 3.5));
-  // 承續權重 ×1.15、文治除數 18（校準：納入城防、知府、死諫後的稱號分布，見 PR 說明）
-  const legacy = Math.min(100, Math.round((Math.min(30, (state.dynasty.generation - 1) * 9) + (state.dynasty.ended ? 0 : 10)) * 1.15));
+  // 承續權重與文治除數見 balance.js（校準：納入城防、知府、死諫後的稱號分布，見 PR 說明）
+  const legacy = Math.min(100, Math.round((Math.min(30, (state.dynasty.generation - 1) * 9) + (state.dynasty.ended ? 0 : 10)) * BALANCE.LEGACY_WEIGHT));
 
   const axes = { military, civil, benevolence, legacy };
   const top = Object.entries(axes).sort((a, b) => b[1] - a[1])[0][0];

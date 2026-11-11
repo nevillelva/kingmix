@@ -4,6 +4,7 @@
 import { officeHolder } from './offices.js';
 import { POLICIES } from './policy.js';
 import { warDefenseMultiplier } from './city.js';
+import { BALANCE } from './balance.js';
 
 // 己方戰力的名目值（不含擲骰）：軍備、武略、兵部/大將武力與國策修正。
 export function nominalStrength(state) {
@@ -26,7 +27,7 @@ export const EVENT_ENEMY_SPREAD = 0.3;
 // 勢均力敵的戰前刺探加成：出兵前已探知敵情（兵部偵查），敵方有效強度 × (1 − EVEN_EDGE × w(ratio))。
 // w 在 ratio 0.9–1.1 為 1，於 0.8–0.9 與 1.1–1.2 線性遞減至 0；1.2 以上（含強敵 ≥1.3）完全不受影響。
 // 連續遞減可保證敵強度單調（強敵不會因跨過區間邊界而變得較弱）。
-export const EVEN_EDGE = 0.08;
+export const EVEN_EDGE = BALANCE.EVEN_EDGE;
 export function evenWeight(ratio) {
   if (!(ratio > 0.8) || ratio >= 1.2) return 0;
   if (ratio < 0.9) return (ratio - 0.8) / 0.1;
