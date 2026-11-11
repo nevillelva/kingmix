@@ -25,6 +25,13 @@ npm run sim -- demo 10   # 以種子 demo 模擬 10 年，輸出 JSON 摘要
 - 每回合三個時段（晨/午/夜）：Phase 1 目前一個月只處理一則奏摺
 - 數值公式與上限為暫定，待模擬校準
 
+## 目前實作狀態（main）
+
+- 單事件上限為 8（`tests/event-limits.test.js`）。先前出現的 16 是稽核把東廠計數算進去造成的誤判。
+- 死諫（E420）：main 以無頭模擬 200 局（每局 40 年）平均每局觸發 1.06 次，符合測試下限 1。
+- 雲端存檔（`web/index.html` 的 `initCloud` / `cloudPush`）：尚未做衝突處理，以 `CLOUD_SAVE_ENABLED = false` 關閉，待處理衝突後再開啟。
+- 網頁路徑為相對 repo 根目錄，主流程可正常開局與快進。
+
 ## 開發工具
 
 ### Claude Code skills（來自 obra/superpowers）
