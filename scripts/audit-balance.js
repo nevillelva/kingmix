@@ -18,15 +18,19 @@ const endReasons = {};
 let dynastyBreaks = 0;
 let totalTriggered = 0;
 let maxTriggered = 0;
+let dcTotal = 0;
 for (let i = 0; i < runs; i++) {
   const r = runSimulation({ seed: `audit-${i}`, months, events, mode });
   const reason = r.endReason ?? (r.alive ? 'alive' : 'unknown');
   endReasons[reason] = (endReasons[reason] ?? 0) + 1;
   if (r.dynastyEnded) dynastyBreaks++;
-  const counts = Object.values(r.triggered ?? {});
+  // DC 是東廠行動的內部計數鍵，不是奏摺事件；單事件上限只看真正的奏摺事件。
+  const memorial = Object.entries(r.triggered ?? {}).filter(([id]) => id !== 'DC');
+  const counts = memorial.map(([, n]) => n);
   const n = counts.reduce((a, b) => a + b, 0);
   totalTriggered += n;
-  maxTriggered = Math.max(maxTriggered, ...counts);
+  maxTriggered = Math.max(maxTriggered, ...counts, 0);
+  dcTotal += r.triggered?.DC ?? 0;
 }
 
 console.log(JSON.stringify({
@@ -37,4 +41,5 @@ console.log(JSON.stringify({
   dynastyInterruptRate: +(dynastyBreaks / runs).toFixed(3),
   avgTriggeredCount: +(totalTriggered / runs).toFixed(1),
   maxSingleEventCount: maxTriggered,
+  avgDongchangActions: +(dcTotal / runs).toFixed(1),
 }, null, 2));
