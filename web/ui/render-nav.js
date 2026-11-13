@@ -2,7 +2,7 @@
 import { eraYearText } from '../../src/era.js';
 import { SCENARIOS } from '../../src/scenarios.js';
 import { milestoneFor } from '../../src/milestones.js';
-import { U } from './store.js';
+import { U, app } from './store.js';
 import { ffMount, ffToast, pendingCase } from './game-flow.js';
 import { actionsCard, crownChoiceCard, renderCourt, renderReview, reviewPending, showQuarterCard, slotsCard } from './render-court.js';
 import { lastBattleCard } from './render-campaign.js';
@@ -49,13 +49,31 @@ export function scenarioBanner(){
     <div class="sub">${esc(def.goalText)}　國祚未盡，仍可續治。</div></section>`;
 }
 
-// 底部導覽：宮城為主畫面，故僅於殿宇（分頁）內顯示「返回宮城」。
+// 底部功能鈕：朝堂、後宮、輿圖、東廠、史冊（手機優先的圓形鈕列）。宮城仍為主畫面，故由殿宇頁頂端的「← 返回宮城」返回。
+const BAR = [
+  {t:'court', n:'朝堂', g:'朝'},
+  {t:'harem', n:'後宮', g:'宮'},
+  {t:'map', n:'輿圖', g:'輿'},
+  {t:'dc', n:'東廠', g:'廠'},
+  {t:'throne', n:'史冊', g:'史'},
+];
+
 export function renderNav(){
   const nav = document.getElementById('nav');
-  if (U.tab === 'palace') { nav.style.display = 'none'; return; }
   nav.style.display = '';
-  document.getElementById('tabs').innerHTML = `<button type="button" class="navback" data-tab="palace">← 返回宮城</button><button type="button" class="navmap${U.tab === 'map' ? ' active' : ''}" data-tab="map">輿圖</button>`;
+  document.getElementById('tabs').innerHTML = BAR.map(b => {
+    const on = U.tab === b.t;
+    return `<button type="button" class="rbtn${on ? ' active' : ''}" data-tab="${b.t}"${on ? ' aria-current="page"' : ''}><span class="rc" aria-hidden="true">${b.g}</span><span class="rl">${b.n}</span></button>`;
+  }).join('');
   nav.querySelectorAll('button').forEach(b => b.onclick = () => { U.tab = b.dataset.tab; U.panel = null; U.pick1 = null; render(); });
+}
+
+// 殿宇頁頂端的返回鈕（宮城不設此鈕）。
+function backToPalace(){
+  if (U.tab === 'palace') return;
+  app.insertAdjacentHTML('afterbegin', '<button type="button" class="backpal" data-tab="palace">← 返回宮城</button>');
+  const b = app.querySelector('.backpal');
+  b.onclick = () => { U.tab = 'palace'; U.panel = null; U.pick1 = null; render(); };
 }
 
 export function paintMilestone(){
@@ -74,13 +92,13 @@ export function render(){
   if (U.tab === 'legacy') {
     topGauges(); applySeason();
     document.getElementById('nav').style.display = '';
-    renderNav(); renderLegacy();
+    renderNav(); renderLegacy(); backToPalace();
     return inkFlash('legacy');
   }
   if (U.tab === 'gallery') {
     topGauges(); applySeason();
     document.getElementById('nav').style.display = '';
-    renderNav(); renderGallery();
+    renderNav(); renderGallery(); backToPalace();
     return inkFlash('gallery');
   }
   topGauges();
@@ -98,6 +116,7 @@ export function render(){
   renderNav();
   if (reviewPending()) { renderReview(); return inkFlash('review'); }
   VIEWS[U.tab]();
+  backToPalace();
   guideMount();
   if (U.tab === 'court') ffMount();
   showQuarterCard();
