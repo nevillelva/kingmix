@@ -47,8 +47,10 @@ export function renderPalace(){
       </div>
       <p class="sub" style="margin:10px 0 0">太和殿處理朝政奏摺；御書房（史冊與帝王）、校場（朝臣任免）、後宮與慈寧宮（嬪妃與子嗣）、東廠各司其事。</p>
       <button class="btn ghost" data-go-map="1">展開全國輿圖</button>
+      <button class="btn ghost" data-go-facility="1">營造宮內設施</button>
     </section>`;
   app.querySelector('[data-go-map]').onclick = () => { U.tab = 'map'; U.panel = null; U.pick1 = null; render(); };
+  app.querySelector('[data-go-facility]').onclick = () => { U.tab = 'facility'; U.panel = null; U.pick1 = null; render(); };
   app.querySelectorAll('g.zone').forEach(g => {
     const go = () => { U.tab = g.dataset.tab; U.panel = null; U.pick1 = null; render(); };
     g.onclick = go;

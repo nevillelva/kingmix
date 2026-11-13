@@ -13,6 +13,8 @@ import { renderDC, renderHarem, renderOfficials, renderThrone } from './render-o
 import { renderMap } from './render-map.js';
 import { applySeason, inkFlash } from './fx.js';
 import { recordLegacyOnce, renderLegacy } from './render-legacy.js';
+import { renderGallery } from './render-gallery.js';
+import { renderFacility } from './render-facility.js';
 import { renderEnding, renderStart } from './render-start.js';
 import { guideMount, showNewYear } from './overlays.js';
 
@@ -66,7 +68,7 @@ export function paintMilestone(){
   U.milestoneSeed = U.seed; U.milestoneId = ms.id;
 }
 
-export const VIEWS = { palace: renderPalace, court: renderCourt, officials: renderOfficials, harem: renderHarem, dc: renderDC, throne: renderThrone, map: renderMap };
+export const VIEWS = { palace: renderPalace, court: renderCourt, officials: renderOfficials, harem: renderHarem, dc: renderDC, throne: renderThrone, map: renderMap, facility: renderFacility };
 
 export function render(){
   if (U.tab === 'legacy') {
@@ -74,6 +76,12 @@ export function render(){
     document.getElementById('nav').style.display = '';
     renderNav(); renderLegacy();
     return inkFlash('legacy');
+  }
+  if (U.tab === 'gallery') {
+    topGauges(); applySeason();
+    document.getElementById('nav').style.display = '';
+    renderNav(); renderGallery();
+    return inkFlash('gallery');
   }
   topGauges();
   applySeason();
