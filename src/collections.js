@@ -24,6 +24,12 @@ for (const set of Object.values(COLLECTIONS)) for (const item of set.items) SET_
 
 export const itemFlag = (item) => `col:${item}`;
 
+// 收藏項目的持有判斷（事件條件 has_item 使用）：以 col:<項目> 旗標為持有依據，未知項目一律拋錯。
+export function ownsItem(state, item) {
+  if (!SET_OF.has(item)) throw new Error(`unknown collection item: ${item}`);
+  return state.flags[itemFlag(item)] === true;
+}
+
 export function collectionProgress(state, setId) {
   const set = COLLECTIONS[setId];
   if (!set) throw new Error(`unknown collection: ${setId}`);

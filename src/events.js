@@ -2,6 +2,7 @@
 import { isBonded, sharedCount } from './bonds.js';
 import { isCourtOfficial } from './officials.js';
 import { ensureCity } from './city.js';
+import { ownsItem } from './collections.js';
 
 import { canDiplomacy } from './diplomacy.js';
 
@@ -68,7 +69,8 @@ export function isEligible(state, event, rng) {
         break;
       case 'bond_with': if (!bondMatches(state, val)) return false; break;
       case 'prior_choice': if (!priorChoiceMatches(state, val)) return false; break;
-      case 'has_item': throw new Error(`has_item is not supported: no item model (${event.id})`);
+      // 持有收藏項目（見 collections.js）：項目 id 如 jiuding_1、sibao_wen、mingju_2。
+      case 'has_item': if (!ownsItem(state, val)) return false; break;
       default: {
         // 通用數值條件：<stat>_lt / <stat>_gt，例如 prestige_lt、commerce_gt
         const m = key.match(/^([a-z]+)_(lt|gt)$/);

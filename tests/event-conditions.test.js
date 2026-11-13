@@ -58,7 +58,7 @@ test('prior_choice keeps only the most recent choice per event', () => {
   assert.equal(isEligible(s, ev({ prior_choice: { event: 'E003', option: 'A' } }), always), false);
 });
 
-test('has_item is rejected: there is no item model yet', () => {
+test('has_item rejects an unknown collection item loudly', () => {
   const s = createInitialState('item-1');
-  assert.throws(() => isEligible(s, ev({ has_item: 'jade' }), always), /has_item is not supported/);
+  assert.throws(() => isEligible(s, ev({ has_item: 'jade' }), always), /unknown collection item/);
 });
