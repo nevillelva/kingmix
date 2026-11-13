@@ -36,6 +36,8 @@ app.addEventListener('click', onSlot);
 
 document.getElementById('legacy-btn').onclick = () => { U.tab = 'legacy'; U.panel = null; U.pick1 = null; render(); };
 
+document.getElementById('gallery-btn').onclick = () => { U.tab = 'gallery'; U.panel = null; U.pick1 = null; render(); };
+
 document.getElementById('exp').onclick = exportGame;
 
 document.getElementById('imp').onclick = () => document.getElementById('imp-file').click();
