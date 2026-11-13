@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { upgradeFacility, facilityMonthlyEffects, facilityLevels, applyFacilityMonthly, FACILITIES, FACILITY_IDS, FACILITY_MAX_LEVEL } from '../src/facilities.js';
+import { upgradeFacility, facilityMonthlyEffects, facilityLevels, applyFacilityMonthly, buildFacility, advanceConstruction, constructionOf, FACILITIES, FACILITY_IDS, FACILITY_MAX_LEVEL } from '../src/facilities.js';
 import { createInitialState } from '../src/state.js';
 
 const base = (treasury = 500) => {
@@ -10,7 +10,9 @@ const base = (treasury = 500) => {
 };
 
 test('facility names and ids are fixed', () => {
-  assert.deepEqual(FACILITY_IDS, ['garden', 'medical', 'academy']);
+  assert.deepEqual(FACILITY_IDS, ['garden', 'medical', 'armory', 'library', 'academy']);
+  assert.equal(FACILITIES.armory.name, '武庫');
+  assert.equal(FACILITIES.library.name, '翻書院');
   assert.equal(FACILITIES.garden.name, '御花園');
   assert.equal(FACILITIES.medical.name, '太醫院');
   assert.equal(FACILITIES.academy.name, '翰林院');
@@ -101,4 +103,73 @@ test('applyFacilityMonthly adds bonuses to stats within bounds', () => {
   applyFacilityMonthly(s);
   assert.equal(s.stats.charm, charm + 1);
   assert.equal(s.stats.health, health + 0.2);
+});
+
+test('hanlin is an alias of academy for upgrades and levels', () => {
+  const next = upgradeFacility(base(1000), 'hanlin');
+  assert.ok(!next.error);
+  assert.equal(next.facilities.academy, 1);
+  assert.equal(facilityLevels(next).academy, 1);
+});
+
+test('armory and library have three levels with cost, monthly and work months', () => {
+  for (const id of ['armory', 'library']) {
+    assert.equal(FACILITIES[id].levels.length, FACILITY_MAX_LEVEL);
+    for (const l of FACILITIES[id].levels) {
+      assert.ok(l.cost > 0 && l.monthly > 0 && Number.isInteger(l.months) && l.months > 0);
+    }
+  }
+  const s = base();
+  s.facilities = { armory: 2, library: 1 };
+  assert.deepEqual(facilityMonthlyEffects(s).map((e) => [e.facility, e.stat]), [['armory', 'military'], ['library', 'literature']]);
+});
+
+test('buildFacility charges silver, opens work, and does not mutate input', () => {
+  const s = base(500);
+  const snapshot = structuredClone(s);
+  const r = buildFacility(s, 'garden');
+  assert.equal(r.ok, true);
+  assert.equal(r.reason, null);
+  assert.deepEqual(s, snapshot);
+  assert.equal(r.state.stats.treasury, 500 - FACILITIES.garden.levels[0].cost);
+  assert.deepEqual(constructionOf(r.state).garden, { target: 1, monthsLeft: FACILITIES.garden.levels[0].months });
+  assert.equal(facilityLevels(r.state).garden, 0);
+});
+
+test('buildFacility rejects while in progress, when maxed, or when short of silver', () => {
+  const started = buildFacility(base(1000), 'medical').state;
+  const again = buildFacility(started, 'medical');
+  assert.equal(again.ok, false);
+  assert.equal(again.reason, 'in_progress');
+  assert.equal(again.state, started);
+
+  const maxed = base(10000);
+  maxed.facilities = { armory: 3 };
+  assert.equal(buildFacility(maxed, 'armory').reason, 'max_level');
+
+  const poor = buildFacility(base(89), 'armory');
+  assert.equal(poor.ok, false);
+  assert.equal(poor.reason, 'insufficient_treasury');
+  assert.equal(buildFacility(base(), 'nope').reason, 'unknown_facility');
+});
+
+test('advanceConstruction completes a job after its work months and raises the level', () => {
+  let s = buildFacility(base(1000), 'armory').state;
+  const months = FACILITIES.armory.levels[0].months;
+  for (let i = 1; i < months; i++) {
+    advanceConstruction(s);
+    assert.equal(facilityLevels(s).armory, 0);
+  }
+  advanceConstruction(s);
+  assert.equal(facilityLevels(s).armory, 1);
+  assert.equal(constructionOf(s).armory, undefined);
+  assert.equal(s.facilityDone.armory, true);
+  assert.equal(s.flags.facility_armory_1, true);
+});
+
+test('advanceConstruction is a no-op without any construction', () => {
+  const s = base();
+  const snapshot = structuredClone(s);
+  advanceConstruction(s);
+  assert.deepEqual(s, snapshot);
 });
