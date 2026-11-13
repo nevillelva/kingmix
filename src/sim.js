@@ -65,6 +65,30 @@ export function eventWeight(e, state = null) {
   return state ? base * situationMultiplier(state, e) : base;
 }
 
+// 抽選公平加權（僅 pickEvent 使用，eventWeight 維持原值；皆為確定性計算，不耗 rng）：
+// 1. 狀態觸發事件（條件含數值 / 政策 / 特質等，非純機率或時序）符合條件時加權 STATE_GATED_BOOST，
+//    避免被大量機率事件稀釋而餓死。
+// 2. 本局已觸發次數越多，權重依 1/(1+n)^FIRED_ALPHA 遞減，讓尚未露面的事件優先被抽中。
+// 3. 久未觸發者隨時間累加權重：距上次觸發（或本局開局）每 NEGLECT_MONTHS 個月 +1 倍，最多 +NEGLECT_MAX_BONUS 倍。
+export const STATE_GATED_BOOST = 2;
+export const FIRED_ALPHA = 2;
+export const NEGLECT_MONTHS = 24;
+export const NEGLECT_MAX_BONUS = 3;
+const NON_STATE_KEYS = new Set(['chance', 'every_years', 'months']);
+export function isStateGated(e) {
+  return Object.keys(e.when || {}).some((k) => !NON_STATE_KEYS.has(k));
+}
+export function pickWeight(e, state) {
+  let w = eventWeight(e, state);
+  if (isStateGated(e)) w *= STATE_GATED_BOOST;
+  const fired = state.eventHistory?.counts?.[e.id] || 0;
+  w /= (1 + fired) ** FIRED_ALPHA;
+  const now = (state.year - 1) * 12 + (state.month - 1);
+  const last = state.eventHistory?.last?.[e.id] ?? 0;
+  w *= 1 + Math.min((now - last) / NEGLECT_MONTHS, NEGLECT_MAX_BONUS);
+  return w;
+}
+
 // 被連鎖指向的事件只能經由連鎖觸發，不進入一般隨機抽選。
 function chainTargetIds(events) {
   const ids = new Set();
@@ -78,10 +102,10 @@ export function pickEvent(state, events, rng, exclude = null) {
   const targets = chainTargetIds(events);
   const eligible = events.filter((e) => !targets.has(e.id) && e.id !== exclude && isAvailable(e) && eventAllowed(state, e.id) && isEligible(state, e, rng));
   if (eligible.length === 0) return null;
-  const total = eligible.reduce((sum, e) => sum + eventWeight(e, state), 0);
+  const total = eligible.reduce((sum, e) => sum + pickWeight(e, state), 0);
   let r = rng() * total;
   for (const e of eligible) {
-    r -= eventWeight(e, state);
+    r -= pickWeight(e, state);
     if (r < 0) return e;
   }
   return eligible[eligible.length - 1];
