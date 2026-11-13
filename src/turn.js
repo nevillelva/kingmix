@@ -23,6 +23,7 @@ import { scheduleChain } from './chains.js';
 import { recordSharedEvent } from './bonds.js';
 import { tickAssassination } from './assassination.js';
 import { DEFAULT_MODE, modeMonths } from './mode.js';
+import { applyFacilityMonthly } from './facilities.js';
 
 // 官員名單上限：朝臣 12 人（開局 4 人加進士招募）＋ 六府知府 6 人。
 export const MAX_OFFICIALS = 18;
@@ -208,6 +209,7 @@ export function monthlyTick(state, rng) {
   drift(state, 'population', g('population') * (1 + 0.001 * (g('people') / 60 - 1)));
   drift(state, 'health', g('health') - 0.1);
   drift(state, 'charm', g('charm') + (g('health') >= 50 ? 1.5 : 0)); // 後宮成長（暫定）
+  if (state.facilities) applyFacilityMonthly(state); // 宮城設施每月加成（無設施時為 no-op）
 
   applyOfficeEffects(state);
   applyPolicyEffects(state);
