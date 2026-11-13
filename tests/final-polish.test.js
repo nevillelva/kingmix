@@ -8,7 +8,7 @@ import {
 } from '../src/diplomacy.js';
 import { PREFECTURE_DEFS, prefectOfficeKey } from '../src/economy.js';
 
-const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+const html = readFileSync(new URL('../web/ui/labels.js', import.meta.url), 'utf8');
 const events = JSON.parse(readFileSync(new URL('../data/events.json', import.meta.url), 'utf8')).events;
 
 // ---- 結盟可達：好感的漂移中心為 50，結盟門檻取 50，使好感達標成為常態 ----
@@ -41,10 +41,10 @@ test('headless sim forms at least 15 alliances over 200 seeds', () => {
 
 // ---- 網頁顯示名稱：新效果鍵與官職鍵不外露原始字串 ----
 
-// 從 web/index.html 取出純資料的物件字面值（EFFECT_EXTRA 與 EFFECT 的展開）。
+// 從 web/ui/labels.js 取出純資料的物件字面值（EFFECT_EXTRA 與 EFFECT 的展開；位於 web/ui/labels.js）。
 function labelMap(name) {
   const m = html.match(new RegExp(`const ${name} = (\\{[^\\n]*\\});`));
-  assert.ok(m, `${name} not found in web/index.html`);
+  assert.ok(m, `${name} not found in web/ui/labels.js`);
   return new Function(`return ${m[1]};`)();
 }
 
