@@ -2,6 +2,7 @@ import { attachPerson } from './people.js';
 import { createEra } from './era.js';
 import { ensureEconomy } from './economy.js';
 import { DEFAULT_MODE, modeMonths } from './mode.js';
+import { applyOrigin } from './origin.js';
 
 // 遊戲狀態與數值邊界。所有數值寫入都必須經過 setStat，確保越界會被截斷並記錄。
 
@@ -93,6 +94,8 @@ export function createInitialState(seed, opts = {}) {
   // 六府與知府（官員記錄）於開局即建立，知府與其他官員一同可見、可任免（見 economy.js）
   ensureEconomy(state);
   modeMonths(state.mode); // 驗證模式鍵，未知模式即拋錯
+  // 即位出身（選用）：未傳入 opts.origin 時不改動任何欄位（見 origin.js）
+  if (opts.origin) applyOrigin(state, opts.origin);
   return state;
 }
 

@@ -1,0 +1,184 @@
+{
+  "version": 1,
+  "source": "即位出身專屬事件（E501–E516）。每則事件以 flag 條件 origin:<出身 id> 觸發，旗標由 src/origin.js 的 applyOrigin 設定。",
+  "events": [
+    {
+      "id": "E501",
+      "name": "經筵進講",
+      "speaker": "太傅",
+      "narrative": "嫡長繼位，名分本無可疑。太傅請陛下親臨經筵，以正統之義講授先王之道，朝野皆盼陛下有所表態。",
+      "when": { "flag": "origin:dichangzi", "chance": 0.04 },
+      "options": [
+        { "key": "A", "label": "親臨經筵，逐章應答", "tone": "仁厚", "effects": { "literature": 10, "benevolence": 5 } },
+        { "key": "B", "label": "命太傅代為講授", "tone": "穩妥", "effects": { "prestige": 5 } },
+        { "key": "C", "label": "以國事繁忙為由推辭", "tone": "謙退", "effects": { "prestige": -5, "power": -5 } }
+      ]
+    },
+    {
+      "id": "E502",
+      "name": "諸王覬覦",
+      "speaker": "宗正",
+      "narrative": "先帝諸子多已封王，皆以為嫡統非必然。宗正密奏，宗室中已有人遣使往來，言辭頗為不遜，請陛下早作處置。",
+      "when": { "flag": "origin:dichangzi", "chance": 0.03 },
+      "options": [
+        { "key": "A", "label": "厚賞諸王，以示兄弟之情", "tone": "仁厚", "effects": { "treasury": -60, "prestige": 5 } },
+        { "key": "B", "label": "削減其封地與護衛", "tone": "強硬", "effects": { "power": 10, "people": -8 } },
+        { "key": "C", "label": "委宗正查辦，不親自過問", "tone": "穩妥", "effects": { "benevolence": 3 } }
+      ]
+    },
+    {
+      "id": "E503",
+      "name": "廢立之議",
+      "speaker": "御史",
+      "narrative": "御史上疏，言及嫡庶之分，稱宗室中有人可議更立。此議一出，朝中人心浮動，陛下當如何回應，天下將以此觀其器度。",
+      "when": { "flag": "origin:dichangzi", "chance": 0.02 },
+      "options": [
+        { "key": "A", "label": "力駁其議，正告嫡統不可動搖", "tone": "強硬", "effects": { "benevolence": 5, "prestige": 5 } },
+        { "key": "B", "label": "順勢收攏權柄，嚴查妄議者", "tone": "攬權", "effects": { "power": 15, "benevolence": -10 } }
+      ]
+    },
+    {
+      "id": "E504",
+      "name": "太廟嫡祭",
+      "speaker": "禮部尚書",
+      "narrative": "嫡長即位，當親祭太廟以告列祖。禮部請示祭禮規格，或從隆重，或從簡儉，皆關乎天下對新君名分的看法。",
+      "when": { "flag": "origin:dichangzi", "chance": 0.05 },
+      "options": [
+        { "key": "A", "label": "依隆重之禮，親祭太廟", "tone": "強硬", "effects": { "prestige": 15, "treasury": -30 } },
+        { "key": "B", "label": "從簡行禮，以省費用", "tone": "節用", "effects": { "people": 5, "prestige": -5 } }
+      ]
+    },
+    {
+      "id": "E505",
+      "name": "生母位分",
+      "speaker": "內廷",
+      "narrative": "陛下生母位分卑微，內廷請示是否追封位號。追封與否，既關乎孝道，也會影響宮中與朝中對陛下出身的議論。",
+      "when": { "flag": "origin:shuchu", "chance": 0.04 },
+      "options": [
+        { "key": "A", "label": "追封位號，厚葬生母", "tone": "仁厚", "effects": { "benevolence": 5, "treasury": -20 } },
+        { "key": "B", "label": "暫不追封，以待來日", "tone": "穩妥", "effects": { "prestige": -5 } }
+      ]
+    },
+    {
+      "id": "E506",
+      "name": "文會應對",
+      "speaker": "翰林學士",
+      "narrative": "翰林院設文會，請陛下臨場賦詩論文。諸臣素以出身輕視陛下，若能當場應對得體，便可扭轉此前的成見。",
+      "when": { "flag": "origin:shuchu", "chance": 0.05 },
+      "options": [
+        { "key": "A", "label": "即席賦詩，文辭俱佳", "tone": "仁厚", "effects": { "literature": 15 } },
+        { "key": "B", "label": "只聽不言，以示持重", "tone": "穩妥", "effects": { "charm": -5, "literature": 5 } }
+      ]
+    },
+    {
+      "id": "E507",
+      "name": "朝臣輕慢",
+      "speaker": "丞相",
+      "narrative": "數位老臣在朝會上言語輕慢，認為庶出之君不足以服眾。丞相請陛下決斷，是厚加籠絡，還是立威以定朝綱。",
+      "when": { "flag": "origin:shuchu", "chance": 0.04 },
+      "options": [
+        { "key": "A", "label": "延攬老臣，屈己下問", "tone": "仁厚", "effects": { "charm": 10, "power": -5 } },
+        { "key": "B", "label": "當庭申斥，以立威信", "tone": "強硬", "effects": { "power": 10, "charm": -10 } }
+      ]
+    },
+    {
+      "id": "E508",
+      "name": "以才立身",
+      "speaker": "戶部尚書",
+      "narrative": "戶部尚書知陛下通曉錢糧之學，請陛下親自過問賦稅。若允其所請，農商或可見效，但國庫也要先行支出。",
+      "when": { "flag": "origin:shuchu", "chance": 0.03 },
+      "options": [
+        { "key": "A", "label": "親理錢糧，整頓農政", "tone": "勤政", "effects": { "agriculture": 20, "treasury": -40 } },
+        { "key": "B", "label": "婉辭，請戶部專責", "tone": "謙退", "effects": { "people": 3 } }
+      ]
+    },
+    {
+      "id": "E509",
+      "name": "藩邸舊臣",
+      "speaker": "藩邸舊部",
+      "narrative": "入繼時隨行的藩邸舊臣陸續請見，皆盼能在新朝得一官半職。朝中舊臣對此多有側目，陛下若用之，恐生猜忌；若棄之，又傷藩中之心。",
+      "when": { "flag": "origin:waifan", "chance": 0.05 },
+      "options": [
+        { "key": "A", "label": "擢用藩邸舊臣，授以要職", "tone": "攬權", "effects": { "charm": 10, "power": -5 } },
+        { "key": "B", "label": "厚賞遣回藩地，不留朝中", "tone": "穩妥", "effects": { "prestige": -5, "benevolence": 3 } }
+      ]
+    },
+    {
+      "id": "E510",
+      "name": "藩鎮兵馬",
+      "speaker": "兵部尚書",
+      "narrative": "藩中兵馬仍駐於京畿外圍，兵部請示是編入禁軍，還是任其自領。收編則兵力集於朝廷，留之則藩將擁兵自重。",
+      "when": { "flag": "origin:waifan", "chance": 0.04 },
+      "options": [
+        { "key": "A", "label": "編入禁軍，統歸朝廷", "tone": "強硬", "effects": { "military": 10, "armament": 30 } },
+        { "key": "B", "label": "暫許自領，以安藩將之心", "tone": "穩妥", "effects": { "military": -5, "power": -5 } }
+      ]
+    },
+    {
+      "id": "E511",
+      "name": "正統之辯",
+      "speaker": "御史",
+      "narrative": "御史彈劾陛下以藩王入繼，言其名分不正。朝臣議論紛紛，陛下須拿出一套說法，方能平息眾口。",
+      "when": { "flag": "origin:waifan", "chance": 0.03 },
+      "options": [
+        { "key": "A", "label": "援引宗法先例，自辯正統", "tone": "仁厚", "effects": { "prestige": 10 } },
+        { "key": "B", "label": "嚴查彈劾之人，以儆效尤", "tone": "強硬", "effects": { "power": 10, "people": -5 } }
+      ]
+    },
+    {
+      "id": "E512",
+      "name": "外邦來朝",
+      "speaker": "鴻臚寺",
+      "narrative": "鄰邦遣使入京，慶賀陛下即位，並獻上方物。鴻臚寺請示回禮之制，厚薄之間，可見朝廷的氣度與底氣。",
+      "when": { "flag": "origin:waifan", "chance": 0.04 },
+      "options": [
+        { "key": "A", "label": "厚禮回贈，示以懷柔", "tone": "仁厚", "effects": { "treasury": -40, "prestige": 15 } },
+        { "key": "B", "label": "陳列儀仗，示以威儀", "tone": "強硬", "effects": { "military": 5, "prestige": -5 } }
+      ]
+    },
+    {
+      "id": "E513",
+      "name": "軍中擁戴",
+      "speaker": "邊帥",
+      "narrative": "部將於軍營中高呼萬歲，請陛下順應軍心，登臨大位。此舉既是恩寵，也是擔子，陛下如何接受，將決定軍中與朝中的關係。",
+      "when": { "flag": "origin:jungong", "chance": 0.05 },
+      "options": [
+        { "key": "A", "label": "順應軍心，受其擁戴", "tone": "強硬", "effects": { "military": 10, "benevolence": -5 } },
+        { "key": "B", "label": "辭謝軍中之議，以示謙退", "tone": "謙退", "effects": { "benevolence": 5, "power": -5 } }
+      ]
+    },
+    {
+      "id": "E514",
+      "name": "舊臣不服",
+      "speaker": "御史",
+      "narrative": "數位文臣私下串聯，以篡逆之名相指，認為陛下不配居此大位。御史請示是否追究，眾臣皆在觀望，此事將定下朝局的基調。",
+      "when": { "flag": "origin:jungong", "chance": 0.04 },
+      "options": [
+        { "key": "A", "label": "誅殺為首者，以儆效尤", "tone": "峻法", "effects": { "power": 15, "people": -10, "benevolence": -10 } },
+        { "key": "B", "label": "寬宥其罪，以示仁德", "tone": "仁厚", "effects": { "benevolence": 10, "power": -5 } }
+      ]
+    },
+    {
+      "id": "E515",
+      "name": "邊軍索餉",
+      "speaker": "兵部尚書",
+      "narrative": "邊軍久無糧餉，兵部請示撥發庫銀。陛下若不應允，軍心恐生變動；若全數應允，國庫將見底，須另尋他策。",
+      "when": { "flag": "origin:jungong", "chance": 0.04 },
+      "options": [
+        { "key": "A", "label": "自內庫撥銀，足數發放", "tone": "強硬", "effects": { "treasury": -80, "military": 10 } },
+        { "key": "B", "label": "許以田賦減免，分期補發", "tone": "穩妥", "effects": { "people": -8, "military": 5 } }
+      ]
+    },
+    {
+      "id": "E516",
+      "name": "天命之辯",
+      "speaker": "欽天監",
+      "narrative": "欽天監奏報星象，言天意已有更易之兆。此說可用以安定人心，亦可能被人借題發揮，陛下應如何措辭，須格外斟酌。",
+      "when": { "flag": "origin:jungong", "chance": 0.03 },
+      "options": [
+        { "key": "A", "label": "以天命自詡，昭示新朝氣象", "tone": "強硬", "effects": { "heaven": 10, "prestige": 5 } },
+        { "key": "B", "label": "謙言天命難測，專務民生", "tone": "謙退", "effects": { "heaven": 5, "benevolence": 5 } }
+      ]
+    }
+  ]
+}
