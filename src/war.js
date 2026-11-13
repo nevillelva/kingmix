@@ -76,15 +76,64 @@ export const TACTICS = Object.freeze({
 export const SPREAD_UNSCOUTED = 0.2;
 export const SPREAD_SCOUTED = 0.08;
 
+// 剋制表（克制倍率，作用於己方戰力）：COUNTER[我方戰術][敵方架勢] = 倍率。
+// 模型沒有兵種，對應的是既有的三種戰術；敵方架勢於每回合以同一條 rng 序列擲出（ENEMY_STANCES 均等機率）。
+// 三組循環剋制：強攻 剋 堅守（衝垮固守陣）、堅守 剋 奇襲（穩守不被偷襲）、奇襲 剋 強攻（以逸待勞、伏擊衝陣）。
+// 被剋的一方乘以倒數（1/COUNTER_MULT），使剋制為零和，平均戰力不因此系統性偏移。
+// 其餘配對（含同架勢）倍率為 1。
+export const COUNTER_MULT = 1.06;
+const COUNTERED = 1 / COUNTER_MULT;
+export const COUNTER = Object.freeze({
+  assault: Object.freeze({ hold: COUNTER_MULT, ambush: COUNTERED }),
+  hold: Object.freeze({ ambush: COUNTER_MULT, assault: COUNTERED }),
+  ambush: Object.freeze({ assault: COUNTER_MULT, hold: COUNTERED }),
+});
+export const ENEMY_STANCES = Object.freeze(['assault', 'hold', 'ambush']);
+export function counterMultiplier(tactic, stance) {
+  return COUNTER[tactic]?.[stance] ?? 1;
+}
+
+// 戰損比例：戰敗方損失自身戰力的 10%，戰勝方損失自身戰力的 5%（確定性，不擲骰）。
+export const LOSS_RATE_LOSER = 0.1;
+export const LOSS_RATE_WINNER = 0.05;
+
 // 單一回合結算。ourPower 由呼叫端先以 ourStrength 取得；rng 須為同一條確定性序列。
-// multiplier 用於糧草不足等外部修正。回傳 { won, ours, enemy }（四捨五入後的戰力）。
-export function resolveRound({ ourPower, enemyStrength, tactic, spread = SPREAD_UNSCOUTED, rng, multiplier = 1 }) {
+// multiplier 用於糧草不足等外部修正。enemyStance 可省略，省略時於回合末由 rng 擲出（不影響前面的擲骰）。
+// 回傳 { won, ours, enemy, stance, counter, lossOurs, lossEnemy, line }：
+// ours / enemy 為四捨五入後的戰力，lossOurs / lossEnemy 為本回合戰損，line 為本回合的剋制關係（中文）。
+export function resolveRound({ ourPower, enemyStrength, tactic, spread = SPREAD_UNSCOUTED, rng, multiplier = 1, enemyStance }) {
   const t = TACTICS[tactic];
   if (!t) throw new Error(`unknown tactic: ${tactic}`);
   const mod = t.gambleChance !== undefined ? (rng() < t.gambleChance ? t.gambleHit : t.gambleMiss) : t.power;
-  const ours = ourPower * mod * multiplier;
   const enemy = enemyStrength * t.enemy * (1 + (rng() * 2 - 1) * spread);
-  return { won: ours >= enemy, ours: Math.round(ours), enemy: Math.round(enemy) };
+  const stance = enemyStance ?? ENEMY_STANCES[Math.floor(rng() * ENEMY_STANCES.length)];
+  if (!ENEMY_STANCES.includes(stance)) throw new Error(`unknown stance: ${stance}`);
+  const counter = counterMultiplier(tactic, stance);
+  const ours = ourPower * mod * multiplier * counter;
+  const won = ours >= enemy;
+  const oursR = Math.round(ours);
+  const enemyR = Math.round(enemy);
+  const lossOurs = Math.round(oursR * (won ? LOSS_RATE_WINNER : LOSS_RATE_LOSER));
+  const lossEnemy = Math.round(enemyR * (won ? LOSS_RATE_LOSER : LOSS_RATE_WINNER));
+  const relation = counter > 1 ? `${t.label}剋敵${TACTICS[stance].label}` : counter < 1 ? `${t.label}遭敵${TACTICS[stance].label}剋制` : `${t.label}對敵${TACTICS[stance].label}`;
+  const line = relation;
+  return { won, ours: oursR, enemy: enemyR, stance, counter, lossOurs, lossEnemy, line };
+}
+
+// 將戰役結果（含 rounds 陣列，或 { campaign: { rounds } }）轉為中文逐回合戰報。純函式，不改動輸入。
+export function formatBattleLog(result) {
+  const rounds = result?.rounds ?? result?.campaign?.rounds ?? [];
+  const lines = rounds.map((r) => {
+    const head = `第${r.round}回合：${r.tactic ? TACTICS[r.tactic]?.label ?? r.tactic : ''}`;
+    const body = `我方${r.ours} 對 敵方${r.enemy}`;
+    const loss = r.lossOurs !== undefined ? `，我損${r.lossOurs}、敵損${r.lossEnemy}` : '';
+    return `${head}（${body}${loss}）${r.won ? '勝' : '敗'}${r.line ? `：${r.line}` : ''}`;
+  });
+  const outcome = result?.outcome;
+  if (outcome !== undefined && result?.won !== undefined) {
+    lines.push(`結果：${result.won ? '勝' : '敗'}（${outcome}）`);
+  }
+  return lines;
 }
 
 // 寫入 state.wars，格式與單擲路徑相同（turn / strength / power / won），額外欄位可選。

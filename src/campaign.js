@@ -106,7 +106,20 @@ export function pickTactic(state, tactic, applyEffects = defaultApply) {
 
   if (res.won) c.ourWins += 1;
   else c.enemyWins += 1;
-  c.rounds.push({ round: c.round + 1, tactic, won: res.won, ours: res.ours, enemy: res.enemy, grain: c.grain, starved: short });
+  c.rounds.push({
+    round: c.round + 1,
+    tactic,
+    won: res.won,
+    ours: res.ours,
+    enemy: res.enemy,
+    grain: c.grain,
+    starved: short,
+    stance: res.stance,
+    counter: res.counter,
+    lossOurs: res.lossOurs,
+    lossEnemy: res.lossEnemy,
+    line: res.line,
+  });
   c.round += 1;
 
   let finished = null;
