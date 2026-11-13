@@ -268,11 +268,13 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
       <div class="seal" aria-hidden="true">帝</div>
       <div><h1>皇帝養成綜合版</h1><div class="when" id="when"></div></div>
       <button class="snd" id="snd" type="button" aria-pressed="false">音效：關</button>
+      <button class="snd" id="legacy-btn" type="button">歷代帝王</button>
       <div class="save-tools"><button class="snd" id="exp" type="button">匯出存檔</button><button class="snd" id="imp" type="button">匯入存檔</button><input type="file" id="imp-file" accept=".json,application/json" hidden></div>
     </div>
     <p class="save-msg" id="save-msg" role="status" aria-live="polite"></p>
     <div class="slot-tools" id="slot-tools" aria-label="多存檔欄位"></div>
     <div class="gauges" id="gauges" aria-label="國勢概況"></div>
+    <div class="milestone" id="milestone" aria-live="polite"></div>
   </header>
   <main id="app"></main>
 </div>
@@ -282,6 +284,11 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 
 <style>
 .save-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.milestone{display:flex;gap:8px;align-items:baseline;margin:4px 0 0;font-size:13px;color:var(--ink)}
+.milestone:empty{display:none}
+.ms-kicker{font-size:11px;color:var(--ink-soft);letter-spacing:.06em}
+.legacy-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.legacy-tbl th,.legacy-tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 .save-msg{margin:4px 0 0;font-size:12px;color:var(--ink-soft);min-height:0}
 .save-msg:empty{display:none}
 @media (max-width:480px){.save-tools .snd{padding:3px 8px}}
@@ -339,6 +346,9 @@ import { startCampaign, reconnoiter, pickTactic, offerPeace, MAX_ROUNDS, WINS_NE
 import { TACTICS } from '../src/war.js';
 import { DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, NEIGHBORS, arrangeMarriage, acceptTribute, formAlliance, diplomacyOf, monthlyDrift, neighborById, MARRIAGE_COST, TRIBUTE_MIN_ATTITUDE, TRIBUTE_GAIN, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES } from '../src/diplomacy.js';
 import { exportSave, importSave, serializeSave, parseSave } from '../src/save.js';
+import { MODES, DEFAULT_MODE } from '../src/mode.js';
+import { milestoneFor } from '../src/milestones.js';
+import { recordRun, summarizeLegacy, legacyFromState } from '../src/legacy.js';
 
 const SAVE_KEY = 'kingmix-save-v1';
 const SOUND_KEY = 'kingmix-sound';
@@ -549,10 +559,10 @@ function guideMount(){
   };
 }
 
-function newGame(s, scenId, eraRaw, pols){
+function newGame(s, scenId, eraRaw, pols, modeKey){
   seed = s || String(Math.floor(Math.random()*1e9));
   const list = pols && pols.length ? pols : ['agrarian'];
-  const opts = { policy: list[0], era: eraRaw };
+  const opts = { policy: list[0], era: eraRaw, mode: MODES[modeKey] ? modeKey : DEFAULT_MODE };
   try {
     state = scenId ? createScenarioState(seed, scenId, opts) : createInitialState(seed, opts);
   } catch (e) {
@@ -831,6 +841,8 @@ function renderStart(){
       <label class="lbl" for="scen">本紀劇本（選用）</label>
       <select class="seed" id="scen"><option value="">一般開局（不選劇本）</option>${scenOpts}</select>
       <p class="sub" id="scen-desc" style="margin:8px 0 0">不選劇本，即為自由治國的一般開局。</p>
+      <label class="lbl" for="mode">局長模式</label>
+      <select class="seed" id="mode">${Object.values(MODES).map(m => `<option value="${esc(m.key)}"${m.key === DEFAULT_MODE ? ' selected' : ''}>${esc(m.label)}（${m.months / 12} 年）</option>`).join('')}</select>
       <label class="lbl">即位國策（選 1–2 條）</label>
       <div class="opts" id="acc-policy" style="grid-template-columns:1fr 1fr;margin:0"></div>
       <p class="sub" id="acc-policy-hint" style="margin:8px 0 0"></p>
@@ -864,7 +876,7 @@ function renderStart(){
       const v = validateEra(raw);
       if (!v.ok) { eraErr.textContent = ERA_REASON_TEXT[v.reason]; eraErr.hidden = false; return; }
     }
-    newGame(document.getElementById('seed').value.trim(), scenSel.value, raw, accPolicies.slice());
+    newGame(document.getElementById('seed').value.trim(), scenSel.value, raw, accPolicies.slice(), document.getElementById('mode').value);
   };
   const c = document.getElementById('cont');
   if (c) c.onclick = () => { seed = saved.seed; state = saved.state; migrateEraLog(state); reviewedCount = (state.annals||[]).length; render(); };
@@ -1741,10 +1753,55 @@ function showNewYear(){
   openNianhao(eraYearText(state), '新歲伊始，萬象更新。');
 }
 
+// ── 段落目標（章節）：頂欄顯示目前章節；章節變動時短訊告知。同一局內首次繪製不發訊。
+const LEGACY_KEY = 'kingmix-legacy-v1';
+let milestoneSeed = null, milestoneId = null;
+function paintMilestone(){
+  const el = document.getElementById('milestone');
+  if (!el) return;
+  if (!state || !state.alive) { el.innerHTML = ''; milestoneSeed = null; return; }
+  const ms = milestoneFor(state);
+  el.innerHTML = `<span class="ms-kicker">當前章節</span><b>${esc(ms.title)}</b>`;
+  if (milestoneSeed === seed && milestoneId !== null && milestoneId !== ms.id) ffToast(`新章節：${ms.title}`);
+  milestoneSeed = seed; milestoneId = ms.id;
+}
+
+// ── 歷代帝王：跨局史冊存於 localStorage；一局結束時記錄一次（以 state.legacyRecorded 防重）。
+function loadLegacy(){ try { const r = JSON.parse(localStorage.getItem(LEGACY_KEY) || '[]'); return Array.isArray(r) ? r : []; } catch (e) { return []; } }
+function recordLegacyOnce(){
+  if (!state || state.alive || state.legacyRecorded) return;
+  try {
+    const next = recordRun(loadLegacy(), { ...legacyFromState(state), mode: state.mode ?? DEFAULT_MODE });
+    localStorage.setItem(LEGACY_KEY, JSON.stringify(next));
+  } catch (e) {}
+  state.legacyRecorded = true;
+  save();
+}
+const MODE_TEXT = Object.fromEntries(Object.values(MODES).map(m => [m.key, m.label]));
+const LEGACY_END = { '禪位': '禪位', death: '駕崩', abdicated: '高年致仕', short_end: '短局終局' };
+function renderLegacy(){
+  const runs = loadLegacy();
+  const sum = summarizeLegacy(runs);
+  const rows = runs.slice().reverse().map((r, i) => `<tr><td>${runs.length - i}</td><td>${esc(MODE_TEXT[r.mode] ?? '—')}</td><td>${esc(r.seed ?? '—')}</td><td>${esc(r.years ?? '—')}</td><td>${esc(r.generations ?? '—')}</td><td>${esc(LEGACY_END[r.endReason] ?? r.endReason ?? '—')}</td><td>${esc(r.finalTitle ?? '—')}</td></tr>`).join('');
+  app.innerHTML = `
+    <section class="card"><div class="kicker">史冊</div><h2>歷代帝王</h2>
+      <p class="sub">共 ${sum.runs} 局　平均在位 ${sum.avgYears} 年${sum.bestTitle ? `　首見稱號：${esc(sum.bestTitle)}` : ''}</p>
+      ${runs.length ? `<div style="overflow-x:auto"><table class="legacy-tbl"><thead><tr><th>局</th><th>模式</th><th>種子</th><th>在位年</th><th>世數</th><th>結局</th><th>稱號</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="sub">尚無已結束的局，待一局終了後，史冊方會記下。</p>'}
+    </section>`;
+}
+
 const VIEWS = { palace: renderPalace, court: renderCourt, officials: renderOfficials, harem: renderHarem, dc: renderDC, throne: renderThrone };
 function render(){
+  if (tab === 'legacy') {
+    topGauges(); applySeason();
+    document.getElementById('nav').style.display = '';
+    renderNav(); renderLegacy();
+    return inkFlash('legacy');
+  }
   topGauges();
   applySeason();
+  paintMilestone();
+  if (state && !state.alive) recordLegacyOnce();
   if (!state) {
     document.getElementById('when').textContent = '未開局';
     renderStart(); document.getElementById('nav').style.display='none';
@@ -1772,19 +1829,33 @@ const SAVE_ERR = {
   invalid_alive: '存檔內容不完整（存活狀態無效）',
 };
 function saveMsg(text){ const m = document.getElementById('save-msg'); if (m) m.textContent = text; }
-function exportGame(){
+async function exportGame(){
   if (!state) return saveMsg('尚無進行中的局，無法匯出。');
+  let text, filename;
   try {
-    const text = exportSave({ ...state, seed });
+    text = exportSave({ ...state, seed });
     const d = new Date(), p = n => String(n).padStart(2, '0');
+    filename = `kingmix-save-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+  } catch (e) { return saveMsg('匯出失敗，請再試一次。'); }
+  // Artifacts 內 blob 下載無效，優先走 claude.use('downloads')；不可用時退回原本的 anchor 下載。
+  let dl = null;
+  try { dl = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null; } catch (e) { dl = null; }
+  if (dl) {
+    try {
+      await dl.save({ filename, data: text });
+      return saveMsg('已匯出存檔。');
+    } catch (e) { return saveMsg('未完成匯出（已取消或無法儲存）。'); }
+  }
+  try {
     const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
     const a = document.createElement('a');
-    a.href = url; a.download = `kingmix-save-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+    a.href = url; a.download = filename;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     saveMsg('已匯出存檔。');
   } catch (e) { saveMsg('匯出失敗，請再試一次。'); }
 }
+document.getElementById('legacy-btn').onclick = () => { tab = 'legacy'; panel = null; pick1 = null; render(); };
 function importGame(file){
   const reader = new FileReader();
   reader.onload = () => {
