@@ -65,6 +65,9 @@ export const CHAIN_CHANCE = 0.25;
 
 export function afterOption(state, event, option) {
   const effects = option.effects || {};
+  // 記錄先前選擇（供 prior_choice 條件）：每事件保留最近一次所選選項。
+  state.choices = state.choices || {};
+  state.choices[event.id] = { option: option.key };
   // 連鎖以機率觸發（種子決定）：每次選中皆必定排程會使後續事件過多，平衡會偏移。
   if (effects.chain && makeRng([state.seed, state.year, state.month, 'chain', event.id])() < CHAIN_CHANCE) {
     scheduleChain(state, effects.chain);

@@ -1,8 +1,36 @@
 // 事件資格判斷。條件以 AND 組合；chance 會消耗 rng，順序固定以維持確定性。
-import { isBonded } from './bonds.js';
+import { isBonded, sharedCount } from './bonds.js';
 import { isCourtOfficial } from './officials.js';
+import { ensureCity } from './city.js';
 
 import { canDiplomacy } from './diplomacy.js';
+
+// 州府地形（economy.js 的 character：farming 農 / trade 商）。
+export const TERRAIN_KINDS = Object.freeze(['farming', 'trade']);
+
+// 地形條件門檻：城防低於此值的州府視為「設防不足」（城防每月風化，見 city.js）。
+export const TERRAIN_DEFENSE_LOW = 40;
+
+// 地形條件：某地形的州府中，有城防低於 TERRAIN_DEFENSE_LOW 者。城防來自 city.js，懶初始化。
+export function terrainUnderDefended(state, terrain) {
+  return ensureCity(state).some((p) => p.character === terrain && p.defense < TERRAIN_DEFENSE_LOW);
+}
+
+// 君臣羈絆條件：'bonded' 任一朝臣已相得；'sharing' 任一朝臣已有共歷事件（尚未相得亦可）。
+export function bondMatches(state, kind) {
+  const courtIds = state.officials.filter(isCourtOfficial).map((o) => o.id);
+  if (kind === 'bonded') return courtIds.some((id) => isBonded(state, id));
+  if (kind === 'sharing') return courtIds.some((id) => sharedCount(state, id) >= 1);
+  throw new Error(`unknown bond_with: ${kind}`);
+}
+
+// 先前選擇條件：{ event, option? }。option 省略時只要該事件曾被選過任一選項即成立。
+// 紀錄由 turn.js afterOption 寫入 state.choices（每事件保留最近一次的選項鍵）。
+export function priorChoiceMatches(state, { event, option }) {
+  const c = state.choices?.[event];
+  if (!c) return false;
+  return option === undefined ? true : c.option === option;
+}
 
 export function isEligible(state, event, rng) {
   const when = event.when || {};
@@ -34,6 +62,13 @@ export function isEligible(state, event, rng) {
       case 'bonded_loyalty_lt':
         if (!state.officials.some((o) => isCourtOfficial(o) && isBonded(state, o.id) && o.loyalty < val)) return false;
         break;
+      case 'terrain_is':
+        if (!TERRAIN_KINDS.includes(val)) throw new Error(`unknown terrain in ${event.id}: ${val}`);
+        if (!terrainUnderDefended(state, val)) return false;
+        break;
+      case 'bond_with': if (!bondMatches(state, val)) return false; break;
+      case 'prior_choice': if (!priorChoiceMatches(state, val)) return false; break;
+      case 'has_item': throw new Error(`has_item is not supported: no item model (${event.id})`);
       default: {
         // 通用數值條件：<stat>_lt / <stat>_gt，例如 prestige_lt、commerce_gt
         const m = key.match(/^([a-z]+)_(lt|gt)$/);
