@@ -166,6 +166,39 @@ body{
 .plan text.hallname{font-size:17px;font-weight:700}
 .plan text.sm{font-size:11px;fill:var(--ink-soft)}
 .plan text.compass{font-size:11px;fill:var(--ink-soft)}
+/* 輿圖：州府依城防著色（文字固定深色，明暗兩模式皆可讀）；鄰國以虛線邊界示意 */
+.plan.map svg text{fill:#1F1A17;font-size:13px}
+.plan.map svg text.mv{font-size:11px;fill:#3a3129}
+.plan.map g.mzone{cursor:pointer;outline:none}
+.plan.map g.mzone path{stroke:var(--line);stroke-width:1.2;transition:filter .15s}
+.plan.map g.mzone:hover path,.plan.map g.mzone:focus-visible path{filter:brightness(.94)}
+.plan.map g.mzone.sel path{stroke:var(--vermilion);stroke-width:2.4}
+.plan.map g.mzone:focus-visible path{stroke:var(--gold);stroke-width:2}
+.plan.map g.medge{cursor:pointer;outline:none}
+.plan.map g.medge path{fill:var(--zone);stroke:var(--ink-soft);stroke-width:1;stroke-dasharray:4 3}
+.plan.map g.medge:hover path,.plan.map g.medge:focus-visible path{fill:var(--zone-hi)}
+.plan.map g.medge text{fill:var(--ink)}
+.plan.map g.medge text.mv{fill:var(--ink-soft)}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:2px;border:1px solid var(--line);vertical-align:-1px}
+.pdetail{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--paper)}
+.pdetail .name{font:700 15px/1.3 var(--serif)}
+.pdetail .track{margin:6px 0 8px}
+/* 朝堂：派系分組與小卡（手機單欄，寬度足夠時雙欄） */
+.fgrid{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:560px){.fgrid{grid-template-columns:1fr 1fr}}
+.fcard{border:1px solid var(--line);border-radius:4px;background:var(--paper);min-width:0}
+.fcard>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:4px 8px;padding:10px 12px;min-height:44px}
+.fcard>summary::-webkit-details-marker{display:none}
+.fcard>summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.fcard[open]>summary{border-bottom:1px dashed var(--line)}
+.fcard .person{border:0;border-radius:0;background:transparent}
+.fname{font:700 15px/1.3 var(--serif);min-width:0;overflow-wrap:anywhere}
+.fmeta{font-size:12px;color:var(--ink-soft);text-align:right;align-self:center}
+.floy{grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-soft)}
+.floy .track{flex:1;margin:0}
+.floy b{font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;min-width:2ch;text-align:right}
+.fstance{grid-column:1/-1;font-size:12px;color:var(--ink-soft)}
+.war-log li{font-size:14px;line-height:1.5}
 /* 史冊卷軸：年終考評、結局諡號 */
 .review{margin:14px 0}
 .roller{height:20px;border-radius:10px;background:linear-gradient(to bottom,#8a6a45,#6B4A2B 40%,#4f3620);box-shadow:0 3px 6px rgba(0,0,0,.25);margin:0 -10px;position:relative;z-index:2}
@@ -321,7 +354,7 @@ import { applyDongchangAction, DC_ACTIONS, openInvestigation, MAX_ACTIVE_CASES, 
 import { assignOffice, OFFICES, dismissOffice, officeFit, officeHolder, suggestCandidate } from '../src/offices.js';
 import { POLICIES, POLICY_KEYS, changePolicy, policyLockRemaining, POLICY_CHANGE_PRESTIGE_COST, setAccessionPolicies, ACCESSION_POLICY_MAX } from '../src/policy.js';
 import { holdExam, examRemaining, EXAM_INTERVAL_TURNS } from '../src/exam.js';
-import { loyaltySafetyStatus } from '../src/officials.js';
+import { loyaltySafetyStatus, FACTIONS, isCourtOfficial } from '../src/officials.js';
 import { buildGazette } from '../src/gazette.js';
 import { SLOTS, slotCost, canTakeSlot } from '../src/slots.js';
 import { illnessLabel } from '../src/heir-status.js';
@@ -329,7 +362,7 @@ import { eligibleCrownHeirs, heirFaction, chooseCrownPrince, CHANGE_CROWN_PRINCE
 import { pickEvent, pickSecondMemorial, autoAppoint } from '../src/sim.js';
 import { tryAccession } from '../src/succession.js';
 import { evaluateDynasty } from '../src/ending.js';
-import { setTaxTier, ensureEconomy, administrativeEfficiency, TAX_TIERS, PREFECTURE_DEFS } from '../src/economy.js';
+import { setTaxTier, ensureEconomy, administrativeEfficiency, governorOf, TAX_TIERS, PREFECTURE_DEFS } from '../src/economy.js';
 import { repairCity, ensureCity, cityOf, REPAIR_COST } from '../src/city.js';
 import { taihouOpposes, WAIJIA_THRESHOLD, TAIHOU_OPPOSE } from '../src/harem.js';
 import { factionsBalanced, forcingFaction, strongFactionCount, FORCE_MONTHS, FACTION_FORCE_THRESHOLD, FACTION_POLICY, BALANCED_EFFICIENCY, suppressFaction, rallyFaction } from '../src/factions.js';
@@ -343,7 +376,7 @@ import { fastForwardPause } from '../src/fastforward.js';
 import { autoDecideMemorial } from '../src/autodecide.js';
 import { buildScroll } from '../src/posthumous.js';
 import { startCampaign, reconnoiter, pickTactic, offerPeace, MAX_ROUNDS, WINS_NEEDED, RECON_GRAIN_COST } from '../src/campaign.js';
-import { TACTICS } from '../src/war.js';
+import { TACTICS, formatBattleLog } from '../src/war.js';
 import { DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, NEIGHBORS, arrangeMarriage, acceptTribute, formAlliance, diplomacyOf, monthlyDrift, neighborById, MARRIAGE_COST, TRIBUTE_MIN_ATTITUDE, TRIBUTE_GAIN, ALLIANCE_MIN_ATTITUDE, MAX_ALLIANCES } from '../src/diplomacy.js';
 import { exportSave, importSave, serializeSave, parseSave } from '../src/save.js';
 import { MODES, DEFAULT_MODE } from '../src/mode.js';
@@ -664,6 +697,7 @@ function finishCampaignUI(f, prefix){
   const word = f.outcome === 'peace' ? '和議既成，兵戈暫息'
     : f.outcome === 'talks_failed' ? (f.won ? '和議不成，然戰績居先' : '和議不成，退兵')
     : (f.won ? '大捷' : '戰敗');
+  lastBattle = { title: c.title || '親征', lines: [...formatBattleLog({ rounds: c.rounds || [] }), `結果：${word}`] };
   feedback = `${prefix}${word}。`;
   sfx(f.won ? 'win' : 'lose');
   if (c.tick) return finishMonth(true);
@@ -693,11 +727,21 @@ function campAct(a, v){
     return finishCampaignUI(r.finished, '');
   }
 }
+// 戰報：逐回合列出（文字由 src/war.js formatBattleLog 產生），粮絕者加註。
+let lastBattle = null; // 本工作階段最近一役的戰報（戰役結束即清除於 state，故另存於此）
+function warLogList(rounds){
+  const lines = formatBattleLog({ rounds });
+  return lines.map((line, i) => `<li><span>${esc(line)}${rounds[i]?.starved ? '（粮絕，戰力減損）' : ''}</span></li>`).join('');
+}
+function lastBattleCard(){
+  if (!lastBattle) return '';
+  return `<section class="card" aria-label="上一役戰報"><h2>戰報・${esc(lastBattle.title)}</h2>
+    <ul class="list war-log">${lastBattle.lines.map(l => `<li><span>${esc(l)}</span></li>`).join('')}</ul></section>`;
+}
 function campaignCard(){
   const c = state.campaign;
   const scouted = c.intel === 'scouted';
-  const log = (c.rounds || []).map(r => `<li><span>第${r.round}回合・${esc(TACTICS[r.tactic]?.label || r.tactic)}${r.starved ? '（粮絕，戰力減損）' : ''}</span>
-      <span class="${r.won ? 'up' : 'dn'}">${r.won ? '勝' : '負'}　己 ${r.ours}／敵 ${r.enemy}</span></li>`).join('');
+  const log = warLogList(c.rounds || []);
   const tactics = Object.entries(TACTICS).map(([k, t]) => `
     <button class="opt zhu" data-act="camp-tactic" data-arg="${k}">
       <span class="mark">${t.label.slice(0,1)}</span>
@@ -731,7 +775,7 @@ function meter(k){
 }
 // 朝堂的行動卡（僅在無待決案件、尚未駕崩時出現）
 function actionsSection(){
-  return (!pendingCase() && state.alive) ? crownChoiceCard() + actionsCard() + slotsCard() : '';
+  return (!pendingCase() && state.alive) ? crownChoiceCard() + actionsCard() + slotsCard() + lastBattleCard() : '';
 }
 function calendar(){
   document.getElementById('when').textContent = `第${state.dynasty.generation}世 · ${eraYearText(state)}${state.month}月 · ${state.age}歲`;
@@ -806,8 +850,8 @@ function renderNav(){
   const nav = document.getElementById('nav');
   if (tab === 'palace') { nav.style.display = 'none'; return; }
   nav.style.display = '';
-  document.getElementById('tabs').innerHTML = `<button type="button" class="navback" data-tab="palace">← 返回宮城</button>`;
-  document.querySelector('nav.tabs button').onclick = () => { tab = 'palace'; panel = null; pick1 = null; render(); };
+  document.getElementById('tabs').innerHTML = `<button type="button" class="navback" data-tab="palace">← 返回宮城</button><button type="button" class="navmap${tab === 'map' ? ' active' : ''}" data-tab="map">輿圖</button>`;
+  nav.querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.tab; panel = null; pick1 = null; render(); });
 }
 
 function paintAccPolicies(){
@@ -1009,6 +1053,83 @@ function renderCourt(){
   if (showSecond) wireSecond(ev2);
 }
 
+// ── 全國輿圖：六府依城防著色，鄰國列於邊界；點州府看詳情，點鄰國開外交面板 ──
+// 示意版圖（非實際地理比例）；座標僅供排版。民心為全國單一數值，不分府。
+const MAP_SHAPE = {
+  pref: {
+    jingzhao: { d: 'M60 100 L120 92 L124 150 L100 168 L64 160 Z', x: 92, y: 134 },
+    hedong: { d: 'M124 60 L186 56 L196 118 L150 126 L124 112 Z', x: 160, y: 94 },
+    denglai: { d: 'M206 56 L262 40 L300 70 L292 118 L240 112 L210 96 Z', x: 254, y: 84 },
+    yangzhou: { d: 'M214 128 L270 124 L286 176 L238 190 L210 160 Z', x: 248, y: 160 },
+    yizhou: { d: 'M60 184 L118 176 L124 240 L92 262 L56 236 Z', x: 90, y: 222 },
+    jiangning: { d: 'M140 196 L200 190 L216 240 L178 262 L142 240 Z', x: 178, y: 230 },
+  },
+  nb: {
+    north: { d: 'M40 14 L300 10 L300 32 L40 36 Z', x: 170, y: 26 },
+    west: { d: 'M14 96 L48 88 L50 236 L18 244 Z', x: 30, y: 168 },
+    south: { d: 'M50 286 L300 290 L290 314 L50 310 Z', x: 170, y: 304 },
+    east: { d: 'M304 190 L330 184 L330 262 L304 262 Z', x: 318, y: 226 },
+  },
+};
+let mapSel = null;
+const fillForDefense = v => (v < 40 ? '#D9A397' : v < 70 ? '#E6D39A' : '#B7D3B2');
+function renderMap(){
+  const prefs = ensureCity(state);
+  const d = diplomacyOf(state);
+  const people = Math.round(state.stats.people);
+  const zones = PREFECTURE_DEFS.map(def => {
+    const p = prefs.find(x => x.id === def.id);
+    const def2 = Math.round(p?.defense ?? 50);
+    const sh = MAP_SHAPE.pref[def.id];
+    return `<g class="mzone${mapSel === def.id ? ' sel' : ''}" role="button" tabindex="0" data-pref="${def.id}" aria-label="${esc(def.name)}，城防 ${def2}">
+      <path d="${sh.d}" fill="${fillForDefense(def2)}"/>
+      <text x="${sh.x}" y="${sh.y}" text-anchor="middle">${esc(def.name)}</text>
+      <text class="mv" x="${sh.x}" y="${sh.y + 14}" text-anchor="middle">城防 ${def2}</text></g>`;
+  }).join('');
+  const edges = NEIGHBORS.map(n => {
+    const sh = MAP_SHAPE.nb[n.id];
+    const s = d[n.id];
+    const tag = s.allied ? '盟' : s.kin > 0 ? '婚' : '';
+    return `<g class="medge" role="button" tabindex="0" data-nb="${n.id}" aria-label="${esc(n.name)}，好感 ${s.attitude}，開外交面板">
+      <path d="${sh.d}"/>
+      <text x="${sh.x}" y="${sh.y}" text-anchor="middle">${esc(n.name)}</text>
+      <text class="mv" x="${sh.x}" y="${sh.y + 14}" text-anchor="middle">好感 ${s.attitude}${tag ? ' ' + tag : ''}</text></g>`;
+  }).join('');
+  const p = prefs.find(x => x.id === mapSel);
+  const def = PREFECTURE_DEFS.find(x => x.id === mapSel);
+  const gov = p && def ? governorOf(state, p) : null;
+  const detail = p && def ? `<div class="pdetail">
+      <div class="name">${esc(def.name)}</div>
+      <div class="loy">知府 ${esc(gov?.personName || gov?.name || p.governor?.name || '—')}　政 ${esc(gov?.abilities?.politics ?? p.governor?.abilities?.politics ?? '—')}　${p.output === 'agriculture' ? '農產' : '商產'}</div>
+      <div class="kicker" style="margin:8px 0 2px">城防 ${Math.round(p.defense ?? 50)}　產值 ${Number(p.yield || 0).toFixed(2)}</div>
+      <div class="track"><div class="fill${(p.defense ?? 50) < 40 ? ' warn' : ''}" style="width:${Math.max(0, Math.min(100, p.defense ?? 50))}%"></div></div>
+      <button class="btn ghost" data-go-city="1">前往朝堂修繕城池</button>
+    </div>` : `<p class="sub" style="margin:10px 0 0">點選州府，檢視其知府與城防。</p>`;
+  app.innerHTML = `
+    <section class="card"><h2>全國輿圖</h2>
+      <div class="sub">民心 ${people}（全國）　城防色：<span class="swatch" style="background:#D9A397"></span>低　<span class="swatch" style="background:#E6D39A"></span>中　<span class="swatch" style="background:#B7D3B2"></span>高</div>
+      <div class="plan map">
+        <svg viewBox="0 0 340 322" role="group" aria-label="全國輿圖，六府與四鄰">
+          ${edges}
+          ${zones}
+        </svg>
+      </div>
+      ${detail}
+    </section>`;
+  app.querySelectorAll('[data-pref]').forEach(g => {
+    const go = () => { mapSel = g.dataset.pref; render(); };
+    g.onclick = go;
+    g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+  });
+  app.querySelectorAll('[data-nb]').forEach(g => {
+    const go = () => { tab = 'court'; panel = 'diplo'; pick1 = null; render(); };
+    g.onclick = go;
+    g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+  });
+  const cityBtn = app.querySelector('[data-go-city]');
+  if (cityBtn) cityBtn.onclick = () => { tab = 'court'; panel = 'city'; pick1 = null; render(); };
+}
+
 // ── 宮城平面圖：點選宮室即前往對應分頁 ──
 // 待批件數：東廠密報或戰事優先；否則為早朝的第一則與次奏（未留中者）。
 function pendingMemorials(){
@@ -1050,7 +1171,9 @@ function renderPalace(){
         </svg>
       </div>
       <p class="sub" style="margin:10px 0 0">太和殿處理朝政奏摺；御書房（史冊與帝王）、校場（朝臣任免）、後宮與慈寧宮（嬪妃與子嗣）、東廠各司其事。</p>
+      <button class="btn ghost" data-go-map="1">展開全國輿圖</button>
     </section>`;
+  app.querySelector('[data-go-map]').onclick = () => { tab = 'map'; panel = null; pick1 = null; render(); };
   app.querySelectorAll('g.zone').forEach(g => {
     const go = () => { tab = g.dataset.tab; panel = null; pick1 = null; render(); };
     g.onclick = go;
@@ -1243,13 +1366,35 @@ function renderOfficials(){
   const total = Object.values(f).reduce((a,b)=>a+b,0) || 1;
   const bar = Object.entries(f).map(([k,v]) => `<div style="width:${v/total*100}%;background:${FAC(k).c}" title="${FAC(k).l} ${Math.round(v)}"></div>`).join('');
   const legend = Object.entries(f).map(([k,v]) => `<span><i style="background:${FAC(k).c}"></i>${FAC(k).l} ${Math.round(v)}</span>`).join('');
-  const cards = state.officials.map(personCard).join('');
+  const court = state.officials.filter(isCourtOfficial);
+  const local = state.officials.filter(o => !isCourtOfficial(o));
+  // 派系分組：依 FACTIONS 順序，各派內以忠誠由高至低。
+  const groups = FACTIONS.map(k => {
+    const f = FAC(k);
+    const list = court.filter(o => o.faction === k).sort((a, b) => b.loyalty - a.loyalty);
+    return `<section class="card fgroup" aria-label="${f.l}"><h2 style="color:${f.c}">${f.l}　${list.length} 人</h2>
+      <div class="fgrid">${list.map(officialCard).join('') || '<p class="empty">此派無朝臣。</p>'}</div></section>`;
+  }).join('');
+  const localHtml = local.length ? `<section class="card fgroup" aria-label="外任知府"><h2>外任知府　${local.length} 人</h2>
+      <div class="fgrid">${local.map(officialCard).join('')}</div></section>` : '';
   app.innerHTML = `
     ${fbLine()}
     <section class="card"><h2>朝局</h2>
       <div class="factions">${bar}</div><div class="legend">${legend}</div>${pressureLine()}</section>
     ${officeCard()}
-    <div class="officials">${cards || '<p class="empty">朝中無人。</p>'}</div>`;
+    ${groups}${localHtml}
+    ${court.length + local.length ? '' : '<p class="empty">朝中無人。</p>'}`;
+}
+// 小卡：姓名、忠誠條、態度（依忠誠分三級）與所主國策；點開展示完整人物卡（含進諫等操作）。
+function officialCard(o){
+  const pol = POLICIES[FACTION_POLICY[o.faction]];
+  const loy = Math.max(0, Math.min(100, o.loyalty));
+  const stance = loy >= 60 ? '效忠' : loy >= 40 ? '觀望' : '離心';
+  return `<details class="fcard">
+    <summary><span class="fname">${esc(o.personName || o.name)}</span><span class="fmeta">${o.office ? esc(officeName(o.office)) : '閒置'}</span>
+      <span class="floy"><span class="track"><span class="fill${loy < 40 ? ' warn' : ''}" style="width:${loy}%"></span></span><b>${Math.round(o.loyalty)}</b></span>
+      <span class="fstance">${stance}${pol ? `　主「${esc(pol.name)}」` : ''}</span></summary>
+    ${personCard(o)}</details>`;
 }
 
 function renderHarem(){
@@ -1790,7 +1935,7 @@ function renderLegacy(){
     </section>`;
 }
 
-const VIEWS = { palace: renderPalace, court: renderCourt, officials: renderOfficials, harem: renderHarem, dc: renderDC, throne: renderThrone };
+const VIEWS = { palace: renderPalace, court: renderCourt, officials: renderOfficials, harem: renderHarem, dc: renderDC, throne: renderThrone, map: renderMap };
 function render(){
   if (tab === 'legacy') {
     topGauges(); applySeason();
@@ -1803,6 +1948,7 @@ function render(){
   paintMilestone();
   if (state && !state.alive) recordLegacyOnce();
   if (!state) {
+    lastBattle = null;
     document.getElementById('when').textContent = '未開局';
     renderStart(); document.getElementById('nav').style.display='none';
     return inkFlash('start');
