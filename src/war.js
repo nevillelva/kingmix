@@ -3,7 +3,7 @@
 
 import { officeHolder } from './offices.js';
 import { POLICIES } from './policy.js';
-import { warDefenseMultiplier } from './city.js';
+import { warDefenseMultiplier, markOccupied } from './city.js';
 import { BALANCE } from './balance.js';
 
 // 己方戰力的名目值（不含擲骰）：軍備、武略、兵部/大將武力與國策修正。
@@ -50,6 +50,8 @@ export function resolveWar(state, spec, rng, applyEffects) {
   const effects = won ? spec.reward : spec.loss;
   applyEffects(state, effects || {});
   if (!won) applyEffects(state, { prestige: -3 });
+  // 戰敗且戰事明確屬於某府：該府遭敵方佔領（可攻回，見 city-capture.js）。無府則不觸發。
+  if (!won && spec.prefecture) markOccupied(state, spec.prefecture);
   state.wars.push({
     turn: state.turn,
     strength: spec.strength,

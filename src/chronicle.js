@@ -5,6 +5,8 @@
 //   heir_death   皇子夭折／奪嫡失勢（succession.js 的 removeHeir）
 //   assassination 刺殺（assassination.js）：來源、目標、結果
 //   city_capture 攻城佔點（city-capture.js）：州府名、年月
+//   rebellion    府民心連續低落而叛亂（city-capture.js tickRebellion）：含 text
+//   occupation   戰敗失守、遭敵方佔領（city.js markOccupied）：含 text
 //   （無 kind）  駕崩或禪位後的世代紀錄（succession.js 的 tryAccession）
 
 const END_WORD = { death: '駕崩', abdicated: '高年致仕', '禪位': '禪位', assassinated: '遇刺' };
@@ -28,6 +30,12 @@ export function chronicleLine(c) {
   }
   if (c.kind === 'city_capture') {
     return { text: `${orDash(c.prefectureName)}平定 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '攻城' };
+  }
+  if (c.kind === 'rebellion') {
+    return { text: orDash(c.text ?? `${orDash(c.prefectureName)}叛亂 · ${orDash(c.year)}年${orDash(c.month)}月`), tag: '叛亂' };
+  }
+  if (c.kind === 'occupation') {
+    return { text: orDash(c.text ?? `${orDash(c.prefectureName)}失守 · ${orDash(c.year)}年${orDash(c.month)}月`), tag: '失守' };
   }
   if (c.kind === 'remonstrance') {
     const died = c.outcome === 'died';

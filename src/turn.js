@@ -25,6 +25,7 @@ import { tickAssassination } from './assassination.js';
 import { DEFAULT_MODE, modeMonths } from './mode.js';
 import { applyFacilityMonthly, advanceConstruction } from './facilities.js';
 import { stepRelations } from './relations.js';
+import { tickRebellion } from './city-capture.js';
 
 // 官員名單上限：朝臣 12 人（開局 4 人加進士招募）＋ 六府知府 6 人。
 export const MAX_OFFICIALS = 18;
@@ -219,6 +220,7 @@ export function monthlyTick(state, rng) {
   tickEconomy(state);
   applyPrefectureYield(state);
   tickCity(state);
+  tickRebellion(state); // 民心衰減與叛亂判定（每月一次；見 city-capture.js）
   tickHarem(state);
   applyWaijiaCoupling(state);
   const tp = taihouPenalty(state);
