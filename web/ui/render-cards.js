@@ -5,6 +5,7 @@ import { U } from './store.js';
 import { esc, rng } from './util.js';
 import { save } from './state-io.js';
 import { render } from './render-nav.js';
+import { EFFECT } from './labels.js';
 
 // 可選引擎：匯入失敗或匯出名稱不存在時維持空物件，各處以 typeof 檢查。
 export const engine = {};
@@ -24,10 +25,31 @@ const cardDesc = (c) => esc(c.desc ?? c.description ?? c.text ?? cardEffectText(
 // 卡面效果：由 monthly 欄位列出，例如「農業 +0.4」。
 const cardEffectText = (c) => Object.entries(c.monthly ?? {}).map(([k, v]) => `${k} ${v > 0 ? '+' : ''}${v}`).join('　');
 
+// 策卡名稱與效果文字（效果以中文屬性名列出，例如「商業 +0.6　國庫 +2」）。
+const policyName = (id) => { const c = engine.POLICY_CARDS?.[id]; return c ? (c.name ?? c.label ?? id) : id; };
+const policyEffectText = (id) => {
+  const c = engine.POLICY_CARDS?.[id];
+  return Object.entries(c?.monthly ?? {}).map(([k, v]) => `${EFFECT[k] ?? k} ${v > 0 ? '+' : ''}${v}`).join('　');
+};
+
+// 目前生效的策卡（activeCards）：列於策卡區塊之下，擇卡後仍可見。
+export function activeCardsLine() {
+  if (!has('activeCards') || !U.state) return '';
+  let ids = [];
+  try { ids = engine.activeCards(U.state) || []; } catch (e) { ids = []; }
+  if (!Array.isArray(ids) || ids.length === 0) return '';
+  return `<div class="sub" style="margin:10px 0 0">生效策卡：${ids.map((id) => esc(`${policyName(id)}（${policyEffectText(id)}）`)).join('、')}</div>`;
+}
+
+// 年度策卡國策區塊，外加生效策卡列。
+export function policyCardsCard() {
+  return policyOfferCard() + activeCardsLine();
+}
+
 // 每年（正月）三選一的策卡國策。已選定本年者不再顯示。
 // 抽卡只在本年首次呈現時進行一次，結果寫入 state.policyCards.offer，並以 flags.policy_offer_year 記年；
 // 之後重繪僅讀取既有 offer，不再重抽（drawPolicyCards 會覆寫 offer，故不可每次呼叫）。
-export function policyCardsCard() {
+function policyOfferCard() {
   const s = U.state;
   if (!s || !s.alive || s.month !== 1 || !has('drawPolicyCards') || !has('choosePolicyCard')) return '';
   s.flags = s.flags || {};
@@ -93,7 +115,8 @@ export function handleCardAct(a, v) {
     let r;
     try { r = engine.choosePolicyCard(U.state, v); } catch (e) { r = null; }
     const ok = !!r;
-    U.feedback = ok ? '策卡已定，施行於本年。' : '此策卡未能施行。';
+    const eff = policyEffectText(v);
+    U.feedback = ok ? `已定策卡：${policyName(v)}${eff ? `（${eff}）` : ''}，施行於本年。` : '此策卡未能施行。';
     if (ok) { U.state.flags = U.state.flags || {}; U.state.flags.policy_card_year = U.state.year; }
     save(); render(); return true;
   }

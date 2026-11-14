@@ -114,3 +114,32 @@ test('策卡生效 40 年：所有屬性與國庫維持在 BOUNDS 內（多 seed
     }
   }
 });
+
+// ── 策卡擇定回饋與生效策卡列（web/ui/render-cards.js）。模組依賴 DOM，此處以最小替身載入。
+{
+  const stub = () => new Proxy(function () {}, {
+    get: (t, k) => (k === 'then' ? undefined : k === Symbol.toPrimitive ? () => '' : stub()),
+    apply: () => stub(), set: () => true,
+  });
+  globalThis.document ??= { getElementById: () => null, createElement: () => stub(), body: stub(), addEventListener() {}, querySelector: () => null, querySelectorAll: () => [] };
+  globalThis.window ??= globalThis;
+  globalThis.localStorage ??= { getItem: () => null, setItem() {}, removeItem() {} };
+}
+const RC = await import('../web/ui/render-cards.js');
+const { U } = await import('../web/ui/store.js');
+await new Promise((r) => setTimeout(r, 50)); // 等待可選引擎非同步載入
+
+test('擇定策卡後回饋列出卡名與效果，且生效策卡列同步顯示', () => {
+  U.state = { alive: true, year: 2, month: 1, flags: {}, policyCards: { active: [], offer: ['sea_trade', 'irrigation', 'light_tax'] } };
+  U.feedback = '';
+  try { RC.handleCardAct('pickcard', 'sea_trade'); } catch (e) { /* 替身 DOM 無法完整重繪，僅驗證訊息 */ }
+  assert.equal(U.feedback, '已定策卡：開海通商（商業 +0.6　國庫 +2），施行於本年。');
+  assert.deepEqual(U.state.policyCards.active, ['sea_trade']);
+  const line = RC.activeCardsLine();
+  assert.match(line, /生效策卡：開海通商（商業 \+0\.6　國庫 \+2）/);
+});
+
+test('無生效策卡時不顯示生效策卡列', () => {
+  U.state = { alive: true, year: 3, month: 5, flags: {}, policyCards: { active: [], offer: null } };
+  assert.equal(RC.activeCardsLine(), '');
+});
