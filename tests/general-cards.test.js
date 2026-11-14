@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createInitialState } from '../src/state.js';
-import { buildGeneralCard } from '../src/general-cards.js';
+import { buildGeneralCard, isGeneral } from '../src/general-cards.js';
 import { ASSASSIN_LOW_LOYALTY } from '../src/assassination.js';
 import { exportSave } from '../src/save.js';
 
@@ -31,6 +31,14 @@ test('卡片資料組裝：欄位取自官員物件（姓名、首字、派系�
   assert.equal(c.age, 48);
   assert.equal(c.command, 65);
   assert.equal(c.martial, 70);
+});
+
+test('將領卡的所任官職與武將判定來源一致：武職卡 office 為 war，武略不影響判定', () => {
+  const war = official({ office: 'war', abilities: { martial: 10, command: 65, intellect: 50, politics: 40, virtue: 55 } });
+  assert.equal(isGeneral(war), true);
+  assert.equal(buildGeneralCard(war).office, 'war');
+  const civil = official({ office: 'revenue', abilities: { martial: 99, command: 65, intellect: 50, politics: 40, virtue: 55 } });
+  assert.equal(isGeneral(civil), false);
 });
 
 test('特質標籤最多兩個，且為既有特質的中文名稱', () => {
