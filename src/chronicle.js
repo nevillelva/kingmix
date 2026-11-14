@@ -4,6 +4,7 @@
 //   heir_illness 幼子染疾（succession.js 的 tickHeirs）
 //   heir_death   皇子夭折／奪嫡失勢（succession.js 的 removeHeir）
 //   assassination 刺殺（assassination.js）：來源、目標、結果
+//   city_capture 攻城佔點（city-capture.js）：州府名、年月
 //   （無 kind）  駕崩或禪位後的世代紀錄（succession.js 的 tryAccession）
 
 const END_WORD = { death: '駕崩', abdicated: '高年致仕', '禪位': '禪位', assassinated: '遇刺' };
@@ -24,6 +25,9 @@ export function chronicleLine(c) {
       text: `${orDash(ASSASSIN_SOURCE[c.source])}行刺${orDash(c.targetName)} · ${orDash(c.year)}年${orDash(c.month)}月`,
       tag: ASSASSIN_OUTCOME[c.outcome] ?? '—',
     };
+  }
+  if (c.kind === 'city_capture') {
+    return { text: `${orDash(c.prefectureName)}平定 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '攻城' };
   }
   if (c.kind === 'remonstrance') {
     const died = c.outcome === 'died';
