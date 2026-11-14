@@ -16,7 +16,7 @@ export const ASSASSIN_SOURCES = Object.freeze({ tyranny: '暴政', remnant: '前
 // 無頭模擬 600 月（big1..200 校準、hold1..200 驗證）：30 + 暴政累積（見 dongchang.js TYRANNY_GAIN）→ 來源觸發局數約 2%–2.5%。
 export const ASSASSIN_TYRANNY_THRESHOLD = 30;
 export const ASSASSIN_LOW_LOYALTY = 50; // 忠誠低於此值視為「離心」官員
-export const ASSASSIN_RATE = Object.freeze({ tyranny: 0.03, remnant: 0.002, court: 0.012 }); // 月機率上限（暫定，待模擬校準）
+export const ASSASSIN_RATE = Object.freeze({ tyranny: 0.045, remnant: 0.003, court: 0.018 }); // 月機率上限（暫定，待模擬校準；1.5 倍以使王朝中斷率落於 12–17%）
 export const ASSASSIN_INJURY = 12; // 皇帝受傷時健康損耗
 const TARGET_HEIR = 0.2; // 有太子時，目標為太子的機率
 const TARGET_EMPEROR = 0.5; // 目標為皇帝的機率（其餘為官員）

@@ -19,6 +19,9 @@ let dynastyBreaks = 0;
 let totalTriggered = 0;
 let maxTriggered = 0;
 let dcTotal = 0;
+let e420Runs = 0;
+let e420Total = 0;
+let e420Max = 0;
 for (let i = 0; i < runs; i++) {
   const r = runSimulation({ seed: `audit-${i}`, months, events, mode });
   const reason = r.endReason ?? (r.alive ? 'alive' : 'unknown');
@@ -31,6 +34,10 @@ for (let i = 0; i < runs; i++) {
   totalTriggered += n;
   maxTriggered = Math.max(maxTriggered, ...counts, 0);
   dcTotal += r.triggered?.DC ?? 0;
+  const e420 = r.triggered?.E420 ?? 0;
+  if (e420 > 0) e420Runs++;
+  e420Total += e420;
+  e420Max = Math.max(e420Max, e420);
 }
 
 console.log(JSON.stringify({
@@ -42,4 +49,7 @@ console.log(JSON.stringify({
   avgTriggeredCount: +(totalTriggered / runs).toFixed(1),
   maxSingleEventCount: maxTriggered,
   avgDongchangActions: +(dcTotal / runs).toFixed(1),
+  e420RunsWithAtLeastOne: e420Runs,
+  e420Mean: +(e420Total / runs).toFixed(2),
+  e420Max,
 }, null, 2));
