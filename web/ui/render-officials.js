@@ -12,6 +12,7 @@ import { TAX_TIERS, administrativeEfficiency, ensureEconomy } from '../../src/ec
 import { COLLECTIONS, collectionProgress } from '../../src/collections.js';
 import { chronicleLine } from '../../src/chronicle.js';
 import { tyrannyStatus } from '../../src/dongchang.js';
+import { buildGeneralCard } from '../../src/general-cards.js';
 import { U, app } from './store.js';
 import { ABIL, FAC, SCEN_LABEL, SCEN_STATUS, STAT, officeName } from './labels.js';
 import { esc, gapText, meter, reqText } from './util.js';
@@ -106,7 +107,7 @@ export function renderOfficials(){
     const f = FAC(k);
     const list = court.filter(o => o.faction === k).sort((a, b) => b.loyalty - a.loyalty);
     return `<section class="card fgroup" aria-label="${f.l}"><h2 style="color:${f.c}">${f.l}　${list.length} 人</h2>
-      <div class="fgrid">${list.map(officialCard).join('') || '<p class="empty">此派無朝臣。</p>'}</div></section>`;
+      <div class="fgrid">${list.map(generalCard).join('') || '<p class="empty">此派無朝臣。</p>'}</div></section>`;
   }).join('');
   const localHtml = local.length ? `<section class="card fgroup" aria-label="外任知府"><h2>外任知府　${local.length} 人</h2>
       <div class="fgrid">${local.map(officialCard).join('')}</div></section>` : '';
@@ -118,6 +119,27 @@ export function renderOfficials(){
     ${officeCard()}
     ${groups}${localHtml}
     ${court.length + local.length ? '' : '<p class="empty">朝中無人。</p>'}`;
+}
+
+// 將領卡（校場朝臣）：色塊姓名首字頭像、姓名、官職、忠誠數值與特質標籤；忠誠低於門檻以警示色標示。
+// 展開後顯示經歷、兵力（統御）、所屬派系，並附完整人物卡（進諫等操作）。展開狀態僅存於 DOM，不寫入存檔。
+export function generalCard(o){
+  const c = buildGeneralCard(o);
+  const offTxt = c.office ? esc(officeName(c.office)) : '閒置';
+  const warnTag = c.loyaltyWarn ? `<span class="gwarn-tag" title="忠誠低於 ${c.loyaltyWarnBelow}">忠誠偏低</span>` : '';
+  return `<details class="gcard${c.loyaltyWarn ? ' gwarn' : ''}">
+    <summary>
+      <span class="gavatar" style="background:${FAC(c.faction).c}" aria-hidden="true">${esc(c.initial)}</span>
+      <span class="gtxt"><span class="fname">${esc(c.name)}</span><span class="fmeta">${offTxt}</span></span>
+      <span class="gloy">${warnTag}<b>${c.loyalty ?? '—'}</b></span>
+      <span class="gtags">${c.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</span>
+    </summary>
+    <div class="gbody">
+      <div class="loy">經歷：${c.age !== null ? `${c.age} 歲` : '年歲不詳'}，${c.office ? `現任${offTxt}` : '閒置待命'}</div>
+      <div class="loy">兵力：統御 ${c.command ?? '—'}</div>
+      <div class="loy">所屬派系：${esc(c.factionName)}</div>
+      ${personCard(o)}
+    </div></details>`;
 }
 
 // 小卡：姓名、忠誠條、態度（依忠誠分三級）與所主國策；點開展示完整人物卡（含進諫等操作）。
