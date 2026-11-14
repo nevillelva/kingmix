@@ -94,6 +94,7 @@ export function renderMap(){
       <div class="track"><div class="fill${defense < 40 ? ' warn' : ''}" style="width:${defense}%"></div></div>
       ${statusText ? `<div class="row">${esc(statusText)}</div>` : ''}
       ${events.length ? `<ul class="row" style="padding-left:18px">${events.map(e => `<li>${esc(e)}</li>`).join('')}</ul>` : ''}
+      ${U.mapNote ? `<p class="sub" role="status" style="color:var(--vermilion);margin:8px 0 0">${esc(U.mapNote)}</p>` : ''}
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
         <button class="btn" data-tour="${def.id}" ${hasTour ? '' : 'disabled aria-disabled="true"'}>${hasTour ? '巡幸' : '巡幸（巡幸功能待接線）'}</button>
         <button class="btn ghost" data-go-city="1">前往朝堂修繕城池</button>
@@ -124,7 +125,7 @@ export function renderMap(){
     </section>`;
 
   app.querySelectorAll('[data-pref]').forEach(g => {
-    const go = () => { U.mapSel = g.dataset.pref; render(); };
+    const go = () => { U.mapSel = g.dataset.pref; U.mapNote = ''; render(); };
     g.onclick = go;
     g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
   });
@@ -134,15 +135,16 @@ export function renderMap(){
     g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
   });
   // tourTo 回傳 { state, ok, reason }；失敗時狀態不變，僅顯示原因。
+  // 結果寫入側欄（U.mapNote），緊接巡幸鈕之上顯示，不放在頁首的 fbLine 以免離按鈕太遠。
   const tourBtn = app.querySelector('[data-tour]');
   if (tourBtn && hasTour) tourBtn.onclick = () => {
     let r;
     try { r = tour.tourTo(U.state, tourBtn.dataset.tour); } catch (e) { r = { ok: false, reason: null, error: e }; }
     if (r?.ok) {
       const name = PREFECTURE_DEFS.find(x => x.id === tourBtn.dataset.tour)?.name ?? '';
-      U.feedback = `天子巡幸${name}，所至府民心、城防皆增。`;
+      U.mapNote = `天子巡幸${name}，所至府民心、城防皆增。`;
     } else {
-      U.feedback = TOUR_REASON[r?.reason] ?? `巡幸未成：${r?.error?.message || "未知原因"}`;
+      U.mapNote = TOUR_REASON[r?.reason] ?? `巡幸未成：${r?.error?.message || '未知原因'}`;
     }
     save();
     render();
