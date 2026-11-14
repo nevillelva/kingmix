@@ -4,20 +4,21 @@ import { MAX_ROUNDS, RECON_GRAIN_COST, WINS_NEEDED } from '../../src/campaign.js
 import { U } from './store.js';
 import { esc } from './util.js';
 import { fbLine } from './render-nav.js';
+import { battleTickMs, nextBattleSpeed, visibleRoundCount, battleFrames } from '../../src/war-autoplay.js';
 
 // 兵種相剋（騎→盾→弓→槍→騎：前者剋後者）。僅作戰報圖示，不改動戰術數值。
 export const UNIT_CHAIN = Object.freeze(['騎', '盾', '弓', '槍']);
 export const unitBeats = (u) => UNIT_CHAIN[(UNIT_CHAIN.indexOf(u) + 1) % UNIT_CHAIN.length];
 
-// 戰報捲動的播放狀態（模組層級，跨渲染保留）：shown 為已顯示回合數，speed 為 1 或 2。
-export const BATTLE_TICK_MS = 650;
-const scroll = { total: 0, shown: 0, speed: 1, timer: null };
+// 戰報捲動的播放狀態（模組層級，跨渲染保留）：shown 為已顯示回合數；速度與自動戰鬥偏好見 U.battlePrefs。
+const scroll = { total: 0, shown: 0, timer: null };
 
 // 新一役（回合數歸零或縮減）時重設；回合數增加時，新回合依播放速度逐一出現。
 function syncScrollTotal(n) {
   if (n < scroll.total) { scroll.total = n; scroll.shown = Math.min(scroll.shown, n); }
   else if (n > scroll.total) scroll.total = n;
   if (n === 0) scroll.shown = 0;
+  if (U.battlePrefs?.auto) scroll.shown = scroll.total;
 }
 
 function stopScrollTimer() {
@@ -25,13 +26,13 @@ function stopScrollTimer() {
 }
 
 function startScrollTimer() {
-  if (scroll.timer !== null || scroll.shown >= scroll.total) return;
+  if (scroll.timer !== null || scroll.shown >= scroll.total || U.battlePrefs?.auto) return;
   if (typeof setInterval !== 'function') return;
   scroll.timer = setInterval(() => {
     scroll.shown = Math.min(scroll.total, scroll.shown + 1);
     paintScroll();
     if (scroll.shown >= scroll.total) stopScrollTimer();
-  }, BATTLE_TICK_MS / scroll.speed);
+  }, battleTickMs(U.battlePrefs?.speed));
 }
 
 // 將播放狀態寫回畫面中的戰報捲動區（不需重繪整張卡）。
@@ -42,7 +43,9 @@ function paintScroll() {
       li.hidden = Number(li.dataset.i) >= scroll.shown;
     });
     const speedBtn = box.parentElement?.querySelector('[data-battle="speed"]');
-    if (speedBtn) speedBtn.textContent = `加速 x${scroll.speed}`;
+    if (speedBtn) speedBtn.textContent = `加速 x${U.battlePrefs.speed}`;
+    const autoBtn = box.parentElement?.querySelector('[data-battle="auto"]');
+    if (autoBtn) { autoBtn.textContent = `自動戰鬥：${U.battlePrefs.auto ? '開' : '關'}`; autoBtn.setAttribute('aria-pressed', String(U.battlePrefs.auto)); }
     const count = box.parentElement?.querySelector('[data-battle="count"]');
     if (count) count.textContent = `${scroll.shown}／${scroll.total} 回合`;
   });
@@ -58,9 +61,14 @@ if (typeof document !== 'undefined') {
       scroll.shown = scroll.total;
       paintScroll();
     } else if (btn.dataset.battle === 'speed') {
-      scroll.speed = scroll.speed === 1 ? 2 : 1;
+      U.battlePrefs.speed = nextBattleSpeed(U.battlePrefs.speed);
       stopScrollTimer();
       startScrollTimer();
+      paintScroll();
+    } else if (btn.dataset.battle === 'auto') {
+      U.battlePrefs.auto = !U.battlePrefs.auto;
+      if (U.battlePrefs.auto) { stopScrollTimer(); scroll.shown = scroll.total; }
+      else startScrollTimer();
       paintScroll();
     }
   });
@@ -94,19 +102,23 @@ export function counterIconsHTML() {
 // 逐回合戰報捲動（每回合一列：戰術、雙方戰力、戰損、勝負與剋制關係）。
 export function battleScrollHTML(rounds = []) {
   syncScrollTotal(rounds.length);
-  if (scroll.shown < scroll.total) startScrollTimer();
+  if (U.battlePrefs.auto) { stopScrollTimer(); scroll.shown = scroll.total; }
+  else if (scroll.shown < scroll.total) startScrollTimer();
+  const frames = battleFrames(rounds);
   const items = rounds.map((r, i) => {
     const [line] = formatBattleLog({ rounds: [r] });
+    const f = frames[i];
     const mark = r.line && r.line.includes('剋敵') ? '▲' : r.line && r.line.includes('遭') ? '▼' : '●';
     const tone = r.won ? 'win' : 'lose';
-    return `<li data-i="${i}" class="${tone}"${i >= scroll.shown ? ' hidden' : ''}><span class="rd-mark" aria-hidden="true">${mark}</span><span>${esc(line)}${r.starved ? '（粮絕，戰力減損）' : ''}</span></li>`;
+    return `<li data-i="${i}" class="${tone}"${i >= scroll.shown ? ' hidden' : ''}><span class="rd-mark" aria-hidden="true">${mark}</span><span>${esc(line)}${r.starved ? '（粮絕，戰力減損）' : ''}</span><span class="rd-bar" aria-label="我方${f.oursPct}％、敵方${f.enemyPct}％" style="display:inline-block;width:60px;height:6px;margin-left:6px;vertical-align:middle;background:linear-gradient(to right,var(--ours,#5a7fb0) ${f.oursPct}%,var(--enemy,#b0604a) ${f.oursPct}%)"></span></li>`;
   }).join('');
   const empty = rounds.length ? '' : '<li class="sub">尚無回合。</li>';
   return `<div class="battle-wrap">
     <div class="battle-ctl">
-      <span class="sub" data-battle="count">${scroll.shown}／${scroll.total} 回合</span>
+      <span class="sub" data-battle="count">${visibleRoundCount(U.battlePrefs, scroll.total, scroll.shown)}／${scroll.total} 回合</span>
+      <button type="button" class="btn ghost mini" data-battle="auto" aria-pressed="${U.battlePrefs.auto}">自動戰鬥：${U.battlePrefs.auto ? '開' : '關'}</button>
       <button type="button" class="btn ghost mini" data-battle="skip">跳過</button>
-      <button type="button" class="btn ghost mini" data-battle="speed">加速 x${scroll.speed}</button>
+      <button type="button" class="btn ghost mini" data-battle="speed">加速 x${U.battlePrefs.speed}</button>
     </div>
     <ol class="list battle-scroll" role="log" aria-live="polite" style="max-height:220px;overflow:auto;margin:0 0 8px">${items}${empty}</ol>
   </div>`;
