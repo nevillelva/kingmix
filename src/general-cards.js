@@ -6,12 +6,17 @@
 import { ASSASSIN_LOW_LOYALTY } from './assassination.js';
 import { describeTraits, FACTION_NAMES } from './people.js';
 
-// 武將標記：不新增欄位，直接由既有武略（abilities.martial）推導。
-// 模型中沒有獨立的武職欄位（兵部尚書為文官職），故以武略達此值者視為武將；純函式，不影響模擬隨機序列。
-export const GENERAL_MARTIAL_MIN = 50;
+// 武職清單：官員目前所任官職（official.office）屬於此清單者視為武將。
+// 來源皆為 src/offices.js 的 OFFICES 既有鍵，未另行新增職位：
+//   war：兵部尚書（OFFICES.war）。名稱為文官部院的長官，但職掌軍政，依使用者決定列為武職。
+// 目前沒有「大將軍」「校場統領」等職位定義，故不列入；日後新增軍職時於此陣列加入鍵並附來源註解。
+export const MILITARY_OFFICES = ['war'];
+
+// 武將判定：依官員目前職位。無職位（office 為 null／缺欄位）或職位不在武職清單者，視為非武將。
+// 純函式，只讀取 office 欄位，不改動官員物件，不影響模擬隨機序列。
 export function isGeneral(official) {
-  const martial = official && official.abilities ? official.abilities.martial : undefined;
-  return Number.isFinite(martial) && martial >= GENERAL_MARTIAL_MIN;
+  const office = official && typeof official === 'object' ? official.office : null;
+  return typeof office === 'string' && MILITARY_OFFICES.includes(office);
 }
 
 // 回傳卡片欄位；缺欄位時以 null 或預設文字代替，不拋例外。
