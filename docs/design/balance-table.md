@@ -2,7 +2,9 @@
 
 所有集中參數定義於 `src/balance.js`（`BALANCE`，凍結物件）。各模組原本的導出名稱保留，改由 `BALANCE` 取值，數值與原先字面值完全相同。
 
-稽核：`node scripts/audit-balance.js 20 600` 在 base 與本分支輸出 **完全相同**。
+稽核（Phase A 重構時）：`node scripts/audit-balance.js 20 600` 在 base 與本分支輸出 **完全相同**。
+
+現行量測基準（已確認）：王朝中斷率以 **40 年（480 個月）、60 局** 計，`node scripts/audit-balance.js 60 480` 結果為 `dynastyInterruptRate 0.15`（目標 12–17%），死諫（E420）`e420Mean 1.93`、每局至少一次 60/60。600 個月口徑會把長期累積的刺殺機率一併計入，約 41.7%，不作為目標依據。
 
 | 參數 | 值 | 模組 | 目標 / 說明 |
 |---|---|---|---|
