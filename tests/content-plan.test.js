@@ -61,10 +61,12 @@ test('seasonal festivals: exactly one fixed (single-month) festival per month, 1
   assert.deepEqual([...months].sort((a, b) => a - b), Array.from({ length: 12 }, (_, i) => i + 1));
 });
 
-test('chain follow-ups: 8 chain links, each pointing at an existing E2xx event', () => {
+// 階段 C 新增危機奏摺鏈：10 條（後續為 E914–E923），與原 8 條（E201–E208）合計 18 條。
+const CRISIS_FOLLOWUPS = range(914, 923);
+test('chain follow-ups: 18 chain links (8 original E201–E208 + 10 crisis E914–E923), each pointing at an existing follow-up', () => {
   const links = [];
   for (const e of events) for (const o of e.options) if (o.effects?.chain) links.push(o.effects.chain);
-  assert.equal(links.length, 8);
+  assert.equal(links.length, 18);
   for (const id of links) assert.ok(byId.has(id), `chain target ${id} must exist`);
-  assert.ok(links.every((id) => /^E20[1-8]$/.test(id)));
+  assert.ok(links.every((id) => /^E20[1-8]$/.test(id) || CRISIS_FOLLOWUPS.includes(id)));
 });
