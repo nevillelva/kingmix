@@ -18,6 +18,8 @@ import { esc, gapText, meter, reqText } from './util.js';
 import { actionsLeft, portrait, pressureLine } from './render-court.js';
 import { fbLine } from './render-nav.js';
 import { openResignDialog } from './overlays.js';
+import { giveItemMenu } from './render-cards.js';
+import { renderRelationsCard } from './render-relations.js';
 
 // 忠誠安全線：本派勢力達 33 + 野心/2 時，忠誠不再每月下滑；未達則流失（見 turn.js 忠誠漂移）。
 // 忠誠安全線：本派勢力達安全線忠誠才不流失；君臣相得者忠誠凍結，另註明。
@@ -43,6 +45,7 @@ export function personCard(o){
     <div class="abil">${Object.keys(ABIL).map(k => `<div>${ABIL[k]}<b>${o.abilities?.[k] ?? '—'}</b></div>`).join('')}</div>
     ${traits ? `<div class="tags">${traits}</div>` : ''}
     ${bonded ? `<div><button class="btn ghost mini" data-act="remon" data-arg="${esc(o.id)}" ${dis}>進諫</button></div>` : shared ? `<div class="loy">共歷 ${shared} / ${BOND_THRESHOLD}</div>` : ''}
+    ${giveItemMenu(o.id)}
   </article>`;
 }
 
@@ -111,6 +114,7 @@ export function renderOfficials(){
     ${fbLine()}
     <section class="card"><h2>朝局</h2>
       <div class="factions">${bar}</div><div class="legend">${legend}</div>${pressureLine()}</section>
+    ${renderRelationsCard()}
     ${officeCard()}
     ${groups}${localHtml}
     ${court.length + local.length ? '' : '<p class="empty">朝中無人。</p>'}`;
@@ -132,7 +136,7 @@ export function renderHarem(){
   const h = U.state.harem || {};
   const consorts = U.state.consorts || [];
   const nameOf = id => { const c = consorts.find(x => x.id === id); return c ? (c.personName || '嬪妃 ' + c.id) : '（已故）'; };
-  const consortRows = consorts.map(c => `<li><span>${esc(c.family ? describeConsort(c) : (c.personName || '嬪妃 ' + c.id))}</span></li>`).join('');
+  const consortRows = consorts.map(c => `<li><span>${esc(c.family ? describeConsort(c) : (c.personName || '嬪妃 ' + c.id))}</span>${giveItemMenu(c.id)}</li>`).join('');
   const demandRows = (h.demands || []).filter(d => d.status === 'open').slice(-6).reverse()
     .map(d => `<li><span>${esc(nameOf(d.consortId))} 請「${esc(d.kind)}」</span><span class="loy">${esc(FAC(d.family).l)}</span></li>`).join('');
   const famRows = Object.entries(h.waijia || {}).sort((a, b) => b[1] - a[1]).map(([k, v]) =>

@@ -29,6 +29,7 @@ import { campAct, campaignActive, chooseDC, chooseOption, finishMonth, morningPa
 import { campaignCard } from './render-campaign.js';
 import { heirPersonLabel } from './render-officials.js';
 import { markNewYearShown, openNianhao } from './overlays.js';
+import { deferButton, handleCardAct, policyCardsCard } from './render-cards.js';
 
 // 立繪：程序化 SVG。官帽依官職、印章色依品級、臉型與鬚由 (姓名) 決定。
 export function portrait(o){
@@ -71,11 +72,45 @@ export function effChips(o){
   }).join('') || '<span class="chip">無直接效果</span>';
 }
 
-// 奏摺的發言大臣與敘事（發言者由既有官員池決定，見 src/speaker.js）。
+// 發言大臣人物小卡：立繪、姓名、派系、忠誠條；無官員池時僅顯示官職名。
+export function speakerCardHtml(sp){
+  const off = sp.officialId ? U.state.officials.find(o => o.id === sp.officialId) : null;
+  if (!off) return `<div class="spk-name">${esc(sp.role)}</div><div class="loy">官員池空缺，以官職進言</div>`;
+  const f = FAC(off.faction);
+  const loy = Math.max(0, Math.min(100, off.loyalty));
+  return `<div class="spk-head" style="display:flex;gap:8px;align-items:center">${portrait(off)}<div style="min-width:0">
+      <div class="spk-name">${esc(off.personName || off.name)}</div>
+      <div class="tags"><span class="tag" style="color:${f.c};border-color:${f.c}">${esc(f.l)}</span><span class="tag">${esc(sp.role)}</span></div></div></div>
+    <div class="loy">忠誠 <b>${Math.round(off.loyalty)}</b></div>
+    <div class="track"><div class="fill${loy < 40 ? ' warn' : ''}" style="width:${loy}%"></div></div>`;
+}
+
+// 選項所涉朝臣的小立繪（僅示意：效果未指名對象者，取發言大臣同派中忠誠最低的數人，標為「可能受影響」）。
+export function affectedPortraits(o, sp){
+  const keys = Object.keys(o.effects || {});
+  const pool = U.state.officials.filter(x => x && (x.personName || x.name));
+  let list = [];
+  if (keys.includes('investigate_lowest')) {
+    const low = [...pool].sort((a, b) => a.loyalty - b.loyalty)[0];
+    if (low) list.push(low);
+  }
+  if (keys.some(k => ['official_loyalty_add', 'removeOfficial', 'tutor_teach'].includes(k))) {
+    const same = pool.filter(x => sp.officialId && x.faction === (pool.find(p => p.id === sp.officialId) || {}).faction);
+    list = list.concat(same.sort((a, b) => a.loyalty - b.loyalty).slice(0, 3));
+  }
+  const seen = new Set();
+  list = list.filter(x => !seen.has(x.id) && seen.add(x.id)).slice(0, 4);
+  if (!list.length) return '';
+  return `<span class="affected" title="可能受影響之朝臣" style="display:flex;gap:2px;margin-top:4px">${list.map(x => `<span class="spk-mini" title="${esc(x.personName || x.name)}" style="width:22px;height:26px;display:inline-block">${portrait(x).replace('width="44" height="52"', 'width="22" height="26"')}</span>`).join('')}</span>`;
+}
+
+// 奏摺的發言大臣與敘事（發言者由既有官員池決定，見 src/speaker.js）：左為人物小卡，右為卷軸式敘事。
 export function narrHtml(ev){
   const sp = pickSpeaker(U.state, ev);
-  const who = sp.name === sp.role ? esc(sp.role) : `${esc(sp.role)}　${esc(sp.name)}`;
-  return `<div class="sub">${who} 進言</div><p class="narr">${esc(ev.narrative || '')}</p>`;
+  return `<div class="court-split" style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap">
+    <aside class="speaker-card" aria-label="發言大臣" style="flex:0 0 150px;max-width:100%;border:1px solid var(--ink-soft);border-radius:8px;padding:8px">${speakerCardHtml(sp)}</aside>
+    <div class="scroll-paper story" style="flex:1 1 220px;min-width:0"><div class="sub">${esc(sp.role)} 進言</div><p class="narr">${esc(ev.narrative || '')}</p></div>
+  </div>`;
 }
 
 export function secondMemorialCard(ev){
@@ -135,7 +170,7 @@ export function renderCourt(){
         <div class="opts">${DC_ACTIONS.map((a,i) => `
           <button class="opt zhu" data-dc="${a}"><span class="mark">${i+1}</span>
           <span class="otxt"><span class="label">${DC_LABEL[a]}</span><span class="hint">${DC_HINT[a]}</span></span></button>`).join('')}
-        </div>`);
+        </div><div style="margin-top:8px">${deferButton(dc)}</div>`);
     app.querySelectorAll('[data-dc]').forEach(b => b.onclick = () => stampThen(b, () => chooseDC(b.dataset.dc)));
     return;
   }
@@ -154,7 +189,8 @@ export function renderCourt(){
     return;
   }
   const opts = ev.options.filter((o) => isAvailable(o) && optionOpen(U.state, o));
-  app.innerHTML = sb + memorialCard(`御覽・${esc(ev.name)}`, `
+  const sp = pickSpeaker(U.state, ev);
+  app.innerHTML = sb + policyCardsCard() + memorialCard(`御覽・${esc(ev.name)}`, `
       <div class="kicker">奏摺</div>
       <h3>${esc(ev.name)}</h3>
       ${narrHtml(ev)}
@@ -162,7 +198,7 @@ export function renderCourt(){
       <div class="opts">${opts.map((o,i) => `
         <button class="opt zhu" data-i="${i}"><span class="mark">${esc(o.key)}</span>
         <span class="otxt"><span class="label">${esc(o.label)}</span>
-        <span class="eff">${effChips(o)}</span></span></button>
+        <span class="eff">${effChips(o)}</span>${affectedPortraits(o, sp)}</span></button>
         ${o.effects && o.effects.war ? `
         <button class="opt zhu" data-camp="${i}"><span class="mark">親</span>
         <span class="otxt"><span class="label">${esc(o.label)}・親征</span>
@@ -422,6 +458,7 @@ export function onAgency(e){
   const b = e.target.closest('[data-act]');
   if (!b || b.disabled || !U.state) return;
   const a = b.dataset.act, v = b.dataset.arg;
+  if (handleCardAct(a, v)) return;
   if (a.startsWith('camp-')) return campAct(a, v);
   if (a === 'close') { U.panel = null; U.pick1 = null; return render(); }
   if (a === 'open') {

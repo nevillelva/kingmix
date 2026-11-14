@@ -9821,7 +9821,7 @@
       "speaker": "諫臣",
       "narrative": "君臣相得之臣，近日屢諫不納，忠誠已見動搖。今叩首殿前，言若不納，願以死明志，請陛下速決。",
       "when": {
-        "bonded_loyalty_lt": 75
+        "bonded_loyalty_lt": 85
       },
       "options": [
         {
@@ -9846,1023 +9846,1023 @@
       ]
     },
     {
-        "id": "E214",
-        "name": "京兆水患",
-        "speaker": "京兆知府",
-        "narrative": "京兆府各縣堤防多年失修，雨季潰決數處，田舍淹沒，災民已逾千戶。臣請陛下早定修堤或賑濟之策，以免秋收盡失。",
-        "options": [
-            {
-                "key": "A",
-                "label": "撥銀修堤",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -40,
-                    "agriculture": 15
-                }
-            },
-            {
-                "key": "B",
-                "label": "開倉賑災",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -30,
-                    "people": 10
-                }
-            },
-            {
-                "key": "C",
-                "label": "令民自救",
-                "tone": "冒險",
-                "effects": {
-                    "people": -6
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "farming",
-            "chance": 0.35
+      "id": "E214",
+      "name": "京兆水患",
+      "speaker": "京兆知府",
+      "narrative": "京兆府各縣堤防多年失修，雨季潰決數處，田舍淹沒，災民已逾千戶。臣請陛下早定修堤或賑濟之策，以免秋收盡失。",
+      "options": [
+        {
+          "key": "A",
+          "label": "撥銀修堤",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -40,
+            "agriculture": 15
+          }
+        },
+        {
+          "key": "B",
+          "label": "開倉賑災",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -30,
+            "people": 10
+          }
+        },
+        {
+          "key": "C",
+          "label": "令民自救",
+          "tone": "冒險",
+          "effects": {
+            "people": -6
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "farming",
+        "chance": 0.35
+      }
     },
     {
-        "id": "E215",
-        "name": "益州蠶桑",
-        "speaker": "益州府同知",
-        "narrative": "益州府桑田多荒，織戶因絲稅沉重而紛紛歇業，市上布帛日見稀少。臣請陛下酌減絲稅，或嚴令有司不得加派。",
-        "options": [
-            {
-                "key": "A",
-                "label": "減免絲稅",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -20,
-                    "people": 10
-                }
-            },
-            {
-                "key": "B",
-                "label": "維持舊制",
-                "tone": "穩妥",
-                "effects": {
-                    "people": -3,
-                    "commerce": -5
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "farming",
-            "chance": 0.3
+      "id": "E215",
+      "name": "益州蠶桑",
+      "speaker": "益州府同知",
+      "narrative": "益州府桑田多荒，織戶因絲稅沉重而紛紛歇業，市上布帛日見稀少。臣請陛下酌減絲稅，或嚴令有司不得加派。",
+      "options": [
+        {
+          "key": "A",
+          "label": "減免絲稅",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -20,
+            "people": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "維持舊制",
+          "tone": "穩妥",
+          "effects": {
+            "people": -3,
+            "commerce": -5
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "farming",
+        "chance": 0.3
+      }
     },
     {
-        "id": "E216",
-        "name": "江寧港淤",
-        "speaker": "江寧通判",
-        "narrative": "江寧府碼頭河道淤塞已久，大船難以停泊，行商連番上書請求疏浚。若任其淤積，數年之內江寧商賦必然大減。",
-        "options": [
-            {
-                "key": "A",
-                "label": "撥款疏浚",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -50,
-                    "commerce": 20
-                }
-            },
-            {
-                "key": "B",
-                "label": "收取船稅",
-                "tone": "強硬",
-                "effects": {
-                    "treasury": 40,
-                    "commerce": -5
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "trade",
-            "chance": 0.35
+      "id": "E216",
+      "name": "江寧港淤",
+      "speaker": "江寧通判",
+      "narrative": "江寧府碼頭河道淤塞已久，大船難以停泊，行商連番上書請求疏浚。若任其淤積，數年之內江寧商賦必然大減。",
+      "options": [
+        {
+          "key": "A",
+          "label": "撥款疏浚",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -50,
+            "commerce": 20
+          }
+        },
+        {
+          "key": "B",
+          "label": "收取船稅",
+          "tone": "強硬",
+          "effects": {
+            "treasury": 40,
+            "commerce": -5
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "trade",
+        "chance": 0.35
+      }
     },
     {
-        "id": "E217",
-        "name": "揚州鹽訟",
-        "speaker": "揚州府推官",
-        "narrative": "揚州府鹽商因引岸劃分而互控不休，訟案堆積如山，各家僕從時有鬥毆。地方官吏無力裁決，懇請朝廷遣使調解。",
-        "options": [
-            {
-                "key": "A",
-                "label": "遣使調解",
-                "tone": "穩妥",
-                "effects": {
-                    "power": 4,
-                    "prestige": 2
-                }
-            },
-            {
-                "key": "B",
-                "label": "任其自決",
-                "tone": "冒險",
-                "effects": {
-                    "commerce": -5
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "trade",
-            "chance": 0.3
+      "id": "E217",
+      "name": "揚州鹽訟",
+      "speaker": "揚州府推官",
+      "narrative": "揚州府鹽商因引岸劃分而互控不休，訟案堆積如山，各家僕從時有鬥毆。地方官吏無力裁決，懇請朝廷遣使調解。",
+      "options": [
+        {
+          "key": "A",
+          "label": "遣使調解",
+          "tone": "穩妥",
+          "effects": {
+            "power": 4,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "任其自決",
+          "tone": "冒險",
+          "effects": {
+            "commerce": -5
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "trade",
+        "chance": 0.3
+      }
     },
     {
-        "id": "E218",
-        "name": "登萊海禁",
-        "speaker": "登萊府知府",
-        "narrative": "登萊沿海海禁日嚴，漁民與小商為生計所迫，時有私出海者與巡哨衝突。臣以為海禁宜寬嚴有度，請陛下聖裁。",
-        "options": [
-            {
-                "key": "A",
-                "label": "開海通商",
-                "tone": "仁厚",
-                "effects": {
-                    "commerce": 15,
-                    "treasury": 20
-                }
-            },
-            {
-                "key": "B",
-                "label": "嚴申海禁",
-                "tone": "強硬",
-                "effects": {
-                    "armament": 10,
-                    "commerce": -8
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "trade",
-            "chance": 0.3
+      "id": "E218",
+      "name": "登萊海禁",
+      "speaker": "登萊府知府",
+      "narrative": "登萊沿海海禁日嚴，漁民與小商為生計所迫，時有私出海者與巡哨衝突。臣以為海禁宜寬嚴有度，請陛下聖裁。",
+      "options": [
+        {
+          "key": "A",
+          "label": "開海通商",
+          "tone": "仁厚",
+          "effects": {
+            "commerce": 15,
+            "treasury": 20
+          }
+        },
+        {
+          "key": "B",
+          "label": "嚴申海禁",
+          "tone": "強硬",
+          "effects": {
+            "armament": 10,
+            "commerce": -8
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "trade",
+        "chance": 0.3
+      }
     },
     {
-        "id": "E219",
-        "name": "京兆屯田",
-        "speaker": "司農寺卿",
-        "narrative": "京兆府屯田近年收成連年不佳，屯卒多有飢色，屯官卻奏報豐收，賬目多有不符。臣請陛下定奪增撥糧草或另派官員查核。",
-        "options": [
-            {
-                "key": "A",
-                "label": "增撥糧草",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -40,
-                    "agriculture": 20
-                }
-            },
-            {
-                "key": "B",
-                "label": "責令屯官自辯",
-                "tone": "強硬",
-                "effects": {
-                    "power": 3,
-                    "people": -2
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "farming",
-            "chance": 0.3
+      "id": "E219",
+      "name": "京兆屯田",
+      "speaker": "司農寺卿",
+      "narrative": "京兆府屯田近年收成連年不佳，屯卒多有飢色，屯官卻奏報豐收，賬目多有不符。臣請陛下定奪增撥糧草或另派官員查核。",
+      "options": [
+        {
+          "key": "A",
+          "label": "增撥糧草",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -40,
+            "agriculture": 20
+          }
+        },
+        {
+          "key": "B",
+          "label": "責令屯官自辯",
+          "tone": "強硬",
+          "effects": {
+            "power": 3,
+            "people": -2
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "farming",
+        "chance": 0.3
+      }
     },
     {
-        "id": "E220",
-        "name": "河東抗租",
-        "speaker": "河東府判官",
-        "narrative": "河東府佃農聚集結社，拒不交納地租，聲稱田主盤剝過甚，地方官吏懇請以兵力彈壓，以免事態擴大。",
-        "options": [
-            {
-                "key": "A",
-                "label": "赦其罪責",
-                "tone": "仁厚",
-                "effects": {
-                    "benevolence": 6,
-                    "people": 5
-                }
-            },
-            {
-                "key": "B",
-                "label": "派兵彈壓",
-                "tone": "強硬",
-                "effects": {
-                    "military": 3,
-                    "people": -10
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "farming",
-            "chance": 0.3
+      "id": "E220",
+      "name": "河東抗租",
+      "speaker": "河東府判官",
+      "narrative": "河東府佃農聚集結社，拒不交納地租，聲稱田主盤剝過甚，地方官吏懇請以兵力彈壓，以免事態擴大。",
+      "options": [
+        {
+          "key": "A",
+          "label": "赦其罪責",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "people": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "派兵彈壓",
+          "tone": "強硬",
+          "effects": {
+            "military": 3,
+            "people": -10
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "farming",
+        "chance": 0.3
+      }
     },
     {
-        "id": "E221",
-        "name": "織造欠薪",
-        "speaker": "江寧織造提督",
-        "narrative": "江寧織造局積欠匠人工錢已逾半年，匠戶聚眾於局門前求薪，局中官員以為此乃小事，卻已驚動街坊。懇請陛下決斷。",
-        "options": [
-            {
-                "key": "A",
-                "label": "補發工錢",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -45,
-                    "people": 6
-                }
-            },
-            {
-                "key": "B",
-                "label": "發告示安撫",
-                "tone": "穩妥",
-                "effects": {
-                    "charm": 2,
-                    "people": -2
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "trade",
-            "chance": 0.25
+      "id": "E221",
+      "name": "織造欠薪",
+      "speaker": "江寧織造提督",
+      "narrative": "江寧織造局積欠匠人工錢已逾半年，匠戶聚眾於局門前求薪，局中官員以為此乃小事，卻已驚動街坊。懇請陛下決斷。",
+      "options": [
+        {
+          "key": "A",
+          "label": "補發工錢",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -45,
+            "people": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "發告示安撫",
+          "tone": "穩妥",
+          "effects": {
+            "charm": 2,
+            "people": -2
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "trade",
+        "chance": 0.25
+      }
     },
     {
-        "id": "E222",
-        "name": "益州蝗災",
-        "speaker": "益州府尹",
-        "narrative": "益州府近來蝗蟲成群而至，所過田畝盡成枯草，農家顆粒無收，已有數縣上報請求賑災免租，奏報日日不絕於御前。",
-        "options": [
-            {
-                "key": "A",
-                "label": "開倉賑災",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -70,
-                    "people": 15
-                }
-            },
-            {
-                "key": "B",
-                "label": "命民捕蝗",
-                "tone": "穩妥",
-                "effects": {
-                    "agriculture": 10,
-                    "people": -3
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "farming",
-            "chance": 0.25
+      "id": "E222",
+      "name": "益州蝗災",
+      "speaker": "益州府尹",
+      "narrative": "益州府近來蝗蟲成群而至，所過田畝盡成枯草，農家顆粒無收，已有數縣上報請求賑災免租，奏報日日不絕於御前。",
+      "options": [
+        {
+          "key": "A",
+          "label": "開倉賑災",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -70,
+            "people": 15
+          }
+        },
+        {
+          "key": "B",
+          "label": "命民捕蝗",
+          "tone": "穩妥",
+          "effects": {
+            "agriculture": 10,
+            "people": -3
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "farming",
+        "chance": 0.25
+      }
     },
     {
-        "id": "E223",
-        "name": "揚州榷場",
-        "speaker": "揚州市舶使",
-        "narrative": "揚州府新築碼頭已竣，四方商人願在此設立榷場交易，地方官言若立官市，每年可增歲入，唯恐有司中飽私囊，請陛下明示。",
-        "options": [
-            {
-                "key": "A",
-                "label": "立榷場收稅",
-                "tone": "穩妥",
-                "effects": {
-                    "commerce": 20,
-                    "treasury": 25
-                }
-            },
-            {
-                "key": "B",
-                "label": "暫緩再議",
-                "tone": "保守",
-                "effects": {
-                    "prestige": 1
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "trade",
-            "chance": 0.25
+      "id": "E223",
+      "name": "揚州榷場",
+      "speaker": "揚州市舶使",
+      "narrative": "揚州府新築碼頭已竣，四方商人願在此設立榷場交易，地方官言若立官市，每年可增歲入，唯恐有司中飽私囊，請陛下明示。",
+      "options": [
+        {
+          "key": "A",
+          "label": "立榷場收稅",
+          "tone": "穩妥",
+          "effects": {
+            "commerce": 20,
+            "treasury": 25
+          }
+        },
+        {
+          "key": "B",
+          "label": "暫緩再議",
+          "tone": "保守",
+          "effects": {
+            "prestige": 1
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "trade",
+        "chance": 0.25
+      }
     },
     {
-        "id": "E224",
-        "name": "河東流民",
-        "speaker": "河東府同知",
-        "narrative": "河東府流民日夜湧入城郭，聚於寺廟及城門之外，乞食者多有病弱，城中粥廠已不敷使用。臣請陛下早定安置之策。",
-        "options": [
-            {
-                "key": "A",
-                "label": "設所安置",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -40,
-                    "people": 10
-                }
-            },
-            {
-                "key": "B",
-                "label": "驅逐出境",
-                "tone": "強硬",
-                "effects": {
-                    "people": -10,
-                    "charm": -3
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "farming",
-            "chance": 0.3
+      "id": "E224",
+      "name": "河東流民",
+      "speaker": "河東府同知",
+      "narrative": "河東府流民日夜湧入城郭，聚於寺廟及城門之外，乞食者多有病弱，城中粥廠已不敷使用。臣請陛下早定安置之策。",
+      "options": [
+        {
+          "key": "A",
+          "label": "設所安置",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -40,
+            "people": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "驅逐出境",
+          "tone": "強硬",
+          "effects": {
+            "people": -10,
+            "charm": -3
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "farming",
+        "chance": 0.3
+      }
     },
     {
-        "id": "E225",
-        "name": "登萊倭患",
-        "speaker": "登萊總兵",
-        "narrative": "登萊沿海近來倭船時來侵擾，商船屢遭劫掠，海商聯名請求朝廷派遣水師護航，以保海路通暢，否則商路恐將斷絕。",
-        "options": [
-            {
-                "key": "A",
-                "label": "派遣水師",
-                "tone": "強硬",
-                "effects": {
-                    "military": 6,
-                    "treasury": -50
-                }
-            },
-            {
-                "key": "B",
-                "label": "聽其自保",
-                "tone": "冒險",
-                "effects": {
-                    "commerce": -6,
-                    "people": -2
-                }
-            }
-        ],
-        "when": {
-            "terrain_is": "trade",
-            "chance": 0.3
+      "id": "E225",
+      "name": "登萊倭患",
+      "speaker": "登萊總兵",
+      "narrative": "登萊沿海近來倭船時來侵擾，商船屢遭劫掠，海商聯名請求朝廷派遣水師護航，以保海路通暢，否則商路恐將斷絕。",
+      "options": [
+        {
+          "key": "A",
+          "label": "派遣水師",
+          "tone": "強硬",
+          "effects": {
+            "military": 6,
+            "treasury": -50
+          }
+        },
+        {
+          "key": "B",
+          "label": "聽其自保",
+          "tone": "冒險",
+          "effects": {
+            "commerce": -6,
+            "people": -2
+          }
         }
+      ],
+      "when": {
+        "terrain_is": "trade",
+        "chance": 0.3
+      }
     },
     {
-        "id": "E226",
-        "name": "諫言未决",
-        "speaker": "翰林侍講",
-        "narrative": "同殿議政多年，臣與陛下漸有默契，然近日臣有數語想要直言，又恐言辭過激而觸怒天顏，故遲遲不敢上陳，請陛下寬容。",
-        "options": [
-            {
-                "key": "A",
-                "label": "虛心採納",
-                "tone": "仁厚",
-                "effects": {
-                    "benevolence": 8,
-                    "prestige": 2,
-                    "shared_event": true,
-                    "official_loyalty_add": 5
-                }
-            },
-            {
-                "key": "B",
-                "label": "命其退下",
-                "tone": "強硬",
-                "effects": {
-                    "charm": -3,
-                    "official_loyalty_add": -5
-                }
-            }
-        ],
-        "when": {
-            "bond_with": "sharing",
-            "chance": 0.4
+      "id": "E226",
+      "name": "諫言未决",
+      "speaker": "翰林侍講",
+      "narrative": "同殿議政多年，臣與陛下漸有默契，然近日臣有數語想要直言，又恐言辭過激而觸怒天顏，故遲遲不敢上陳，請陛下寬容。",
+      "options": [
+        {
+          "key": "A",
+          "label": "虛心採納",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 8,
+            "prestige": 2,
+            "shared_event": true,
+            "official_loyalty_add": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "命其退下",
+          "tone": "強硬",
+          "effects": {
+            "charm": -3,
+            "official_loyalty_add": -5
+          }
         }
+      ],
+      "when": {
+        "bond_with": "sharing",
+        "chance": 0.4
+      }
     },
     {
-        "id": "E227",
-        "name": "監察之議",
-        "speaker": "御史中丞",
-        "narrative": "同僚有言，陛下與臣子相處日久，朝中已傳君臣相得之說。臣以為可藉此整飭吏治，然此事關係重大，請陛下明示所以。",
-        "options": [
-            {
-                "key": "A",
-                "label": "授以監察之權",
-                "tone": "穩妥",
-                "effects": {
-                    "power": 6,
-                    "shared_event": true,
-                    "official_loyalty_add": 4
-                }
-            },
-            {
-                "key": "B",
-                "label": "不置可否",
-                "tone": "保守",
-                "effects": {
-                    "prestige": -1
-                }
-            },
-            {
-                "key": "C",
-                "label": "嚴加防範",
-                "tone": "強硬",
-                "effects": {
-                    "power": 4,
-                    "official_loyalty_add": -6
-                }
-            }
-        ],
-        "when": {
-            "bond_with": "sharing",
-            "chance": 0.3
+      "id": "E227",
+      "name": "監察之議",
+      "speaker": "御史中丞",
+      "narrative": "同僚有言，陛下與臣子相處日久，朝中已傳君臣相得之說。臣以為可藉此整飭吏治，然此事關係重大，請陛下明示所以。",
+      "options": [
+        {
+          "key": "A",
+          "label": "授以監察之權",
+          "tone": "穩妥",
+          "effects": {
+            "power": 6,
+            "shared_event": true,
+            "official_loyalty_add": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "不置可否",
+          "tone": "保守",
+          "effects": {
+            "prestige": -1
+          }
+        },
+        {
+          "key": "C",
+          "label": "嚴加防範",
+          "tone": "強硬",
+          "effects": {
+            "power": 4,
+            "official_loyalty_add": -6
+          }
         }
+      ],
+      "when": {
+        "bond_with": "sharing",
+        "chance": 0.3
+      }
     },
     {
-        "id": "E228",
-        "name": "相得賜宴",
-        "speaker": "內侍省",
-        "narrative": "君臣相得之臣隨侍已有數年，其家眷亦深感聖恩。臣請陛下賜宴以示恩寵，既可慰其辛勞，也可固君臣之情，以示天下。",
-        "options": [
-            {
-                "key": "A",
-                "label": "賜宴",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -30,
-                    "official_loyalty_add": 6
-                }
-            },
-            {
-                "key": "B",
-                "label": "賜金帛",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -60,
-                    "official_loyalty_add": 10
-                }
-            },
-            {
-                "key": "C",
-                "label": "不必如此",
-                "tone": "保守",
-                "effects": {
-                    "prestige": 1
-                }
-            }
-        ],
-        "when": {
-            "bond_with": "bonded",
-            "chance": 0.2
+      "id": "E228",
+      "name": "相得賜宴",
+      "speaker": "內侍省",
+      "narrative": "君臣相得之臣隨侍已有數年，其家眷亦深感聖恩。臣請陛下賜宴以示恩寵，既可慰其辛勞，也可固君臣之情，以示天下。",
+      "options": [
+        {
+          "key": "A",
+          "label": "賜宴",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -30,
+            "official_loyalty_add": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "賜金帛",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -60,
+            "official_loyalty_add": 10
+          }
+        },
+        {
+          "key": "C",
+          "label": "不必如此",
+          "tone": "保守",
+          "effects": {
+            "prestige": 1
+          }
         }
+      ],
+      "when": {
+        "bond_with": "bonded",
+        "chance": 0.2
+      }
     },
     {
-        "id": "E229",
-        "name": "相得請辭",
-        "speaker": "吏部尚書",
-        "narrative": "君臣相得之臣屢次請辭，言身體日弱，恐難再效犬馬之勞。臣請陛下慎重斟酌，或准其告老，或命其留任，以定朝局。",
-        "options": [
-            {
-                "key": "A",
-                "label": "准其留任",
-                "tone": "仁厚",
-                "effects": {
-                    "benevolence": 4,
-                    "official_loyalty_add": 3
-                }
-            },
-            {
-                "key": "B",
-                "label": "命其速去",
-                "tone": "強硬",
-                "effects": {
-                    "power": 3,
-                    "official_loyalty_add": -8
-                }
-            },
-            {
-                "key": "C",
-                "label": "厚加慰勞",
-                "tone": "穩妥",
-                "effects": {
-                    "prestige": 2,
-                    "people": 1
-                }
-            }
-        ],
-        "when": {
-            "bond_with": "bonded",
-            "chance": 0.2
+      "id": "E229",
+      "name": "相得請辭",
+      "speaker": "吏部尚書",
+      "narrative": "君臣相得之臣屢次請辭，言身體日弱，恐難再效犬馬之勞。臣請陛下慎重斟酌，或准其告老，或命其留任，以定朝局。",
+      "options": [
+        {
+          "key": "A",
+          "label": "准其留任",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 4,
+            "official_loyalty_add": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "命其速去",
+          "tone": "強硬",
+          "effects": {
+            "power": 3,
+            "official_loyalty_add": -8
+          }
+        },
+        {
+          "key": "C",
+          "label": "厚加慰勞",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": 2,
+            "people": 1
+          }
         }
+      ],
+      "when": {
+        "bond_with": "bonded",
+        "chance": 0.2
+      }
     },
     {
-        "id": "E230",
-        "name": "議論偏私",
-        "speaker": "都察院",
-        "narrative": "近來朝臣之間議論紛紛，有人主張君臣不宜過密，恐有偏私之弊，此風若長，必將妨礙政務。臣請陛下定奪，以正朝綱而服眾心。",
-        "options": [
-            {
-                "key": "A",
-                "label": "廣開言路",
-                "tone": "仁厚",
-                "effects": {
-                    "power": 3,
-                    "benevolence": 5,
-                    "shared_event": true
-                }
-            },
-            {
-                "key": "B",
-                "label": "收斂言論",
-                "tone": "強硬",
-                "effects": {
-                    "prestige": -2,
-                    "official_loyalty_add": -3
-                }
-            }
-        ],
-        "when": {
-            "bond_with": "sharing",
-            "chance": 0.3
+      "id": "E230",
+      "name": "議論偏私",
+      "speaker": "都察院",
+      "narrative": "近來朝臣之間議論紛紛，有人主張君臣不宜過密，恐有偏私之弊，此風若長，必將妨礙政務。臣請陛下定奪，以正朝綱而服眾心。",
+      "options": [
+        {
+          "key": "A",
+          "label": "廣開言路",
+          "tone": "仁厚",
+          "effects": {
+            "power": 3,
+            "benevolence": 5,
+            "shared_event": true
+          }
+        },
+        {
+          "key": "B",
+          "label": "收斂言論",
+          "tone": "強硬",
+          "effects": {
+            "prestige": -2,
+            "official_loyalty_add": -3
+          }
         }
+      ],
+      "when": {
+        "bond_with": "sharing",
+        "chance": 0.3
+      }
     },
     {
-        "id": "E231",
-        "name": "寵信過盛",
-        "speaker": "給事中",
-        "narrative": "陛下與某臣議事多次，朝中已有人私下議論其寵信過盛，恐生妒忌，臣請陛下留意。若處置不當，恐將影響朝臣之間的和睦。",
-        "options": [
-            {
-                "key": "A",
-                "label": "明示信任",
-                "tone": "仁厚",
-                "effects": {
-                    "prestige": 1,
-                    "official_loyalty_add": 4
-                }
-            },
-            {
-                "key": "B",
-                "label": "疏遠其人",
-                "tone": "強硬",
-                "effects": {
-                    "power": 2,
-                    "official_loyalty_add": -4
-                }
-            }
-        ],
-        "when": {
-            "bond_with": "sharing",
-            "chance": 0.25
+      "id": "E231",
+      "name": "寵信過盛",
+      "speaker": "給事中",
+      "narrative": "陛下與某臣議事多次，朝中已有人私下議論其寵信過盛，恐生妒忌，臣請陛下留意。若處置不當，恐將影響朝臣之間的和睦。",
+      "options": [
+        {
+          "key": "A",
+          "label": "明示信任",
+          "tone": "仁厚",
+          "effects": {
+            "prestige": 1,
+            "official_loyalty_add": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "疏遠其人",
+          "tone": "強硬",
+          "effects": {
+            "power": 2,
+            "official_loyalty_add": -4
+          }
         }
+      ],
+      "when": {
+        "bond_with": "sharing",
+        "chance": 0.25
+      }
     },
     {
-        "id": "E232",
-        "name": "請假省親",
-        "speaker": "翰林學士",
-        "narrative": "同殿之臣有人隨侍日久，近日請求歸鄉省親，言語懇切，言其老母年邁，恐有不測。陛下若准其假，則君臣之情益深，亦合於孝道。",
-        "options": [
-            {
-                "key": "A",
-                "label": "準假",
-                "tone": "仁厚",
-                "effects": {
-                    "benevolence": 5,
-                    "official_loyalty_add": 2
-                }
-            },
-            {
-                "key": "B",
-                "label": "不許",
-                "tone": "強硬",
-                "effects": {
-                    "official_loyalty_add": -3
-                }
-            }
-        ],
-        "when": {
-            "bond_with": "sharing",
-            "chance": 0.25
+      "id": "E232",
+      "name": "請假省親",
+      "speaker": "翰林學士",
+      "narrative": "同殿之臣有人隨侍日久，近日請求歸鄉省親，言語懇切，言其老母年邁，恐有不測。陛下若准其假，則君臣之情益深，亦合於孝道。",
+      "options": [
+        {
+          "key": "A",
+          "label": "準假",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 5,
+            "official_loyalty_add": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "不許",
+          "tone": "強硬",
+          "effects": {
+            "official_loyalty_add": -3
+          }
         }
+      ],
+      "when": {
+        "bond_with": "sharing",
+        "chance": 0.25
+      }
     },
     {
-        "id": "E233",
-        "name": "子弟入仕",
-        "speaker": "吏部侍郎",
-        "narrative": "君臣相得之臣奏稱，其府中有子弟讀書有成，欲入仕途為朝廷效力，懇請陛下恩賜。陛下若允，當依例考核，不可因私廢公。",
-        "options": [
-            {
-                "key": "A",
-                "label": "薦子入仕",
-                "tone": "仁厚",
-                "effects": {
-                    "charm": 2,
-                    "official_loyalty_add": 4,
-                    "recruit": 1
-                }
-            },
-            {
-                "key": "B",
-                "label": "婉拒",
-                "tone": "穩妥",
-                "effects": {
-                    "prestige": 1,
-                    "official_loyalty_add": 1
-                }
-            }
-        ],
-        "when": {
-            "bond_with": "bonded",
-            "chance": 0.2
+      "id": "E233",
+      "name": "子弟入仕",
+      "speaker": "吏部侍郎",
+      "narrative": "君臣相得之臣奏稱，其府中有子弟讀書有成，欲入仕途為朝廷效力，懇請陛下恩賜。陛下若允，當依例考核，不可因私廢公。",
+      "options": [
+        {
+          "key": "A",
+          "label": "薦子入仕",
+          "tone": "仁厚",
+          "effects": {
+            "charm": 2,
+            "official_loyalty_add": 4,
+            "recruit": 1
+          }
+        },
+        {
+          "key": "B",
+          "label": "婉拒",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": 1,
+            "official_loyalty_add": 1
+          }
         }
+      ],
+      "when": {
+        "bond_with": "bonded",
+        "chance": 0.2
+      }
     },
     {
-        "id": "E234",
-        "name": "水利續修",
-        "speaker": "工部尚書",
-        "narrative": "前番興修水利，工程已竣，然民間言役夫勞苦，工部又請續修支渠。陛下前所許之款，今可再議否？若續修，當顧及民力。",
-        "options": [
-            {
-                "key": "A",
-                "label": "續修支渠",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -50,
-                    "agriculture": 20
-                }
-            },
-            {
-                "key": "B",
-                "label": "暫停工程",
-                "tone": "保守",
-                "effects": {
-                    "people": 5
-                }
-            },
-            {
-                "key": "C",
-                "label": "增派役夫",
-                "tone": "強硬",
-                "effects": {
-                    "people": -4,
-                    "agriculture": 10
-                }
-            }
-        ],
-        "when": {
-            "prior_choice": {
-                "event": "E001",
-                "option": "A"
-            },
-            "chance": 0.4
+      "id": "E234",
+      "name": "水利續修",
+      "speaker": "工部尚書",
+      "narrative": "前番興修水利，工程已竣，然民間言役夫勞苦，工部又請續修支渠。陛下前所許之款，今可再議否？若續修，當顧及民力。",
+      "options": [
+        {
+          "key": "A",
+          "label": "續修支渠",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -50,
+            "agriculture": 20
+          }
+        },
+        {
+          "key": "B",
+          "label": "暫停工程",
+          "tone": "保守",
+          "effects": {
+            "people": 5
+          }
+        },
+        {
+          "key": "C",
+          "label": "增派役夫",
+          "tone": "強硬",
+          "effects": {
+            "people": -4,
+            "agriculture": 10
+          }
         }
+      ],
+      "when": {
+        "prior_choice": {
+          "event": "E001",
+          "option": "A"
+        },
+        "chance": 0.4
+      }
     },
     {
-        "id": "E235",
-        "name": "勸農之效",
-        "speaker": "地方州縣",
-        "narrative": "陛下前詔勸農，今春田畝果然增產，州縣請以示獎勵，以勉勵後來者。若不加獎賞，恐怕勸農之令日後難以取信於民。",
-        "options": [
-            {
-                "key": "A",
-                "label": "頒賞有功",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -20,
-                    "benevolence": 6
-                }
-            },
-            {
-                "key": "B",
-                "label": "免賦一年",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -60,
-                    "people": 10
-                }
-            },
-            {
-                "key": "C",
-                "label": "嘉許即可",
-                "tone": "保守",
-                "effects": {
-                    "prestige": 1
-                }
-            }
-        ],
-        "when": {
-            "prior_choice": {
-                "event": "E001",
-                "option": "B"
-            },
-            "chance": 0.4
+      "id": "E235",
+      "name": "勸農之效",
+      "speaker": "地方州縣",
+      "narrative": "陛下前詔勸農，今春田畝果然增產，州縣請以示獎勵，以勉勵後來者。若不加獎賞，恐怕勸農之令日後難以取信於民。",
+      "options": [
+        {
+          "key": "A",
+          "label": "頒賞有功",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -20,
+            "benevolence": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "免賦一年",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -60,
+            "people": 10
+          }
+        },
+        {
+          "key": "C",
+          "label": "嘉許即可",
+          "tone": "保守",
+          "effects": {
+            "prestige": 1
+          }
         }
+      ],
+      "when": {
+        "prior_choice": {
+          "event": "E001",
+          "option": "B"
+        },
+        "chance": 0.4
+      }
     },
     {
-        "id": "E236",
-        "name": "減稅安民",
-        "speaker": "戶部侍郎",
-        "narrative": "前次加征賦稅，國庫雖豐，百姓怨聲未息，市井間已有逃戶之說。戶部請再議減稅以安民心，否則民心一旦離散，後患更大。",
-        "options": [
-            {
-                "key": "A",
-                "label": "減稅安民",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -40,
-                    "people": 12
-                }
-            },
-            {
-                "key": "B",
-                "label": "維持舊制",
-                "tone": "穩妥",
-                "effects": {
-                    "people": -5
-                }
-            },
-            {
-                "key": "C",
-                "label": "再加征收",
-                "tone": "強硬",
-                "effects": {
-                    "treasury": 60,
-                    "people": -10
-                }
-            }
-        ],
-        "when": {
-            "prior_choice": {
-                "event": "E002",
-                "option": "A"
-            },
-            "chance": 0.4
+      "id": "E236",
+      "name": "減稅安民",
+      "speaker": "戶部侍郎",
+      "narrative": "前次加征賦稅，國庫雖豐，百姓怨聲未息，市井間已有逃戶之說。戶部請再議減稅以安民心，否則民心一旦離散，後患更大。",
+      "options": [
+        {
+          "key": "A",
+          "label": "減稅安民",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -40,
+            "people": 12
+          }
+        },
+        {
+          "key": "B",
+          "label": "維持舊制",
+          "tone": "穩妥",
+          "effects": {
+            "people": -5
+          }
+        },
+        {
+          "key": "C",
+          "label": "再加征收",
+          "tone": "強硬",
+          "effects": {
+            "treasury": 60,
+            "people": -10
+          }
         }
+      ],
+      "when": {
+        "prior_choice": {
+          "event": "E002",
+          "option": "A"
+        },
+        "chance": 0.4
+      }
     },
     {
-        "id": "E237",
-        "name": "富商催款",
-        "speaker": "戶部主事",
-        "narrative": "前借富商之銀至今未還，商人頻頻上書催討，且言將斷絕對國庫之供給，部中已無從應付，懇請陛下早作定奪，以全朝廷信義。",
-        "options": [
-            {
-                "key": "A",
-                "label": "如數還銀",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -80,
-                    "commerce": 5
-                }
-            },
-            {
-                "key": "B",
-                "label": "許以官位",
-                "tone": "奸巧",
-                "effects": {
-                    "charm": -2,
-                    "commerce": 6
-                }
-            },
-            {
-                "key": "C",
-                "label": "拖延不還",
-                "tone": "冒險",
-                "effects": {
-                    "charm": -4,
-                    "people": -2
-                }
-            }
-        ],
-        "when": {
-            "prior_choice": {
-                "event": "E002",
-                "option": "C"
-            },
-            "chance": 0.4
+      "id": "E237",
+      "name": "富商催款",
+      "speaker": "戶部主事",
+      "narrative": "前借富商之銀至今未還，商人頻頻上書催討，且言將斷絕對國庫之供給，部中已無從應付，懇請陛下早作定奪，以全朝廷信義。",
+      "options": [
+        {
+          "key": "A",
+          "label": "如數還銀",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -80,
+            "commerce": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "許以官位",
+          "tone": "奸巧",
+          "effects": {
+            "charm": -2,
+            "commerce": 6
+          }
+        },
+        {
+          "key": "C",
+          "label": "拖延不還",
+          "tone": "冒險",
+          "effects": {
+            "charm": -4,
+            "people": -2
+          }
         }
+      ],
+      "when": {
+        "prior_choice": {
+          "event": "E002",
+          "option": "C"
+        },
+        "chance": 0.4
+      }
     },
     {
-        "id": "E238",
-        "name": "外使回禮",
-        "speaker": "鴻臚寺卿",
-        "narrative": "前番厚賜外使，各國聞之皆來朝貢，只是朝貢之物大多寡薄。禮部請示是否回賜厚禮，以示天朝之威，還是只以空言相答。",
-        "options": [
-            {
-                "key": "A",
-                "label": "回賜厚禮",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -40,
-                    "prestige": 4
-                }
-            },
-            {
-                "key": "B",
-                "label": "回以空言",
-                "tone": "強硬",
-                "effects": {
-                    "prestige": -2,
-                    "charm": 2
-                }
-            }
-        ],
-        "when": {
-            "prior_choice": {
-                "event": "E201",
-                "option": "A"
-            },
-            "chance": 0.4
+      "id": "E238",
+      "name": "外使回禮",
+      "speaker": "鴻臚寺卿",
+      "narrative": "前番厚賜外使，各國聞之皆來朝貢，只是朝貢之物大多寡薄。禮部請示是否回賜厚禮，以示天朝之威，還是只以空言相答。",
+      "options": [
+        {
+          "key": "A",
+          "label": "回賜厚禮",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -40,
+            "prestige": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "回以空言",
+          "tone": "強硬",
+          "effects": {
+            "prestige": -2,
+            "charm": 2
+          }
         }
+      ],
+      "when": {
+        "prior_choice": {
+          "event": "E201",
+          "option": "A"
+        },
+        "chance": 0.4
+      }
     },
     {
-        "id": "E239",
-        "name": "市舶之議",
-        "speaker": "市舶司",
-        "narrative": "前許外使通商，商船絡繹於港口，然市舶收入如何歸屬尚有爭議。市舶司請設專官司管，或由地方自理，請陛下聖裁，以定後來章程。",
-        "options": [
-            {
-                "key": "A",
-                "label": "設市舶司",
-                "tone": "穩妥",
-                "effects": {
-                    "commerce": 10,
-                    "treasury": 15
-                }
-            },
-            {
-                "key": "B",
-                "label": "收為己用",
-                "tone": "強硬",
-                "effects": {
-                    "armament": 8
-                }
-            },
-            {
-                "key": "C",
-                "label": "嚴加查察",
-                "tone": "穩妥",
-                "effects": {
-                    "prestige": 2
-                }
-            }
-        ],
-        "when": {
-            "prior_choice": {
-                "event": "E201",
-                "option": "B"
-            },
-            "chance": 0.4
+      "id": "E239",
+      "name": "市舶之議",
+      "speaker": "市舶司",
+      "narrative": "前許外使通商，商船絡繹於港口，然市舶收入如何歸屬尚有爭議。市舶司請設專官司管，或由地方自理，請陛下聖裁，以定後來章程。",
+      "options": [
+        {
+          "key": "A",
+          "label": "設市舶司",
+          "tone": "穩妥",
+          "effects": {
+            "commerce": 10,
+            "treasury": 15
+          }
+        },
+        {
+          "key": "B",
+          "label": "收為己用",
+          "tone": "強硬",
+          "effects": {
+            "armament": 8
+          }
+        },
+        {
+          "key": "C",
+          "label": "嚴加查察",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": 2
+          }
         }
+      ],
+      "when": {
+        "prior_choice": {
+          "event": "E201",
+          "option": "B"
+        },
+        "chance": 0.4
+      }
     },
     {
-        "id": "E240",
-        "name": "外使再至",
-        "speaker": "鴻臚寺丞",
-        "narrative": "前拒外使所求，邊疆屢有擾動，使臣又遣人來問，言語間頗有不平。鴻臚寺請示應當如何應對，是出兵示威，還是另遣使臣斡旋。",
-        "options": [
-            {
-                "key": "A",
-                "label": "出兵示威",
-                "tone": "強硬",
-                "effects": {
-                    "military": 6,
-                    "treasury": -20
-                }
-            },
-            {
-                "key": "B",
-                "label": "再遣使臣",
-                "tone": "穩妥",
-                "effects": {
-                    "charm": 3,
-                    "prestige": 2
-                }
-            },
-            {
-                "key": "C",
-                "label": "置之不理",
-                "tone": "冒險",
-                "effects": {
-                    "people": -3
-                }
-            }
-        ],
-        "when": {
-            "prior_choice": {
-                "event": "E201",
-                "option": "C"
-            },
-            "chance": 0.4
+      "id": "E240",
+      "name": "外使再至",
+      "speaker": "鴻臚寺丞",
+      "narrative": "前拒外使所求，邊疆屢有擾動，使臣又遣人來問，言語間頗有不平。鴻臚寺請示應當如何應對，是出兵示威，還是另遣使臣斡旋。",
+      "options": [
+        {
+          "key": "A",
+          "label": "出兵示威",
+          "tone": "強硬",
+          "effects": {
+            "military": 6,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "再遣使臣",
+          "tone": "穩妥",
+          "effects": {
+            "charm": 3,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不理",
+          "tone": "冒險",
+          "effects": {
+            "people": -3
+          }
         }
+      ],
+      "when": {
+        "prior_choice": {
+          "event": "E201",
+          "option": "C"
+        },
+        "chance": 0.4
+      }
     },
     {
-        "id": "E241",
-        "name": "官吏虛應",
-        "speaker": "監察御史",
-        "narrative": "陛下前番親巡民間，百姓感念，然地方官吏多有虛應故事者，巡撫所至，只做表面文章，實際民情仍未上達。臣請陛下另作安排。",
-        "options": [
-            {
-                "key": "A",
-                "label": "嚴察官吏",
-                "tone": "強硬",
-                "effects": {
-                    "power": 6
-                }
-            },
-            {
-                "key": "B",
-                "label": "褒獎忠勤",
-                "tone": "仁厚",
-                "effects": {
-                    "benevolence": 5
-                }
-            },
-            {
-                "key": "C",
-                "label": "不予追究",
-                "tone": "保守",
-                "effects": {
-                    "prestige": -1
-                }
-            }
-        ],
-        "when": {
-            "prior_choice": {
-                "event": "E003",
-                "option": "A"
-            },
-            "chance": 0.4
+      "id": "E241",
+      "name": "官吏虛應",
+      "speaker": "監察御史",
+      "narrative": "陛下前番親巡民間，百姓感念，然地方官吏多有虛應故事者，巡撫所至，只做表面文章，實際民情仍未上達。臣請陛下另作安排。",
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴察官吏",
+          "tone": "強硬",
+          "effects": {
+            "power": 6
+          }
+        },
+        {
+          "key": "B",
+          "label": "褒獎忠勤",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 5
+          }
+        },
+        {
+          "key": "C",
+          "label": "不予追究",
+          "tone": "保守",
+          "effects": {
+            "prestige": -1
+          }
         }
+      ],
+      "when": {
+        "prior_choice": {
+          "event": "E003",
+          "option": "A"
+        },
+        "chance": 0.4
+      }
     },
     {
-        "id": "E242",
-        "name": "賑後餘糧",
-        "speaker": "太倉使",
-        "narrative": "前次開倉賑濟，糧倉已空，今歲又遇小災，民間又開始議論，言朝廷前次之賑不足。太倉使請示是否再開倉，或勸民自行備荒。",
-        "options": [
-            {
-                "key": "A",
-                "label": "再開倉廩",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -60,
-                    "people": 15
-                }
-            },
-            {
-                "key": "B",
-                "label": "勸民自救",
-                "tone": "穩妥",
-                "effects": {
-                    "agriculture": 15,
-                    "people": -2
-                }
-            }
-        ],
-        "when": {
-            "prior_choice": {
-                "event": "E003",
-                "option": "B"
-            },
-            "chance": 0.4
+      "id": "E242",
+      "name": "賑後餘糧",
+      "speaker": "太倉使",
+      "narrative": "前次開倉賑濟，糧倉已空，今歲又遇小災，民間又開始議論，言朝廷前次之賑不足。太倉使請示是否再開倉，或勸民自行備荒。",
+      "options": [
+        {
+          "key": "A",
+          "label": "再開倉廩",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -60,
+            "people": 15
+          }
+        },
+        {
+          "key": "B",
+          "label": "勸民自救",
+          "tone": "穩妥",
+          "effects": {
+            "agriculture": 15,
+            "people": -2
+          }
         }
+      ],
+      "when": {
+        "prior_choice": {
+          "event": "E003",
+          "option": "B"
+        },
+        "chance": 0.4
+      }
     },
     {
-        "id": "E243",
-        "name": "流民復來",
-        "speaker": "京兆府尹",
-        "narrative": "前番水利不修，農事大減，今鄉野流民四散，有扶老攜幼入城者，地方請示撫恤之策，言若不加救濟，恐有聚眾之虞，請陛下定奪。",
-        "options": [
-            {
-                "key": "A",
-                "label": "撥糧撫恤",
-                "tone": "仁厚",
-                "effects": {
-                    "treasury": -50,
-                    "people": 12
-                }
-            },
-            {
-                "key": "B",
-                "label": "驅散流民",
-                "tone": "強硬",
-                "effects": {
-                    "people": -8,
-                    "military": 2
-                }
-            }
-        ],
-        "when": {
-            "prior_choice": {
-                "event": "E001",
-                "option": "C"
-            },
-            "chance": 0.4
+      "id": "E243",
+      "name": "流民復來",
+      "speaker": "京兆府尹",
+      "narrative": "前番水利不修，農事大減，今鄉野流民四散，有扶老攜幼入城者，地方請示撫恤之策，言若不加救濟，恐有聚眾之虞，請陛下定奪。",
+      "options": [
+        {
+          "key": "A",
+          "label": "撥糧撫恤",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -50,
+            "people": 12
+          }
+        },
+        {
+          "key": "B",
+          "label": "驅散流民",
+          "tone": "強硬",
+          "effects": {
+            "people": -8,
+            "military": 2
+          }
         }
+      ],
+      "when": {
+        "prior_choice": {
+          "event": "E001",
+          "option": "C"
+        },
+        "chance": 0.4
+      }
     },
     {
       "id": "E421",
@@ -13218,6 +13218,3030 @@
           "effects": {
             "benevolence": 3,
             "charm": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E517",
+      "name": "西域獻寶劍",
+      "speaker": "鴻臚寺卿",
+      "narrative": "西域使節入貢，獻上一柄鑲嵌寶石的長劍，言稱此劍曾為當地部族之王所佩。使節請陛下親自過目，並期望陛下以劍賜予能臣。臣以為厚往薄來，當示天朝之度。",
+      "when": {
+        "prestige_gt": 60,
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "收下此劍，賜名御賜",
+          "tone": "穩妥",
+          "effects": {
+            "setFlag": "col:yujian",
+            "prestige": 5,
+            "treasury": -30
+          }
+        },
+        {
+          "key": "B",
+          "label": "厚賞使節，請其帶回",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 5,
+            "treasury": -40
+          }
+        }
+      ]
+    },
+    {
+      "id": "E518",
+      "name": "丹房進丹",
+      "speaker": "太醫院院使",
+      "narrative": "丹房新煉成一爐丹藥，據稱可調養聖體。然丹藥藥性難測，臣不敢擅專，請陛下定奪。若陛下願試，臣當細察其方。",
+      "when": {
+        "every_years": 2,
+        "months": [
+          4
+        ],
+        "charm_gt": 40
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "收下丹藥，留待調養",
+          "tone": "穩妥",
+          "effects": {
+            "setFlag": "col:danyao",
+            "health": 3,
+            "treasury": -15
+          }
+        },
+        {
+          "key": "B",
+          "label": "焚丹以絕後患",
+          "tone": "強硬",
+          "effects": {
+            "heaven": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E519",
+      "name": "名家字畫進獻",
+      "speaker": "翰林學士",
+      "narrative": "江南名家近日獻上一幅前朝名畫，筆墨精妙，題跋歷歷可考。此畫若入內府，可為文治增色，然價值不菲，恐耗國庫。請陛下裁決。",
+      "when": {
+        "literature_gt": 120,
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "收入內府，留為典藏",
+          "tone": "穩妥",
+          "effects": {
+            "setFlag": "col:zihua",
+            "literature": 5,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "婉拒名家之請",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E520",
+      "name": "武將求賜寶劍",
+      "speaker": "兵部尚書",
+      "narrative": "有武將聞陛下手中有御賜寶劍，私下求見，言願效死力，只求陛下一句恩典。臣以為此人心志未定，若不加恩，恐生怨望。陛下若賜劍，當可收其心。",
+      "when": {
+        "flag": "col:yujian",
+        "official_loyalty_lt": 55
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "以寶劍賜之，示以信任",
+          "tone": "仁厚",
+          "effects": {
+            "official_loyalty_add": 10,
+            "military": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "留劍自用，不予此人",
+          "tone": "強硬",
+          "effects": {
+            "power": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E521",
+      "name": "丹藥與儲位",
+      "speaker": "太醫院院使",
+      "narrative": "東宮近日多病，太醫署建議以所藏丹藥調養。臣以為丹藥宜慎用，但若能以此示恩，儲君必感陛下慈愛。是否獻丹東宮，請陛下決斷。",
+      "when": {
+        "flag": "col:danyao",
+        "heirs_gt": 0,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "獻丹東宮，以示慈愛",
+          "tone": "仁厚",
+          "effects": {
+            "health": 2,
+            "benevolence": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "丹藥封存，不宜輕用",
+          "tone": "穩妥",
+          "effects": {
+            "heaven": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E522",
+      "name": "妃嬪請賜字畫",
+      "speaker": "尚寢局掌事",
+      "narrative": "宮中數位妃嬪聞陛下內府藏有名家字畫，託人來請，願得一幅懸於寢殿。臣以為宮闈之事，不宜專斷，然賜畫亦是常情，陛下可酌量而行。",
+      "when": {
+        "flag": "col:zihua",
+        "consorts_gt": 0,
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "擇一幅賜予妃嬪",
+          "tone": "仁厚",
+          "effects": {
+            "charm": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "婉言以字畫為由推辭",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E523",
+      "name": "字畫鑑偽",
+      "speaker": "翰林學士",
+      "narrative": "翰林院整理內府字畫，發現其中一幅疑為後人仿作，題跋與紙絹皆有可疑之處。是否公開辨偽，或悄然收入典藏，請陛下決定。",
+      "when": {
+        "flag": "col:zihua",
+        "literature_gt": 100,
+        "every_years": 3,
+        "months": [
+          9
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "公開辨偽，以正文風",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 4,
+            "people": 1
+          }
+        },
+        {
+          "key": "B",
+          "label": "悄然收入典藏，不予張揚",
+          "tone": "穩妥",
+          "effects": {
+            "literature": 6
+          }
+        }
+      ]
+    },
+    {
+      "id": "E524",
+      "name": "寶劍失竊之疑",
+      "speaker": "東廠提督",
+      "narrative": "東廠查知有人言御賜寶劍曾在宮外現身，形跡可疑。此事若屬實，必是內廷有人監守自盜。臣請陛下示下，是否開案徹查。",
+      "when": {
+        "flag": "col:yujian",
+        "treasury_lt": 300,
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開案嚴查，清除內患",
+          "tone": "強硬",
+          "effects": {
+            "investigate_lowest": true,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "不予深究，以安人心",
+          "tone": "仁厚",
+          "effects": {
+            "people": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E525",
+      "name": "丹藥濟民之議",
+      "speaker": "戶部尚書",
+      "narrative": "近年災荒頻仍，民間病疫流行，有臣請將丹房所藏丹藥散予貧病百姓。此舉雖耗內府之物，然可收活人之功。陛下以為如何？",
+      "when": {
+        "flag": "col:danyao",
+        "people_lt": 65
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "散丹濟民，救治病患",
+          "tone": "仁厚",
+          "effects": {
+            "people": 8,
+            "treasury": -40
+          }
+        },
+        {
+          "key": "B",
+          "label": "留作宮中之用",
+          "tone": "穩妥",
+          "effects": {
+            "health": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E526",
+      "name": "寶劍鎮邊",
+      "speaker": "兵部尚書",
+      "narrative": "邊關近來軍械稍顯不足，邊將奏請陛下以御賜寶劍為號令，以振士氣。此劍象徵天子親臨，若授予邊將，可鼓舞軍心；若留於京師，則中樞可安。",
+      "when": {
+        "flag": "col:yujian",
+        "armament_lt": 350,
+        "every_years": 2,
+        "months": [
+          6
+        ]
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "授予邊將，以振軍心",
+          "tone": "強硬",
+          "effects": {
+            "armament": 30,
+            "official_loyalty_add": 4
+          }
+        },
+        {
+          "key": "B",
+          "label": "留於京師，以安中樞",
+          "tone": "穩妥",
+          "effects": {
+            "military": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "E527",
+      "name": "師生薦才",
+      "speaker": "翰林學士",
+      "narrative": "臣之座師近日薦一寒士，文章雖樸，策論頗有見地。座師言其得臣之教，臣願以師門之名保舉，然恐外人以為師生結黨。請陛下明斷。",
+      "when": {
+        "flag": "rel_teacher",
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "擢用其人",
+          "tone": "仁厚",
+          "effects": {
+            "literature": 5,
+            "power": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "暫且擱置",
+          "tone": "穩妥",
+          "effects": {}
+        },
+        {
+          "key": "C",
+          "label": "疑其結黨",
+          "tone": "強硬",
+          "effects": {
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E528",
+      "name": "門生故吏",
+      "speaker": "禮部侍郎",
+      "narrative": "朝中諸臣多出自同一座師之門，遇事互為奧援，奏對之時口徑一致。臣以為此風不可長，然亦不便一律黜落，請陛下酌定。",
+      "when": {
+        "flag": "rel_teacher",
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴申朝綱",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 3,
+            "people": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "循例不問",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E529",
+      "name": "座師獲罪",
+      "speaker": "御史臺",
+      "narrative": "某官被參待決，其座師連日上書求情，言昔日受業之恩不可忘。臣以為門生若因此受牽連，忠誠必受挫，陛下寬嚴之間，當自有權衡。",
+      "when": {
+        "flag": "impeach_pending",
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "赦其門生",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 5,
+            "setFlag": "rel_order_mourn"
+          }
+        },
+        {
+          "key": "B",
+          "label": "依律論處",
+          "tone": "穩妥",
+          "effects": {
+            "power": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "株連到底",
+          "tone": "強硬",
+          "effects": {
+            "people": -3,
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E530",
+      "name": "弟子守制",
+      "speaker": "太常寺卿",
+      "narrative": "座師新喪，其弟子依禮當守制三月，然朝政繁冗，諸人多欲奪情視事。臣請陛下定奪，是准其守制，還是令其照常供職。",
+      "when": {
+        "flag": "rel_teacher",
+        "months": [
+          3
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其守制",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 4,
+            "prestige": 1
+          }
+        },
+        {
+          "key": "B",
+          "label": "奪情視事",
+          "tone": "強硬",
+          "effects": {
+            "power": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E531",
+      "name": "師徒異論",
+      "speaker": "國子監祭酒",
+      "narrative": "座師與其弟子於經義之爭上各執一端，同門為之分裂，朝堂議事時互不相讓。臣以為師說當從，然弟子所見亦有理，請陛下裁定。",
+      "when": {
+        "flag": "rel_teacher",
+        "chance": 0.1,
+        "official_loyalty_lt": 50
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "從師之說",
+          "tone": "穩妥",
+          "effects": {
+            "literature": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "從弟子之議",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "兩說皆罷",
+          "tone": "冒險",
+          "effects": {
+            "commerce": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E532",
+      "name": "外戚結親",
+      "speaker": "宗正寺卿",
+      "narrative": "戶部尚書之子欲與知府之女結親，兩家皆為朝中要員，聯姻之議已傳遍各衙門。臣以為此乃姻親之常情，然亦須防其借親勢以攬權，請陛下允否。",
+      "when": {
+        "flag": "rel_marriage",
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允准婚事",
+          "tone": "仁厚",
+          "effects": {
+            "charm": 5,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "婉言拒絕",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E533",
+      "name": "姻親同舉",
+      "speaker": "吏部侍郎",
+      "narrative": "歲考將至，某官薦其姻親入選，言其才能足堪大任。臣查其考績，確有可取之處，然姻親互薦，外人難免有私相授受之議，請陛下聖裁。",
+      "when": {
+        "flag": "rel_marriage",
+        "months": [
+          9
+        ],
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其薦舉",
+          "tone": "穩妥",
+          "effects": {
+            "power": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "另選他人",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E534",
+      "name": "姻親牽連",
+      "speaker": "刑部侍郎",
+      "narrative": "被參之臣，其姻親數人亦在朝中任職，今皆人人自危，有上書請辭者。臣以為姻親不可一概論罪，然朝中人心已有浮動，請陛下明示。",
+      "when": {
+        "flag": "impeach_pending",
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "赦其姻親",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 4,
+            "setFlag": "rel_order_mourn"
+          }
+        },
+        {
+          "key": "B",
+          "label": "令其自退",
+          "tone": "穩妥",
+          "effects": {
+            "people": 1
+          }
+        },
+        {
+          "key": "C",
+          "label": "一併查辦",
+          "tone": "強硬",
+          "effects": {
+            "prestige": -3,
+            "power": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E535",
+      "name": "聯姻敗露",
+      "speaker": "都察院",
+      "narrative": "有御史舉報，某權臣與姻親暗中交通，以婚約為名行私相授受之實，所涉財帛甚鉅。臣已查得部分書信，然其中尚有許多細節，待陛下下旨深究。",
+      "when": {
+        "flag": "rel_marriage",
+        "chance": 0.06
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴查到底",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 2,
+            "people": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "點到為止",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E536",
+      "name": "婚約續盟",
+      "speaker": "鴻臚寺卿",
+      "narrative": "兩家姻親之約將滿，雙方皆願續約，且各以厚禮相贈。臣以為此可安定朝中人心，然續約之中，亦有借勢之意，請陛下酌定。",
+      "when": {
+        "flag": "rel_marriage",
+        "chance": 0.05
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其續約",
+          "tone": "仁厚",
+          "effects": {
+            "charm": 3,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "不予理會",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E537",
+      "name": "同朝爭寵",
+      "speaker": "中書舍人",
+      "narrative": "丞相與戶部尚書素來不睦，各自在御前爭言國策，互相不讓。臣以為二人各有所長，然長此以往，朝議將為之分裂，請陛下早作裁斷。",
+      "when": {
+        "flag": "rel_rival",
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "偏信其一",
+          "tone": "強硬",
+          "effects": {
+            "power": 3,
+            "benevolence": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "兩用其長",
+          "tone": "穩妥",
+          "effects": {
+            "literature": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "各打五十大板",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E538",
+      "name": "互參奏摺",
+      "speaker": "御史中丞",
+      "narrative": "孿敵二人各上奏摺，彼此參劾，言對方貪墨專擅，所陳事實多有出入。臣已將兩份奏摺並呈御前，請陛下即刻裁決，以免朝議再起風波。",
+      "when": {
+        "flag": "impeach_pending",
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "準其所參",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 1,
+            "setFlag": "rel_order_purge"
+          }
+        },
+        {
+          "key": "B",
+          "label": "駁回參奏",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 2,
+            "setFlag": "rel_order_pardon"
+          }
+        },
+        {
+          "key": "C",
+          "label": "留中不發",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E539",
+      "name": "互參反噬",
+      "speaker": "大理寺",
+      "narrative": "前番互參之案，經查參人所陳亦有不實之處，朝中議論紛紛，皆言其反遭其咎。臣請陛下詳核卷宗，以正朝綱，免使奸佞得計。",
+      "when": {
+        "flag": "rel_rival",
+        "chance": 0.1,
+        "official_loyalty_lt": 40
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "詳查究實",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": 2,
+            "treasury": -10
+          }
+        },
+        {
+          "key": "B",
+          "label": "不予深究",
+          "tone": "冒險",
+          "effects": {
+            "benevolence": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E540",
+      "name": "孿敵和解",
+      "speaker": "翰林學士",
+      "narrative": "素有嫌隙的兩位大臣近日在朝會上相視一笑，並在散朝後同往拜見。臣以為此乃朝局之福，然其和解是否出於真心，尚待陛下體察。",
+      "when": {
+        "flag": "rel_rival",
+        "chance": 0.05
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "許其和解",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3,
+            "setFlag": "rel_order_disband"
+          }
+        },
+        {
+          "key": "B",
+          "label": "靜觀其變",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E541",
+      "name": "清流結黨",
+      "speaker": "諫議大夫",
+      "narrative": "清流一派近來往來頻繁，同聲議論時政，連御史所奏亦多相符。臣恐其自成一黨，朝議將為之偏重，然其所持亦多直言，請陛下權衡。",
+      "when": {
+        "flag": "bloc_qingliu",
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "容其議論",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "下旨戒飭",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 2,
+            "setFlag": "rel_order_disband"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E542",
+      "name": "勳貴結黨",
+      "speaker": "兵部侍郎",
+      "narrative": "勳貴與寒門之家近日締結婚約，兩派素來不睦，今以姻親相連，朝中眾人議論紛紛。臣以為跨派聯姻可以化解嫌隙，然其中利害錯綜，請陛下酌定。",
+      "when": {
+        "flag": "rel_cross_marriage",
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其婚約",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 2,
+            "charm": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "分派以制其勢",
+          "tone": "強硬",
+          "effects": {
+            "power": 2,
+            "setFlag": "rel_order_disband"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E543",
+      "name": "寒門結黨",
+      "speaker": "工部侍郎",
+      "narrative": "寒門子弟借跨派姻親之力入朝為官，一時舊族側目。臣以為其才堪用，然若靠姻親得進，朝中必生怨言，請陛下決定是否另加考校。",
+      "when": {
+        "flag": "rel_cross_marriage",
+        "months": [
+          6
+        ],
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "一體錄用",
+          "tone": "仁厚",
+          "effects": {
+            "literature": 3,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "另行考校",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E544",
+      "name": "朋黨請托",
+      "speaker": "御史臺",
+      "narrative": "同黨之人近日頻繁請托，為各自門人謀求官職，一時朝中薦牘堆積如山。臣已點出數件可疑，請陛下決定是否准其所請。",
+      "when": {
+        "flag": "bloc_qingliu",
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其所請",
+          "tone": "冒險",
+          "effects": {
+            "treasury": -15,
+            "power": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "一律駁回",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 2,
+            "benevolence": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E545",
+      "name": "解黨令",
+      "speaker": "中書令",
+      "narrative": "朝中朋黨之風日盛，朝議漸有分裂之象。臣擬下一道解黨之令，申明官員不得私相結納，違者以國法論。是否頒行，請陛下聖裁。",
+      "when": {
+        "flag": "bloc_qingliu",
+        "months": [
+          12
+        ],
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "頒布解黨令",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 2,
+            "setFlag": "rel_order_disband"
+          }
+        },
+        {
+          "key": "B",
+          "label": "不必頒令",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E546",
+      "name": "黨爭激化",
+      "speaker": "御史中丞",
+      "narrative": "孿敵二人各立門戶，其門下之黨相互攻訐，朝堂之上爭執不休，連日未得一議。臣恐此風蔓延，朝綱將為之廢弛，請陛下速定大計。",
+      "when": {
+        "flag": "impeach_pending",
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "兩黨並斥",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 2,
+            "benevolence": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "安撫雙方",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E501",
+      "name": "經筵進講",
+      "speaker": "太傅",
+      "narrative": "嫡長繼位，名分本無可疑。太傅請陛下親臨經筵，以正統之義講授先王之道，朝野皆盼陛下有所表態。",
+      "when": {
+        "flag": "origin:dichangzi",
+        "chance": 0.04
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "親臨經筵，逐章應答",
+          "tone": "仁厚",
+          "effects": {
+            "literature": 10,
+            "benevolence": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "命太傅代為講授",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": 5
+          }
+        },
+        {
+          "key": "C",
+          "label": "以國事繁忙為由推辭",
+          "tone": "謙退",
+          "effects": {
+            "prestige": -5,
+            "power": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E502",
+      "name": "諸王覬覦",
+      "speaker": "宗正",
+      "narrative": "先帝諸子多已封王，皆以為嫡統非必然。宗正密奏，宗室中已有人遣使往來，言辭頗為不遜，請陛下早作處置。",
+      "when": {
+        "flag": "origin:dichangzi",
+        "chance": 0.03
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "厚賞諸王，以示兄弟之情",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -60,
+            "prestige": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "削減其封地與護衛",
+          "tone": "強硬",
+          "effects": {
+            "power": 10,
+            "people": -8
+          }
+        },
+        {
+          "key": "C",
+          "label": "委宗正查辦，不親自過問",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E503",
+      "name": "廢立之議",
+      "speaker": "御史",
+      "narrative": "御史上疏，言及嫡庶之分，稱宗室中有人可議更立。此議一出，朝中人心浮動，陛下當如何回應，天下將以此觀其器度。",
+      "when": {
+        "flag": "origin:dichangzi",
+        "chance": 0.02
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "力駁其議，正告嫡統不可動搖",
+          "tone": "強硬",
+          "effects": {
+            "benevolence": 5,
+            "prestige": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "順勢收攏權柄，嚴查妄議者",
+          "tone": "攬權",
+          "effects": {
+            "power": 15,
+            "benevolence": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E504",
+      "name": "太廟嫡祭",
+      "speaker": "禮部尚書",
+      "narrative": "嫡長即位，當親祭太廟以告列祖。禮部請示祭禮規格，或從隆重，或從簡儉，皆關乎天下對新君名分的看法。",
+      "when": {
+        "flag": "origin:dichangzi",
+        "chance": 0.05
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "依隆重之禮，親祭太廟",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 15,
+            "treasury": -30
+          }
+        },
+        {
+          "key": "B",
+          "label": "從簡行禮，以省費用",
+          "tone": "節用",
+          "effects": {
+            "people": 5,
+            "prestige": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E505",
+      "name": "生母位分",
+      "speaker": "內廷",
+      "narrative": "陛下生母位分卑微，內廷請示是否追封位號。追封與否，既關乎孝道，也會影響宮中與朝中對陛下出身的議論。",
+      "when": {
+        "flag": "origin:shuchu",
+        "chance": 0.04
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "追封位號，厚葬生母",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 5,
+            "treasury": -20
+          }
+        },
+        {
+          "key": "B",
+          "label": "暫不追封，以待來日",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E506",
+      "name": "文會應對",
+      "speaker": "翰林學士",
+      "narrative": "翰林院設文會，請陛下臨場賦詩論文。諸臣素以出身輕視陛下，若能當場應對得體，便可扭轉此前的成見。",
+      "when": {
+        "flag": "origin:shuchu",
+        "chance": 0.05
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "即席賦詩，文辭俱佳",
+          "tone": "仁厚",
+          "effects": {
+            "literature": 15
+          }
+        },
+        {
+          "key": "B",
+          "label": "只聽不言，以示持重",
+          "tone": "穩妥",
+          "effects": {
+            "charm": -5,
+            "literature": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E507",
+      "name": "朝臣輕慢",
+      "speaker": "丞相",
+      "narrative": "數位老臣在朝會上言語輕慢，認為庶出之君不足以服眾。丞相請陛下決斷，是厚加籠絡，還是立威以定朝綱。",
+      "when": {
+        "flag": "origin:shuchu",
+        "chance": 0.04
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "延攬老臣，屈己下問",
+          "tone": "仁厚",
+          "effects": {
+            "charm": 10,
+            "power": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "當庭申斥，以立威信",
+          "tone": "強硬",
+          "effects": {
+            "power": 10,
+            "charm": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E508",
+      "name": "以才立身",
+      "speaker": "戶部尚書",
+      "narrative": "戶部尚書知陛下通曉錢糧之學，請陛下親自過問賦稅。若允其所請，農商或可見效，但國庫也要先行支出。",
+      "when": {
+        "flag": "origin:shuchu",
+        "chance": 0.03
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "親理錢糧，整頓農政",
+          "tone": "勤政",
+          "effects": {
+            "agriculture": 20,
+            "treasury": -40
+          }
+        },
+        {
+          "key": "B",
+          "label": "婉辭，請戶部專責",
+          "tone": "謙退",
+          "effects": {
+            "people": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E509",
+      "name": "藩邸舊臣",
+      "speaker": "藩邸舊部",
+      "narrative": "入繼時隨行的藩邸舊臣陸續請見，皆盼能在新朝得一官半職。朝中舊臣對此多有側目，陛下若用之，恐生猜忌；若棄之，又傷藩中之心。",
+      "when": {
+        "flag": "origin:waifan",
+        "chance": 0.05
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "擢用藩邸舊臣，授以要職",
+          "tone": "攬權",
+          "effects": {
+            "charm": 10,
+            "power": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "厚賞遣回藩地，不留朝中",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": -5,
+            "benevolence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E510",
+      "name": "藩鎮兵馬",
+      "speaker": "兵部尚書",
+      "narrative": "藩中兵馬仍駐於京畿外圍，兵部請示是編入禁軍，還是任其自領。收編則兵力集於朝廷，留之則藩將擁兵自重。",
+      "when": {
+        "flag": "origin:waifan",
+        "chance": 0.04
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "編入禁軍，統歸朝廷",
+          "tone": "強硬",
+          "effects": {
+            "military": 10,
+            "armament": 30
+          }
+        },
+        {
+          "key": "B",
+          "label": "暫許自領，以安藩將之心",
+          "tone": "穩妥",
+          "effects": {
+            "military": -5,
+            "power": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E511",
+      "name": "正統之辯",
+      "speaker": "御史",
+      "narrative": "御史彈劾陛下以藩王入繼，言其名分不正。朝臣議論紛紛，陛下須拿出一套說法，方能平息眾口。",
+      "when": {
+        "flag": "origin:waifan",
+        "chance": 0.03
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "援引宗法先例，自辯正統",
+          "tone": "仁厚",
+          "effects": {
+            "prestige": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "嚴查彈劾之人，以儆效尤",
+          "tone": "強硬",
+          "effects": {
+            "power": 10,
+            "people": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E512",
+      "name": "外邦來朝",
+      "speaker": "鴻臚寺",
+      "narrative": "鄰邦遣使入京，慶賀陛下即位，並獻上方物。鴻臚寺請示回禮之制，厚薄之間，可見朝廷的氣度與底氣。",
+      "when": {
+        "flag": "origin:waifan",
+        "chance": 0.04
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "厚禮回贈，示以懷柔",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -40,
+            "prestige": 15
+          }
+        },
+        {
+          "key": "B",
+          "label": "陳列儀仗，示以威儀",
+          "tone": "強硬",
+          "effects": {
+            "military": 5,
+            "prestige": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E513",
+      "name": "軍中擁戴",
+      "speaker": "邊帥",
+      "narrative": "部將於軍營中高呼萬歲，請陛下順應軍心，登臨大位。此舉既是恩寵，也是擔子，陛下如何接受，將決定軍中與朝中的關係。",
+      "when": {
+        "flag": "origin:jungong",
+        "chance": 0.05
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "順應軍心，受其擁戴",
+          "tone": "強硬",
+          "effects": {
+            "military": 10,
+            "benevolence": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "辭謝軍中之議，以示謙退",
+          "tone": "謙退",
+          "effects": {
+            "benevolence": 5,
+            "power": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E514",
+      "name": "舊臣不服",
+      "speaker": "御史",
+      "narrative": "數位文臣私下串聯，以篡逆之名相指，認為陛下不配居此大位。御史請示是否追究，眾臣皆在觀望，此事將定下朝局的基調。",
+      "when": {
+        "flag": "origin:jungong",
+        "chance": 0.04
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "誅殺為首者，以儆效尤",
+          "tone": "峻法",
+          "effects": {
+            "power": 15,
+            "people": -10,
+            "benevolence": -10
+          }
+        },
+        {
+          "key": "B",
+          "label": "寬宥其罪，以示仁德",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 10,
+            "power": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E515",
+      "name": "邊軍索餉",
+      "speaker": "兵部尚書",
+      "narrative": "邊軍久無糧餉，兵部請示撥發庫銀。陛下若不應允，軍心恐生變動；若全數應允，國庫將見底，須另尋他策。",
+      "when": {
+        "flag": "origin:jungong",
+        "chance": 0.04
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "自內庫撥銀，足數發放",
+          "tone": "強硬",
+          "effects": {
+            "treasury": -80,
+            "military": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "許以田賦減免，分期補發",
+          "tone": "穩妥",
+          "effects": {
+            "people": -8,
+            "military": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E516",
+      "name": "天命之辯",
+      "speaker": "欽天監",
+      "narrative": "欽天監奏報星象，言天意已有更易之兆。此說可用以安定人心，亦可能被人借題發揮，陛下應如何措辭，須格外斟酌。",
+      "when": {
+        "flag": "origin:jungong",
+        "chance": 0.03
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "以天命自詡，昭示新朝氣象",
+          "tone": "強硬",
+          "effects": {
+            "heaven": 10,
+            "prestige": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "謙言天命難測，專務民生",
+          "tone": "謙退",
+          "effects": {
+            "heaven": 5,
+            "benevolence": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E565",
+      "name": "御花園春宴",
+      "speaker": "內務府總管",
+      "narrative": "三月花事正盛，御花園海棠初開，後宮嬪妃齊請設花宴以賞春色，所耗不貲。是否准許，還請陛下定奪。",
+      "when": {
+        "months": [
+          3
+        ],
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准設花宴",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -20,
+            "charm": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "命宮人自賞",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "花事從簡",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E566",
+      "name": "太醫院奏疫",
+      "speaker": "太醫院院使",
+      "narrative": "夏日暑氣蒸騰，京畿有疫病初起之象，太醫院請增購藥材，並於各坊廣設施藥之所，以安民生。",
+      "when": {
+        "months": [
+          6,
+          7
+        ],
+        "chance": 0.35,
+        "people_lt": 70
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "撥銀購藥施診",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -40,
+            "health": 5,
+            "people": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "令太醫自行處置",
+          "tone": "穩妥",
+          "effects": {
+            "health": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "嚴防封村",
+          "tone": "冒險",
+          "effects": {
+            "people": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E567",
+      "name": "武庫點檢",
+      "speaker": "兵部侍郎",
+      "narrative": "秋高馬肥，武庫點檢軍械，弓弩甲胄多有鏽蝕，兵部與工部請調撥銀兩，修繕補造，以備邊事。",
+      "when": {
+        "months": [
+          10
+        ],
+        "chance": 0.4,
+        "treasury_gt": 150
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "全面修繕軍械",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -60,
+            "military": 8
+          }
+        },
+        {
+          "key": "B",
+          "label": "擇要修補",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -20,
+            "military": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "暫且收存",
+          "tone": "冒險",
+          "effects": {
+            "armament": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E568",
+      "name": "翻書院校典",
+      "speaker": "翰林學士",
+      "narrative": "翻書院新歸典籍數千卷，其中錯訛甚多，學士請設局校勘、刊印頒行，以傳後世，為朝廷添彩。",
+      "when": {
+        "months": [
+          9
+        ],
+        "chance": 0.3,
+        "treasury_gt": 120
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設局校勘刊行",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -50,
+            "literature": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "擇善本收藏",
+          "tone": "穩妥",
+          "effects": {
+            "literature": 4
+          }
+        },
+        {
+          "key": "C",
+          "label": "束之高閣",
+          "tone": "冒險",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E569",
+      "name": "翰林院進講",
+      "speaker": "翰林侍講",
+      "narrative": "隔歲春日，翰林院請陛下御前進講經史，以明治道，並選近臣陪讀，使朝野知所向背，共議政事得失。",
+      "when": {
+        "months": [
+          5
+        ],
+        "every_years": 2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "親臨聽講",
+          "tone": "仁厚",
+          "effects": {
+            "literature": 6,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣近臣代聽",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "以事辭謝",
+          "tone": "冒險",
+          "effects": {
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E570",
+      "name": "御花園秋賞",
+      "speaker": "掌園太監",
+      "narrative": "八月桂香滿園，宮人備秋賞之宴，御花園景致可觀，請陛下臨幸，與後宮同享良辰佳景，以慰寒暑。",
+      "when": {
+        "months": [
+          8,
+          9
+        ],
+        "charm_gt": 200,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "臨幸賞景",
+          "tone": "仁厚",
+          "effects": {
+            "people": 2,
+            "charm": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "大設宴席",
+          "tone": "冒險",
+          "effects": {
+            "treasury": -30,
+            "charm": 12
+          }
+        },
+        {
+          "key": "C",
+          "label": "心繫政務",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E571",
+      "name": "太醫院進補",
+      "speaker": "太醫院御醫",
+      "narrative": "歲暮天寒，太醫院請以冬藥為陛下調補身體，並備妥歲末各宮所需藥材，以防風寒侵體，安度新春。",
+      "when": {
+        "months": [
+          12
+        ],
+        "health_lt": 70,
+        "treasury_gt": 100
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "依方進補",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -30,
+            "health": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "略備藥膳",
+          "tone": "穩妥",
+          "effects": {
+            "health": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "卻之不受",
+          "tone": "冒險",
+          "effects": {
+            "health": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E572",
+      "name": "武庫失火",
+      "speaker": "兵部尚書",
+      "narrative": "二月初春，武庫不慎失火，雖及時撲滅，然庫中存甲受損不少，兵部請陛下定奪修復之策與追責。",
+      "when": {
+        "months": [
+          2
+        ],
+        "chance": 0.2,
+        "armament_gt": 200
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "撥銀重造",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -70,
+            "armament": 30
+          }
+        },
+        {
+          "key": "B",
+          "label": "就存甲修補",
+          "tone": "穩妥",
+          "effects": {
+            "armament": -20,
+            "military": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "追究守庫官",
+          "tone": "冒險",
+          "effects": {
+            "military": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E547",
+      "name": "京兆水患",
+      "speaker": "地方知府",
+      "narrative": "巡幸至京兆，渭水暴漲，沿岸田廬盡沒，流民擁塞驛路。臣請陛下早定賑濟之策，以免饑民生變。",
+      "when": {
+        "at_prefecture": "jingzhao",
+        "agriculture_lt": 400,
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開倉賑濟",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -60,
+            "people": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣使治河",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -30,
+            "agriculture": 40
+          }
+        },
+        {
+          "key": "C",
+          "label": "任其泛濫",
+          "tone": "冒險",
+          "effects": {
+            "people": -8,
+            "agriculture": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E548",
+      "name": "京兆豪強",
+      "speaker": "地方知府",
+      "narrative": "京兆豪右廣置田莊，佃戶依附日深，闔府多有怨言。臣以為兼併若不抑，賦役將盡壓於貧戶。",
+      "when": {
+        "at_prefecture": "jingzhao",
+        "people_lt": 75,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "抑制兼併",
+          "tone": "仁厚",
+          "effects": {
+            "people": 4,
+            "power": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "許其納粟",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": 40,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不問",
+          "tone": "冒險",
+          "effects": {
+            "people": -4,
+            "prestige": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E549",
+      "name": "京兆民謠",
+      "speaker": "御史",
+      "narrative": "市井間傳唱一首童謠，詞句暗諷朝政，京兆百姓爭相吟誦，街頭巷尾議論紛紛。御史請陛下留意民間之議。",
+      "when": {
+        "at_prefecture": "jingzhao",
+        "benevolence_lt": 220,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "採風問政",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "people": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "下詔禁謗",
+          "tone": "強硬",
+          "effects": {
+            "power": 4,
+            "benevolence": -6
+          }
+        },
+        {
+          "key": "C",
+          "label": "付之不理",
+          "tone": "冒險",
+          "effects": {
+            "charm": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E550",
+      "name": "河東水患",
+      "speaker": "地方知府",
+      "narrative": "巡幸河東，汾水溢出堤岸，沿河村落多遭淹沒，府庫難以即刻應付，災民流離失所。臣請陛下酌情處置。",
+      "when": {
+        "at_prefecture": "hedong",
+        "agriculture_lt": 420,
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開倉賑濟",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -60,
+            "people": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣使治河",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -30,
+            "agriculture": 40
+          }
+        },
+        {
+          "key": "C",
+          "label": "任其泛濫",
+          "tone": "冒險",
+          "effects": {
+            "people": -8,
+            "agriculture": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E551",
+      "name": "河東豪強",
+      "speaker": "地方知府",
+      "narrative": "河東鹽池與鐵冶多為豪族所掌，私設關卡盤剝來往商旅，地方苦之久矣，朝廷政令難以直達。臣以為當整飭其利源，以安地方。",
+      "when": {
+        "at_prefecture": "hedong",
+        "people_lt": 80,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "抑制兼併",
+          "tone": "仁厚",
+          "effects": {
+            "people": 4,
+            "power": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "許其納粟",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": 40,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不問",
+          "tone": "冒險",
+          "effects": {
+            "people": -4,
+            "prestige": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E552",
+      "name": "河東民謠",
+      "speaker": "御史",
+      "narrative": "河東鄉里流傳一則謠語，言及地方官吏之貪墨，百姓引為談資，茶坊酒肆間皆有議論。御史請陛下察其實情，以正吏治。",
+      "when": {
+        "at_prefecture": "hedong",
+        "benevolence_lt": 240,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "採風問政",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "people": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "下詔禁謗",
+          "tone": "強硬",
+          "effects": {
+            "power": 4,
+            "benevolence": -6
+          }
+        },
+        {
+          "key": "C",
+          "label": "付之不理",
+          "tone": "冒險",
+          "effects": {
+            "charm": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E553",
+      "name": "益州水患",
+      "speaker": "地方知府",
+      "narrative": "巡幸益州，岷江汛期來勢洶洶，堤防多處潰決，沿岸稻田浸於泥水之中。臣請速撥錢糧搶修。",
+      "when": {
+        "at_prefecture": "yizhou",
+        "agriculture_lt": 450,
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開倉賑濟",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -60,
+            "people": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣使治河",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -30,
+            "agriculture": 40
+          }
+        },
+        {
+          "key": "C",
+          "label": "任其泛濫",
+          "tone": "冒險",
+          "effects": {
+            "people": -8,
+            "agriculture": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E554",
+      "name": "益州豪強",
+      "speaker": "地方知府",
+      "narrative": "益州蜀錦工坊與山地園林多歸少數大族，為利而爭訟者日多。臣以為宜加約束，以免民怨積於一隅。",
+      "when": {
+        "at_prefecture": "yizhou",
+        "people_lt": 80,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "抑制兼併",
+          "tone": "仁厚",
+          "effects": {
+            "people": 4,
+            "power": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "許其納粟",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": 40,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不問",
+          "tone": "冒險",
+          "effects": {
+            "people": -4,
+            "prestige": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E555",
+      "name": "益州民謠",
+      "speaker": "御史",
+      "narrative": "蜀地士民作歌頌揚天子巡幸之德，亦有人詠嘆徭役之苦，兩種聲音交織於市井之間。御史請陛下分辨其中之意。",
+      "when": {
+        "at_prefecture": "yizhou",
+        "benevolence_lt": 240,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "採風問政",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "people": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "下詔禁謗",
+          "tone": "強硬",
+          "effects": {
+            "power": 4,
+            "benevolence": -6
+          }
+        },
+        {
+          "key": "C",
+          "label": "付之不理",
+          "tone": "冒險",
+          "effects": {
+            "charm": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E556",
+      "name": "江寧水患",
+      "speaker": "地方知府",
+      "narrative": "巡幸江寧，連日暴雨使秦淮諸河暴漲，低窪坊巷積水數尺，商鋪與貨棧受損甚重。臣請速議救濟。",
+      "when": {
+        "at_prefecture": "jiangning",
+        "agriculture_lt": 450,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開倉賑濟",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -60,
+            "people": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣使治河",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -30,
+            "agriculture": 40
+          }
+        },
+        {
+          "key": "C",
+          "label": "任其泛濫",
+          "tone": "冒險",
+          "effects": {
+            "people": -8,
+            "agriculture": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E557",
+      "name": "江寧豪強",
+      "speaker": "地方知府",
+      "narrative": "江寧商會勢力日盛，把持絲綢與漕運之利，官府令出多被掣肘。臣以為當稍加節制，以正市易。",
+      "when": {
+        "at_prefecture": "jiangning",
+        "commerce_gt": 300,
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "抑制兼併",
+          "tone": "仁厚",
+          "effects": {
+            "people": 4,
+            "power": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "許其納粟",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": 40,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不問",
+          "tone": "冒險",
+          "effects": {
+            "people": -4,
+            "prestige": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E558",
+      "name": "江寧民謠",
+      "speaker": "御史",
+      "narrative": "江寧街市傳唱一首市謠，嘲諷新設之稅目，商賈與小民同聲怨嘆，連行商之間也暗有怨言。御史請陛下體察民情。",
+      "when": {
+        "at_prefecture": "jiangning",
+        "people_lt": 85,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "採風問政",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "people": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "下詔禁謗",
+          "tone": "強硬",
+          "effects": {
+            "power": 4,
+            "benevolence": -6
+          }
+        },
+        {
+          "key": "C",
+          "label": "付之不理",
+          "tone": "冒險",
+          "effects": {
+            "charm": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E559",
+      "name": "揚州水患",
+      "speaker": "地方知府",
+      "narrative": "巡幸揚州，運河水位驟升，堤岸多處潰口，沿河鹽場與農田俱受波及。臣請陛下即刻定奪。",
+      "when": {
+        "at_prefecture": "yangzhou",
+        "agriculture_lt": 450,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開倉賑濟",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -60,
+            "people": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣使治河",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -30,
+            "agriculture": 40
+          }
+        },
+        {
+          "key": "C",
+          "label": "任其泛濫",
+          "tone": "冒險",
+          "effects": {
+            "people": -8,
+            "agriculture": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E560",
+      "name": "揚州豪強",
+      "speaker": "地方知府",
+      "narrative": "揚州鹽商世代積財，財力足以左右地方官吏，其所請托者甚眾。臣請陛下留意鹽利之歸向。",
+      "when": {
+        "at_prefecture": "yangzhou",
+        "commerce_gt": 350,
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "抑制兼併",
+          "tone": "仁厚",
+          "effects": {
+            "people": 4,
+            "power": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "許其納粟",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": 40,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不問",
+          "tone": "冒險",
+          "effects": {
+            "people": -4,
+            "prestige": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E561",
+      "name": "揚州民謠",
+      "speaker": "御史",
+      "narrative": "揚州酒肆間流傳一首詩謠，語涉鹽價與官府之能否，坊間頗為傳誦。御史請陛下審慎回應。",
+      "when": {
+        "at_prefecture": "yangzhou",
+        "prestige_lt": 200,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "採風問政",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "people": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "下詔禁謗",
+          "tone": "強硬",
+          "effects": {
+            "power": 4,
+            "benevolence": -6
+          }
+        },
+        {
+          "key": "C",
+          "label": "付之不理",
+          "tone": "冒險",
+          "effects": {
+            "prestige": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E562",
+      "name": "登萊水患",
+      "speaker": "地方知府",
+      "narrative": "巡幸登萊，海潮倒灌入河，近海鹽田與村落盡遭鹹水所浸，漁民失業者甚眾。臣請速撥錢糧。",
+      "when": {
+        "at_prefecture": "denglai",
+        "agriculture_lt": 450,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "開倉賑濟",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -60,
+            "people": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣使治河",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -30,
+            "agriculture": 40
+          }
+        },
+        {
+          "key": "C",
+          "label": "任其泛濫",
+          "tone": "冒險",
+          "effects": {
+            "people": -8,
+            "agriculture": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E563",
+      "name": "登萊豪強",
+      "speaker": "地方知府",
+      "narrative": "登萊海商船隊眾多，與外洋互市，私下勾連官吏，逃避稅額。臣以為宜嚴加查核，以正海關。",
+      "when": {
+        "at_prefecture": "denglai",
+        "commerce_gt": 350,
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "抑制兼併",
+          "tone": "仁厚",
+          "effects": {
+            "people": 4,
+            "power": -5
+          }
+        },
+        {
+          "key": "B",
+          "label": "許其納粟",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": 40,
+            "people": -3
+          }
+        },
+        {
+          "key": "C",
+          "label": "置之不問",
+          "tone": "冒險",
+          "effects": {
+            "people": -4,
+            "prestige": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E564",
+      "name": "登萊民謠",
+      "speaker": "御史",
+      "narrative": "登萊海港傳來一首歌謠，讚頌天子巡幸之恩，也有人私下悲嘆出海者難歸。御史請陛下聽取民聲。",
+      "when": {
+        "at_prefecture": "denglai",
+        "charm_gt": 120,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "採風問政",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 6,
+            "people": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "下詔禁謗",
+          "tone": "強硬",
+          "effects": {
+            "power": 4,
+            "benevolence": -6
+          }
+        },
+        {
+          "key": "C",
+          "label": "付之不理",
+          "tone": "冒險",
+          "effects": {
+            "charm": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E573",
+      "name": "騎兵擴編",
+      "speaker": "兵部尚書",
+      "narrative": "北境馬政稍定，邊將奏請增置騎營，以應草原部族奔襲之勢。然養馬耗糧，國庫未必寬裕，請陛下定奪。",
+      "when": {
+        "every_years": 3,
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "增設騎營",
+          "tone": "強硬",
+          "effects": {
+            "treasury": -80,
+            "armament": 40,
+            "military": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "以驛馬充數",
+          "tone": "節用",
+          "effects": {
+            "treasury": -20,
+            "armament": 10
+          }
+        },
+        {
+          "key": "C",
+          "label": "暫緩其議",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E574",
+      "name": "盾兵改制",
+      "speaker": "兵部侍郎",
+      "narrative": "軍中盾甲多朽，前線士卒反映藤牌不堪箭矢，盾陣一破，步卒便無所倚。工部匠人願依舊制重造，所費不貲。",
+      "when": {
+        "chance": 0.12,
+        "armament_lt": 300
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "重造鐵盾",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -50,
+            "armament": 35
+          }
+        },
+        {
+          "key": "B",
+          "label": "以木盾代之",
+          "tone": "節用",
+          "effects": {
+            "treasury": -10,
+            "armament": 10,
+            "people": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "不予改制",
+          "tone": "保守",
+          "effects": {
+            "armament": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E575",
+      "name": "弓弩營練兵",
+      "speaker": "兵部侍郎",
+      "narrative": "善射之士多出邊郡，故老言弓弩齊發，可遏敵騎於百步之外。是否專設弓弩營，請陛下御斷。",
+      "when": {
+        "chance": 0.12,
+        "military_gt": 40
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設弓弩營",
+          "tone": "勤政",
+          "effects": {
+            "treasury": -60,
+            "armament": 30
+          }
+        },
+        {
+          "key": "B",
+          "label": "招募良家善射者",
+          "tone": "仁厚",
+          "effects": {
+            "people": -2,
+            "military": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "不予重視",
+          "tone": "冒險",
+          "effects": {
+            "armament": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E576",
+      "name": "長槍陣圖",
+      "speaker": "兵部尚書",
+      "narrative": "有老將獻長槍陣圖，言槍林列成三排，可拒騎兵於丈外。朝議分為兩端，或欲頒行全軍，或以為陣法難成。",
+      "when": {
+        "chance": 0.12,
+        "military_gt": 60
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "頒行槍陣圖",
+          "tone": "穩妥",
+          "effects": {
+            "armament": 25,
+            "military": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "請老將親授",
+          "tone": "周旋",
+          "effects": {
+            "treasury": -20,
+            "military": 4
+          }
+        },
+        {
+          "key": "C",
+          "label": "罷其操練",
+          "tone": "仁厚",
+          "effects": {
+            "people": 4,
+            "armament": -15
+          }
+        }
+      ]
+    },
+    {
+      "id": "E577",
+      "name": "騎寇衝陣",
+      "speaker": "邊將",
+      "narrative": "草原騎兵夜襲，突入盾陣之外側，馬蹄踏亂前列。邊將請示：是以盾陣死守，抑或弓弩齊射，趁其陣亂而擊之。",
+      "when": {
+        "every_years": 2,
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "盾陣迎擊",
+          "tone": "強硬",
+          "effects": {
+            "war": {
+              "prefecture": "hedong",
+              "strength": 340,
+              "reward": {
+                "prestige": 5,
+                "armament": 15
+              },
+              "loss": {
+                "armament": -90,
+                "people": -4
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "弓弩齊射",
+          "tone": "勤政",
+          "effects": {
+            "war": {
+              "prefecture": "hedong",
+              "strength": 300,
+              "reward": {
+                "prestige": 4,
+                "treasury": 30
+              },
+              "loss": {
+                "armament": -60,
+                "people": -3
+              }
+            }
+          }
+        },
+        {
+          "key": "C",
+          "label": "退守城中",
+          "tone": "保守",
+          "effects": {
+            "people": -5,
+            "agriculture": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E578",
+      "name": "盾陣擋箭",
+      "speaker": "兵部侍郎",
+      "narrative": "敵軍弓手列於百步之外，箭雨如蝗，步卒傷亡日增。盾兵若能舉盾推進，或可逼近而破其陣；亦有人主張後撤以待變。",
+      "when": {
+        "chance": 0.1,
+        "military_gt": 50
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "盾陣推進",
+          "tone": "強硬",
+          "effects": {
+            "war": {
+              "prefecture": "yizhou",
+              "strength": 300,
+              "reward": {
+                "prestige": 4,
+                "treasury": 25
+              },
+              "loss": {
+                "armament": -70,
+                "people": -3
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "以盾護弩",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -30,
+            "armament": 10
+          }
+        },
+        {
+          "key": "C",
+          "label": "後撤待變",
+          "tone": "保守",
+          "effects": {
+            "prestige": -2,
+            "people": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E579",
+      "name": "弓弩破槍陣",
+      "speaker": "邊將",
+      "narrative": "敵方槍陣森然，正面難攻。邊將請以弓弩從高處亂箭齊發，打亂其隊列，然箭矢耗費不少，且須有人誘敵離陣。",
+      "when": {
+        "chance": 0.1,
+        "military_gt": 50
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "亂箭齊發",
+          "tone": "強硬",
+          "effects": {
+            "war": {
+              "prefecture": "jingzhao",
+              "strength": 320,
+              "reward": {
+                "prestige": 5,
+                "armament": 20
+              },
+              "loss": {
+                "armament": -65,
+                "people": -4
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣使誘敵離陣",
+          "tone": "周旋",
+          "effects": {
+            "treasury": -40,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "按兵不動",
+          "tone": "穩妥",
+          "effects": {
+            "armament": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E580",
+      "name": "長槍拒騎",
+      "speaker": "兵部尚書",
+      "narrative": "敵騎再度來襲，邊將欲以長槍列成拒馬之陣，槍尖朝外，以待騎兵自投。此陣成則可挫其鋒，然稍有潰亂，士卒便陷於馬下。",
+      "when": {
+        "chance": 0.1,
+        "military_gt": 60
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "列槍拒馬",
+          "tone": "強硬",
+          "effects": {
+            "war": {
+              "prefecture": "denglai",
+              "strength": 330,
+              "reward": {
+                "prestige": 5,
+                "military": 3
+              },
+              "loss": {
+                "armament": -80,
+                "military": -4
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "以騎兵側擊",
+          "tone": "冒險",
+          "effects": {
+            "treasury": -30,
+            "armament": -10
+          }
+        },
+        {
+          "key": "C",
+          "label": "令其固守",
+          "tone": "穩妥",
+          "effects": {
+            "people": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E581",
+      "name": "陣前單挑·霍去病",
+      "speaker": "武將",
+      "narrative": "敵陣中有猛將叫陣，請戰者稱其可效霍去病孤身深入之勇。若許其單騎出陣，勝則士氣大振，敗則損威失勢。",
+      "when": {
+        "chance": 0.08,
+        "military_gt": 70
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "許其單騎出陣",
+          "tone": "強硬",
+          "effects": {
+            "war": {
+              "prefecture": "hedong",
+              "strength": 280,
+              "reward": {
+                "prestige": 6,
+                "military": 3
+              },
+              "loss": {
+                "prestige": -4,
+                "military": -2
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣裨將代戰",
+          "tone": "穩妥",
+          "effects": {
+            "armament": -10,
+            "military": 1
+          }
+        },
+        {
+          "key": "C",
+          "label": "以大局為重，阻之",
+          "tone": "保守",
+          "effects": {
+            "benevolence": 3,
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E582",
+      "name": "陣前單挑·岳飛",
+      "speaker": "武將",
+      "narrative": "敵將挑戰之聲不絕於營外，部下請將軍出戰。將領自言願效岳武穆以少擊眾之志，若獲准，則生死繫於一騎一槍之間。",
+      "when": {
+        "chance": 0.08,
+        "military_gt": 80
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其出戰",
+          "tone": "強硬",
+          "effects": {
+            "war": {
+              "prefecture": "yizhou",
+              "strength": 290,
+              "reward": {
+                "prestige": 6,
+                "treasury": 30
+              },
+              "loss": {
+                "prestige": -4,
+                "armament": -40
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "命其固守營壘",
+          "tone": "穩妥",
+          "effects": {
+            "armament": 5,
+            "people": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "請其還朝議功",
+          "tone": "周旋",
+          "effects": {
+            "treasury": -20,
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E583",
+      "name": "陣前單挑·李廣",
+      "speaker": "武將",
+      "narrative": "敵方有善射之將立於陣前，連發不止。舊將回憶李廣射石沒羽之事，請命其出陣與之對射，勝負全在一箭。",
+      "when": {
+        "chance": 0.08,
+        "military_gt": 60
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "許其對射",
+          "tone": "冒險",
+          "effects": {
+            "war": {
+              "prefecture": "jingzhao",
+              "strength": 300,
+              "reward": {
+                "prestige": 5,
+                "armament": 15
+              },
+              "loss": {
+                "prestige": -3,
+                "military": -3
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "以弓弩營代出",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -25,
+            "armament": 10
+          }
+        },
+        {
+          "key": "C",
+          "label": "令其退守",
+          "tone": "保守",
+          "effects": {
+            "people": 3,
+            "prestige": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E584",
+      "name": "陣前單挑·呂布",
+      "speaker": "武將",
+      "narrative": "敵營有勇將呂布之稱者連斬數人，諸將股慄。有人請以轅門射戟之法，先以計折其銳氣，再令勇將單挑，勝之則威震四方。",
+      "when": {
+        "chance": 0.08,
+        "military_gt": 90
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "令勇將單挑",
+          "tone": "強硬",
+          "effects": {
+            "war": {
+              "prefecture": "yangzhou",
+              "strength": 310,
+              "reward": {
+                "prestige": 6,
+                "treasury": 40
+              },
+              "loss": {
+                "prestige": -5,
+                "armament": -60
+              }
+            }
+          }
+        },
+        {
+          "key": "B",
+          "label": "先以計折其銳氣",
+          "tone": "周旋",
+          "effects": {
+            "treasury": -30,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "避其鋒芒",
+          "tone": "保守",
+          "effects": {
+            "armament": -10,
+            "people": 2
           }
         }
       ]

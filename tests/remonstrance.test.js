@@ -26,7 +26,7 @@ test('死諫 requires a bonded court official whose loyalty is below the gate', 
   const none = createInitialState('rem-none');
   assert.equal(isEligible(none, E420, rng), false, 'no bonded official');
 
-  const high = bond(createInitialState('rem-high'), 'o1', 75);
+  const high = bond(createInitialState('rem-high'), 'o1', 90);
   assert.equal(isEligible(high, E420, makeRng(['x'])), false, 'bonded but loyal enough');
 
   const low = bond(createInitialState('rem-low'), 'o1', 40);
