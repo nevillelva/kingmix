@@ -1,0 +1,324 @@
+{
+  "version": 1,
+  "source": "facilities-palace",
+  "events": [
+    {
+      "id": "E565",
+      "name": "御花園春宴",
+      "speaker": "內務府總管",
+      "narrative": "三月花事正盛，御花園海棠初開，後宮請設花宴。是否准許，還請陛下定奪。",
+      "when": {
+        "months": [
+          3
+        ],
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准設花宴",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -20,
+            "charm": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "命宮人自賞",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "花事從簡",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E566",
+      "name": "太醫院奏疫",
+      "speaker": "太醫院院使",
+      "narrative": "夏日暑氣蒸騰，京畿有疫病初起之象，太醫院請增藥材、廣設施藥之所。",
+      "when": {
+        "months": [
+          6,
+          7
+        ],
+        "chance": 0.35,
+        "people_lt": 70
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "撥銀購藥施診",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -40,
+            "health": 5,
+            "people": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "令太醫自行處置",
+          "tone": "穩妥",
+          "effects": {
+            "health": -2
+          }
+        },
+        {
+          "key": "C",
+          "label": "嚴防封村",
+          "tone": "冒險",
+          "effects": {
+            "people": -5
+          }
+        }
+      ]
+    },
+    {
+      "id": "E567",
+      "name": "武庫點檢",
+      "speaker": "兵部侍郎",
+      "narrative": "秋高馬肥，武庫點檢軍械，弓弩甲胄多有鏽蝕，請修繕補造。",
+      "when": {
+        "months": [
+          10
+        ],
+        "chance": 0.4,
+        "treasury_gt": 150
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "全面修繕軍械",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -60,
+            "military": 8
+          }
+        },
+        {
+          "key": "B",
+          "label": "擇要修補",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -20,
+            "military": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "暫且收存",
+          "tone": "冒險",
+          "effects": {
+            "armament": -10
+          }
+        }
+      ]
+    },
+    {
+      "id": "E568",
+      "name": "翻書院校典",
+      "speaker": "翰林學士",
+      "narrative": "翻書院新歸典籍數千卷，錯訛甚多，請設局校勘刊行，以傳後世。",
+      "when": {
+        "months": [
+          9
+        ],
+        "chance": 0.3,
+        "treasury_gt": 120
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "設局校勘刊行",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -50,
+            "literature": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "擇善本收藏",
+          "tone": "穩妥",
+          "effects": {
+            "literature": 4
+          }
+        },
+        {
+          "key": "C",
+          "label": "束之高閣",
+          "tone": "冒險",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E569",
+      "name": "翰林院進講",
+      "speaker": "翰林侍講",
+      "narrative": "隔歲春日，翰林院請陛下御前進講經史，以明治道。",
+      "when": {
+        "months": [
+          5
+        ],
+        "every_years": 2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "親臨聽講",
+          "tone": "仁厚",
+          "effects": {
+            "literature": 6,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "遣近臣代聽",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "以事辭謝",
+          "tone": "冒險",
+          "effects": {
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E570",
+      "name": "御花園秋賞",
+      "speaker": "掌園太監",
+      "narrative": "八月桂香滿園，宮人備秋賞之宴，御花園景致可觀，請陛下臨幸。",
+      "when": {
+        "months": [
+          8,
+          9
+        ],
+        "charm_gt": 200,
+        "chance": 0.4
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "臨幸賞景",
+          "tone": "仁厚",
+          "effects": {
+            "people": 2,
+            "charm": 5
+          }
+        },
+        {
+          "key": "B",
+          "label": "大設宴席",
+          "tone": "冒險",
+          "effects": {
+            "treasury": -30,
+            "charm": 12
+          }
+        },
+        {
+          "key": "C",
+          "label": "心繫政務",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E571",
+      "name": "太醫院進補",
+      "speaker": "太醫院御醫",
+      "narrative": "歲暮天寒，太醫院請以冬藥為陛下調補，並備歲末藥材。",
+      "when": {
+        "months": [
+          12
+        ],
+        "health_lt": 70,
+        "treasury_gt": 100
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "依方進補",
+          "tone": "穩妥",
+          "effects": {
+            "treasury": -30,
+            "health": 10
+          }
+        },
+        {
+          "key": "B",
+          "label": "略備藥膳",
+          "tone": "穩妥",
+          "effects": {
+            "health": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "卻之不受",
+          "tone": "冒險",
+          "effects": {
+            "health": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E572",
+      "name": "武庫失火",
+      "speaker": "兵部尚書",
+      "narrative": "二月初春，武庫火起，雖及時撲滅，然庫中存甲受損不少，請陛下定奪修復之策。",
+      "when": {
+        "months": [
+          2
+        ],
+        "chance": 0.2,
+        "armament_gt": 200
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "撥銀重造",
+          "tone": "仁厚",
+          "effects": {
+            "treasury": -70,
+            "armament": 30
+          }
+        },
+        {
+          "key": "B",
+          "label": "就存甲修補",
+          "tone": "穩妥",
+          "effects": {
+            "armament": -20,
+            "military": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "追究守庫官",
+          "tone": "冒險",
+          "effects": {
+            "military": -3
+          }
+        }
+      ]
+    }
+  ]
+}
