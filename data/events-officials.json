@@ -1,0 +1,643 @@
+{
+  "version": 1,
+  "source": "臣子關係網（src/relations.js）：師生、姻親、孿敵與結黨、互參、連坐",
+  "events": [
+    {
+      "id": "E527",
+      "name": "師生薦才",
+      "speaker": "翰林學士",
+      "narrative": "臣之座師近日薦一寒士，文章雖樸，策論頗有見地。座師言其得臣之教，臣願以師門之名保舉，然恐外人以為師生結黨。請陛下明斷。",
+      "when": {
+        "flag": "rel_teacher",
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "擢用其人",
+          "tone": "仁厚",
+          "effects": {
+            "literature": 5,
+            "power": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "暫且擱置",
+          "tone": "穩妥",
+          "effects": {}
+        },
+        {
+          "key": "C",
+          "label": "疑其結黨",
+          "tone": "強硬",
+          "effects": {
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E528",
+      "name": "門生故吏",
+      "speaker": "禮部侍郎",
+      "narrative": "朝中諸臣多出自同一座師之門，遇事互為奧援，奏對之時口徑一致。臣以為此風不可長，然亦不便一律黜落，請陛下酌定。",
+      "when": {
+        "flag": "rel_teacher",
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴申朝綱",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 3,
+            "people": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "循例不問",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E529",
+      "name": "座師獲罪",
+      "speaker": "御史臺",
+      "narrative": "某官被參待決，其座師連日上書求情，言昔日受業之恩不可忘。臣以為門生若因此受牽連，忠誠必受挫，陛下寬嚴之間，當自有權衡。",
+      "when": {
+        "flag": "impeach_pending",
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "赦其門生",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 5,
+            "setFlag": "rel_order_mourn"
+          }
+        },
+        {
+          "key": "B",
+          "label": "依律論處",
+          "tone": "穩妥",
+          "effects": {
+            "power": 2
+          }
+        },
+        {
+          "key": "C",
+          "label": "株連到底",
+          "tone": "強硬",
+          "effects": {
+            "people": -3,
+            "prestige": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E530",
+      "name": "弟子守制",
+      "speaker": "太常寺卿",
+      "narrative": "座師新喪，其弟子依禮當守制三月，然朝政繁冗，諸人多欲奪情視事。臣請陛下定奪，是准其守制，還是令其照常供職。",
+      "when": {
+        "flag": "rel_teacher",
+        "months": [
+          3
+        ],
+        "chance": 0.3
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其守制",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 4,
+            "prestige": 1
+          }
+        },
+        {
+          "key": "B",
+          "label": "奪情視事",
+          "tone": "強硬",
+          "effects": {
+            "power": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "E531",
+      "name": "師徒異論",
+      "speaker": "國子監祭酒",
+      "narrative": "座師與其弟子於經義之爭上各執一端，同門為之分裂，朝堂議事時互不相讓。臣以為師說當從，然弟子所見亦有理，請陛下裁定。",
+      "when": {
+        "flag": "rel_teacher",
+        "chance": 0.1,
+        "official_loyalty_lt": 50
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "從師之說",
+          "tone": "穩妥",
+          "effects": {
+            "literature": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "從弟子之議",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "兩說皆罷",
+          "tone": "冒險",
+          "effects": {
+            "commerce": -20
+          }
+        }
+      ]
+    },
+    {
+      "id": "E532",
+      "name": "外戚結親",
+      "speaker": "宗正寺卿",
+      "narrative": "戶部尚書之子欲與知府之女結親，兩家皆為朝中要員，聯姻之議已傳遍各衙門。臣以為此乃姻親之常情，然亦須防其借親勢以攬權，請陛下允否。",
+      "when": {
+        "flag": "rel_marriage",
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "允准婚事",
+          "tone": "仁厚",
+          "effects": {
+            "charm": 5,
+            "prestige": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "婉言拒絕",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E533",
+      "name": "姻親同舉",
+      "speaker": "吏部侍郎",
+      "narrative": "歲考將至，某官薦其姻親入選，言其才能足堪大任。臣查其考績，確有可取之處，然姻親互薦，外人難免有私相授受之議，請陛下聖裁。",
+      "when": {
+        "flag": "rel_marriage",
+        "months": [
+          9
+        ],
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其薦舉",
+          "tone": "穩妥",
+          "effects": {
+            "power": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "另選他人",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E534",
+      "name": "姻親牽連",
+      "speaker": "刑部侍郎",
+      "narrative": "被參之臣，其姻親數人亦在朝中任職，今皆人人自危，有上書請辭者。臣以為姻親不可一概論罪，然朝中人心已有浮動，請陛下明示。",
+      "when": {
+        "flag": "impeach_pending",
+        "chance": 0.25
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "赦其姻親",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 4,
+            "setFlag": "rel_order_mourn"
+          }
+        },
+        {
+          "key": "B",
+          "label": "令其自退",
+          "tone": "穩妥",
+          "effects": {
+            "people": 1
+          }
+        },
+        {
+          "key": "C",
+          "label": "一併查辦",
+          "tone": "強硬",
+          "effects": {
+            "prestige": -3,
+            "power": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E535",
+      "name": "聯姻敗露",
+      "speaker": "都察院",
+      "narrative": "有御史舉報，某權臣與姻親暗中交通，以婚約為名行私相授受之實，所涉財帛甚鉅。臣已查得部分書信，然其中尚有許多細節，待陛下下旨深究。",
+      "when": {
+        "flag": "rel_marriage",
+        "chance": 0.06
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "嚴查到底",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 2,
+            "people": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "點到為止",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E536",
+      "name": "婚約續盟",
+      "speaker": "鴻臚寺卿",
+      "narrative": "兩家姻親之約將滿，雙方皆願續約，且各以厚禮相贈。臣以為此可安定朝中人心，然續約之中，亦有借勢之意，請陛下酌定。",
+      "when": {
+        "flag": "rel_marriage",
+        "chance": 0.05
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其續約",
+          "tone": "仁厚",
+          "effects": {
+            "charm": 3,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "不予理會",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E537",
+      "name": "同朝爭寵",
+      "speaker": "中書舍人",
+      "narrative": "丞相與戶部尚書素來不睦，各自在御前爭言國策，互相不讓。臣以為二人各有所長，然長此以往，朝議將為之分裂，請陛下早作裁斷。",
+      "when": {
+        "flag": "rel_rival",
+        "chance": 0.12
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "偏信其一",
+          "tone": "強硬",
+          "effects": {
+            "power": 3,
+            "benevolence": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "兩用其長",
+          "tone": "穩妥",
+          "effects": {
+            "literature": 3
+          }
+        },
+        {
+          "key": "C",
+          "label": "各打五十大板",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E538",
+      "name": "互參奏摺",
+      "speaker": "御史中丞",
+      "narrative": "孿敵二人各上奏摺，彼此參劾，言對方貪墨專擅，所陳事實多有出入。臣已將兩份奏摺並呈御前，請陛下即刻裁決，以免朝議再起風波。",
+      "when": {
+        "flag": "impeach_pending",
+        "chance": 0.5
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "準其所參",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 1,
+            "setFlag": "rel_order_purge"
+          }
+        },
+        {
+          "key": "B",
+          "label": "駁回參奏",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 2,
+            "setFlag": "rel_order_pardon"
+          }
+        },
+        {
+          "key": "C",
+          "label": "留中不發",
+          "tone": "穩妥",
+          "effects": {
+            "benevolence": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E539",
+      "name": "互參反噬",
+      "speaker": "大理寺",
+      "narrative": "前番互參之案，經查參人所陳亦有不實之處，朝中議論紛紛，皆言其反遭其咎。臣請陛下詳核卷宗，以正朝綱，免使奸佞得計。",
+      "when": {
+        "flag": "rel_rival",
+        "chance": 0.1,
+        "official_loyalty_lt": 40
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "詳查究實",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": 2,
+            "treasury": -10
+          }
+        },
+        {
+          "key": "B",
+          "label": "不予深究",
+          "tone": "冒險",
+          "effects": {
+            "benevolence": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E540",
+      "name": "孿敵和解",
+      "speaker": "翰林學士",
+      "narrative": "素有嫌隙的兩位大臣近日在朝會上相視一笑，並在散朝後同往拜見。臣以為此乃朝局之福，然其和解是否出於真心，尚待陛下體察。",
+      "when": {
+        "flag": "rel_rival",
+        "chance": 0.05
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "許其和解",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3,
+            "setFlag": "rel_order_disband"
+          }
+        },
+        {
+          "key": "B",
+          "label": "靜觀其變",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E541",
+      "name": "清流結黨",
+      "speaker": "諫議大夫",
+      "narrative": "清流一派近來往來頻繁，同聲議論時政，連御史所奏亦多相符。臣恐其自成一黨，朝議將為之偏重，然其所持亦多直言，請陛下權衡。",
+      "when": {
+        "flag": "bloc_qingliu",
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "容其議論",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "下旨戒飭",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 2,
+            "setFlag": "rel_order_disband"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E542",
+      "name": "勳貴結黨",
+      "speaker": "兵部侍郎",
+      "narrative": "勳貴與寒門之家近日締結婚約，兩派素來不睦，今以姻親相連，朝中眾人議論紛紛。臣以為跨派聯姻可以化解嫌隙，然其中利害錯綜，請陛下酌定。",
+      "when": {
+        "flag": "rel_cross_marriage",
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其婚約",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 2,
+            "charm": 3
+          }
+        },
+        {
+          "key": "B",
+          "label": "分派以制其勢",
+          "tone": "強硬",
+          "effects": {
+            "power": 2,
+            "setFlag": "rel_order_disband"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E543",
+      "name": "寒門結黨",
+      "speaker": "工部侍郎",
+      "narrative": "寒門子弟借跨派姻親之力入朝為官，一時舊族側目。臣以為其才堪用，然若靠姻親得進，朝中必生怨言，請陛下決定是否另加考校。",
+      "when": {
+        "flag": "rel_cross_marriage",
+        "months": [
+          6
+        ],
+        "chance": 0.2
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "一體錄用",
+          "tone": "仁厚",
+          "effects": {
+            "literature": 3,
+            "benevolence": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "另行考校",
+          "tone": "穩妥",
+          "effects": {
+            "prestige": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "E544",
+      "name": "朋黨請托",
+      "speaker": "御史臺",
+      "narrative": "同黨之人近日頻繁請托，為各自門人謀求官職，一時朝中薦牘堆積如山。臣已點出數件可疑，請陛下決定是否准其所請。",
+      "when": {
+        "flag": "bloc_qingliu",
+        "chance": 0.1
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "准其所請",
+          "tone": "冒險",
+          "effects": {
+            "treasury": -15,
+            "power": 2
+          }
+        },
+        {
+          "key": "B",
+          "label": "一律駁回",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 2,
+            "benevolence": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "E545",
+      "name": "解黨令",
+      "speaker": "中書令",
+      "narrative": "朝中朋黨之風日盛，朝議漸有分裂之象。臣擬下一道解黨之令，申明官員不得私相結納，違者以國法論。是否頒行，請陛下聖裁。",
+      "when": {
+        "flag": "bloc_qingliu",
+        "months": [
+          12
+        ],
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "頒布解黨令",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 2,
+            "setFlag": "rel_order_disband"
+          }
+        },
+        {
+          "key": "B",
+          "label": "不必頒令",
+          "tone": "穩妥",
+          "effects": {}
+        }
+      ]
+    },
+    {
+      "id": "E546",
+      "name": "黨爭激化",
+      "speaker": "御史中丞",
+      "narrative": "孿敵二人各立門戶，其門下之黨相互攻訐，朝堂之上爭執不休，連日未得一議。臣恐此風蔓延，朝綱將為之廢弛，請陛下速定大計。",
+      "when": {
+        "flag": "impeach_pending",
+        "chance": 0.15
+      },
+      "options": [
+        {
+          "key": "A",
+          "label": "兩黨並斥",
+          "tone": "強硬",
+          "effects": {
+            "prestige": 2,
+            "benevolence": -2
+          }
+        },
+        {
+          "key": "B",
+          "label": "安撫雙方",
+          "tone": "仁厚",
+          "effects": {
+            "benevolence": 3
+          }
+        }
+      ]
+    }
+  ]
+}
