@@ -46,3 +46,38 @@ export function fastForwardPause(state) {
   if (s.power < FF_THRESHOLDS.power) return 'power';
   return null;
 }
+
+// 快進佇列：快進開始時，所有待決把柄先暫緩入列，不停下；快進結束後再統一交由玩家處置。
+// 回傳本次入列的案件數。
+export function queuePendingLeverage(state) {
+  let n = 0;
+  for (const c of state.dongchang?.cases ?? []) {
+    if (c.status === 'leverage' && deferLeverage(state, c.id)) n++;
+  }
+  return n;
+}
+
+// 連續推進至多 months 個月（僅此處決定快進何時停）。
+// - 快進開始時既有的待決把柄全部入列，不觸發停下。
+// - 快進途中新出現的把柄：第一件停下交由玩家裁決或稍後處理；之後出現的把柄入列，不再停。
+// - 入列（含稍後處理）的案件在本次快進內不會再停下，快進結束時一併還原為待決並回傳。
+// advance(state) 負責推進一個月（由呼叫端提供，保持既有每月流程不變）。
+// 回傳 { done, reason, back }：done 為實際完成月數，reason 為停下原因（null 表示跑完）。
+export function runFastForward(state, months, advance) {
+  queuePendingLeverage(state);
+  let pausedForCase = false;
+  let reason = null;
+  let done = 0;
+  for (; done < months; done++) {
+    reason = fastForwardPause(state);
+    if (reason === 'leverage' && pausedForCase) {
+      queuePendingLeverage(state);
+      reason = fastForwardPause(state);
+    }
+    if (reason === 'leverage') pausedForCase = true;
+    if (reason) break;
+    advance(state);
+  }
+  const back = flushDeferredLeverage(state);
+  return { done, reason, back };
+}
