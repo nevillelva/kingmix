@@ -3,6 +3,7 @@ import { ACCESSION_POLICY_MAX, POLICIES, POLICY_KEYS } from '../../src/policy.js
 import { SCENARIOS } from '../../src/scenarios.js';
 import { ERA_REASON_TEXT, PRESET_ERAS, migrateEraLog, validateEra } from '../../src/era.js';
 import { DEFAULT_MODE, MODES } from '../../src/mode.js';
+import { ORIGINS, applyOrigin } from '../../src/origin.js';
 import { buildScroll } from '../../src/posthumous.js';
 import { evaluateDynasty } from '../../src/ending.js';
 import { chronicleLine } from '../../src/chronicle.js';
@@ -13,6 +14,24 @@ import { newGame } from './game-flow.js';
 import { render } from './render-nav.js';
 import { SCEN_STATUS } from './labels.js';
 import { sfx } from './audio.js';
+
+// 即位出身的目前選擇（模組層級，重繪起始畫面時保留）。
+let originChoice = ORIGINS[0].id;
+
+const statModText = (mods) => Object.entries(mods).map(([k, v]) => `${k} ${v > 0 ? '+' : ''}${v}`).join('、');
+
+export function paintOrigins(){
+  const box = document.getElementById('origin-cards');
+  if (!box) return;
+  box.innerHTML = ORIGINS.map(o => {
+    const on = o.id === originChoice;
+    return `<button type="button" class="btn ${on ? 'zhu' : 'ghost'}" data-origin="${esc(o.id)}" aria-pressed="${on}" style="text-align:left;white-space:normal;display:block">
+      <b>${esc(o.name)}</b><br><span class="sub">${esc(o.desc)}</span><br>
+      <span class="sub">開局：${esc(statModText(o.statMods))}</span><br>
+      <span class="sub">利：${o.pros.map(esc).join('；')}</span><br>
+      <span class="sub">弊：${o.cons.map(esc).join('；')}</span></button>`;
+  }).join('');
+}
 
 export function paintAccPolicies(){
   const box = document.getElementById('acc-policy');
@@ -48,6 +67,8 @@ export function renderStart(){
       <p class="sub" id="scen-desc" style="margin:8px 0 0">不選劇本，即為自由治國的一般開局。</p>
       <label class="lbl" for="mode">局長模式</label>
       <select class="seed" id="mode">${Object.values(MODES).map(m => `<option value="${esc(m.key)}"${m.key === DEFAULT_MODE ? ' selected' : ''}>${esc(m.label)}（${m.months / 12} 年）</option>`).join('')}</select>
+      <label class="lbl">即位出身（選 1 種，各有開局數值與利弊）</label>
+      <div class="opts" id="origin-cards" style="grid-template-columns:1fr 1fr;margin:0"></div>
       <label class="lbl">即位國策（選 1–2 條）</label>
       <div class="opts" id="acc-policy" style="grid-template-columns:1fr 1fr;margin:0"></div>
       <p class="sub" id="acc-policy-hint" style="margin:8px 0 0"></p>
@@ -56,6 +77,13 @@ export function renderStart(){
       ${saved && saved.state ? '<button class="btn ghost" id="cont">繼續本機進度</button>' : ''}</div>
     </section>`;
   paintAccPolicies();
+  paintOrigins();
+  document.getElementById('origin-cards').onclick = e => {
+    const b = e.target.closest('[data-origin]');
+    if (!b) return;
+    originChoice = b.dataset.origin;
+    paintOrigins();
+  };
   document.getElementById('acc-policy').onclick = e => {
     const b = e.target.closest('[data-pol]');
     if (!b) return;
@@ -82,6 +110,8 @@ export function renderStart(){
       if (!v.ok) { eraErr.textContent = ERA_REASON_TEXT[v.reason]; eraErr.hidden = false; return; }
     }
     newGame(document.getElementById('seed').value.trim(), scenSel.value, raw, U.accPolicies.slice(), document.getElementById('mode').value);
+    // 即位出身於開局後套用（newGame 不接收出身參數），再存檔並重繪。
+    if (U.state && !U.state.origin) { applyOrigin(U.state, originChoice); save(); render(); }
   };
   const c = document.getElementById('cont');
   if (c) c.onclick = () => { U.seed = saved.seed; U.state = saved.state; migrateEraLog(U.state); U.reviewedCount = (U.state.annals||[]).length; render(); };
