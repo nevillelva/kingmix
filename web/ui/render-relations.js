@@ -1,16 +1,19 @@
 // web/ui/render-relations.js：朝臣關係圖。派系為分區，邊依關係種類以不同線型呈現（師生、姻親、孿敵）。
 // 資料來自 src/relations.js 的 relationsForGraph(state)；該模組未合入前顯示佔位說明。
+import { U } from './store.js';
 import { esc } from './util.js';
 import { FAC } from './labels.js';
 import { engine, has } from './render-cards.js';
 
+// 引擎的關係種類（src/relations.js 的 REL_KINDS）對應之圖例名稱與線型。
+const KIND_LABEL = { teacher: '師生', marriage: '姻親', rival: '孿敵' };
 const KIND = {
   師生: { stroke: '#4E7D5B', width: 2.4, dash: '' },
   姻親: { stroke: '#B48A3C', width: 2, dash: '6 4' },
   孿敵: { stroke: '#A23B2A', width: 2.4, dash: '1 3' },
 };
-const kindOf = (e) => e.kind ?? e.type ?? e.rel ?? '';
-const endOf = (e, side) => e[side] ?? e[side === 'source' ? 'from' : 'to'] ?? e[side === 'source' ? 'a' : 'b'];
+// 邊資料形如 { a, b, kind }（relationsForGraph 的輸出）。
+const kindOf = (e) => KIND_LABEL[e.kind] ?? e.kind ?? '';
 
 export function relationsGraph() {
   if (!has('relationsForGraph')) return null;
@@ -49,7 +52,7 @@ export function renderRelationsCard() {
     y += h + pad;
   });
   const edges = (g.edges || []).map((e) => {
-    const a = pos[endOf(e, 'source')], b = pos[endOf(e, 'target')];
+    const a = pos[e.a], b = pos[e.b];
     const st = KIND[kindOf(e)];
     if (!a || !b || !st) return '';
     return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${st.stroke}" stroke-width="${st.width}" stroke-dasharray="${st.dash}"><title>${esc(kindOf(e))}</title></line>`;

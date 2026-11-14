@@ -4,7 +4,7 @@ import { NEIGHBORS, diplomacyOf } from '../../src/diplomacy.js';
 import { PREFECTURE_DEFS, governorOf } from '../../src/economy.js';
 import { U, app } from './store.js';
 import { esc } from './util.js';
-import { render } from './render-nav.js';
+import { fbLine, render } from './render-nav.js';
 import { save } from './state-io.js';
 import { INK_DEFS, INK_BACKDROP, MAP_CSS, governorBadge, defenseFill, peopleFill } from './map-svg.js';
 
@@ -35,14 +35,18 @@ export const MAP_SHAPE = {
 const initialOf = (gov, p) => (gov?.personName || gov?.name || p?.governor?.name || '—').slice(0, 1);
 
 // 巡幸狀態與事件：引擎函式存在才呼叫，回傳格式不明時只取可讀字串。
+// prefectureStatus 回傳 [{ id, name, defense, morale, visited }]。
 function tourStatusText(state, id) {
   if (!tour || typeof tour.prefectureStatus !== 'function') return null;
   try {
-    const r = tour.prefectureStatus(state);
-    const row = Array.isArray(r) ? r.find(x => x?.id === id) : r?.[id];
-    return row?.text || row?.label || row?.status || (typeof row === 'string' ? row : null);
+    const row = (tour.prefectureStatus(state) || []).find(x => x?.id === id);
+    if (!row) return null;
+    return `民心 ${row.morale}　${row.visited ? '曾巡幸' : '未巡幸'}`;
   } catch (e) { return null; }
 }
+const TOUR_REASON = {
+  unknown: '查無此府。', here: '天子已在此府。', busy: '巡幸之後正在整頓，尚未可再行。', treasury: '國庫不足，無力支付沿途費用。',
+};
 function tourEventLines(state, id) {
   if (!tour || typeof tour.tourEvents !== 'function') return [];
   try {
@@ -98,6 +102,7 @@ export function renderMap(){
 
   app.innerHTML = `
     ${MAP_CSS}
+    ${fbLine()}
     <section class="card"><h2>全國輿圖</h2>
       <div class="legend" style="margin-bottom:8px">
         <span>民心 <b style="color:${peopleFill(people)}">${people}</b>（全國）</span>
@@ -128,16 +133,19 @@ export function renderMap(){
     g.onclick = go;
     g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
   });
+  // tourTo 回傳 { state, ok, reason }；失敗時狀態不變，僅顯示原因。
   const tourBtn = app.querySelector('[data-tour]');
   if (tourBtn && hasTour) tourBtn.onclick = () => {
-    try {
-      tour.tourTo(U.state, tourBtn.dataset.tour);
-      save();
-      render();
-    } catch (e) {
-      const msg = app.querySelector('.pdetail');
-      if (msg) msg.insertAdjacentHTML('beforeend', `<p class="sub" style="margin:8px 0 0">巡幸未成：${esc(e?.message || String(e))}</p>`);
+    let r;
+    try { r = tour.tourTo(U.state, tourBtn.dataset.tour); } catch (e) { r = { ok: false, reason: null, error: e }; }
+    if (r?.ok) {
+      const name = PREFECTURE_DEFS.find(x => x.id === tourBtn.dataset.tour)?.name ?? '';
+      U.feedback = `天子巡幸${name}，所至府民心、城防皆增。`;
+    } else {
+      U.feedback = TOUR_REASON[r?.reason] ?? `巡幸未成：${r?.error?.message || "未知原因"}`;
     }
+    save();
+    render();
   };
   const cityBtn = app.querySelector('[data-go-city]');
   if (cityBtn) cityBtn.onclick = () => { U.tab = 'court'; U.panel = 'city'; U.pick1 = null; render(); };

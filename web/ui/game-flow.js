@@ -14,7 +14,7 @@ import { applyDongchangAction } from '../../src/dongchang.js';
 import { offerPeace, pickTactic, reconnoiter, startCampaign } from '../../src/campaign.js';
 import { TACTICS, formatBattleLog } from '../../src/war.js';
 import { autoDecideMemorial } from '../../src/autodecide.js';
-import { fastForwardPause } from '../../src/fastforward.js';
+import { fastForwardPause, flushDeferredLeverage } from '../../src/fastforward.js';
 import { U, app } from './store.js';
 import { save } from './state-io.js';
 import { render } from './render-nav.js';
@@ -244,6 +244,8 @@ export function fastForward(){
     ffDecideMonth();
     ffAdvanceMonth();
   }
+  // 快進結束：暫緩之把柄還原為待決，交由玩家處置（見 src/fastforward.js）。
+  flushDeferredLeverage(U.state);
   U.feedback = '';
   save();
   render();
