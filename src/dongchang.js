@@ -39,7 +39,7 @@ export function openInvestigation(state, officialId) {
     id: `DC${dc.nextId}`,
     officialId,
     startedTurn: state.turn,
-    status: 'investigating', // investigating → leverage → closed；prison 路徑：leverage → imprisoned → …
+    status: 'investigating', // investigating → leverage → closed；prison 路徑：leverage → imprisoned → …；快進中「稍後處理」：leverage ⇄ deferred（見 fastforward.js）
     level: 0,
     outcome: null,
   };

@@ -1,4 +1,5 @@
 import { setStat } from './state.js';
+import { cardMonthlyEffects } from './cards.js';
 
 // 國策：開局選定一種施政流派，每月提供固定修正。流派為 Phase 3 暫定設計。
 
@@ -81,5 +82,7 @@ export function activeMonthly(state) {
   if (main) add(main, 1);
   const sec = state.policySecondary ? POLICIES[state.policySecondary] : null;
   if (sec && state.policySecondary !== state.policy) add(sec, SECONDARY_POLICY_WEIGHT);
+  // 策卡槽與協同加成（無卡時為空，既有數值不變）
+  for (const [k, v] of Object.entries(cardMonthlyEffects(state))) out[k] = (out[k] || 0) + v;
   return out;
 }
