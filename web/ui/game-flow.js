@@ -3,6 +3,7 @@ import { DEFAULT_MODE, MODES } from '../../src/mode.js';
 import { createScenarioState, evaluateScenario } from '../../src/scenarios.js';
 import { createInitialState, setStat } from '../../src/state.js';
 import { seedRelations } from '../../src/relations.js';
+import { seedBondedCourtOfficial } from '../../src/bonds.js';
 import { setAccessionPolicies } from '../../src/policy.js';
 import { EVENT_MAX_PER_RUN, isAvailable, optionOpen, recordEvent } from '../../src/events.js';
 import { takeChain } from '../../src/chains.js';
@@ -35,6 +36,7 @@ export function newGame(s, scenId, eraRaw, pols, modeKey){
   }
   setAccessionPolicies(U.state, list);
   seedRelations(U.state); // 開局臣子關係網
+  seedBondedCourtOfficial(U.state); // 開局即有一位相得之臣（與 sim.js 一致）
   U.reviewedCount = 0;
   U.guideArmed = true;
   save(); U.tab = 'palace'; U.panel = null; U.pick1 = null; render();

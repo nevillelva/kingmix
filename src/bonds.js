@@ -39,6 +39,17 @@ export function isLoyaltyFrozen(state, official) {
   return isBonded(state, official.id);
 }
 
+// 開局種子：首位朝臣直接視為已相得（不經共歷事件），忠誠設為 70（低於死諫門檻 85）。
+// 相得後忠誠不月月流失（見 isLoyaltyFrozen），故開局值即維持。僅於開局呼叫，與 seedRelations 同處。
+export const SEED_BOND_LOYALTY = 70;
+export function seedBondedCourtOfficial(state) {
+  const official = state.officials.find((o) => !o.prefecture);
+  if (!official) return null;
+  official.loyalty = SEED_BOND_LOYALTY;
+  ensureBonds(state).unlocked[official.id] = true;
+  return official.id;
+}
+
 // 進諫：相得的官員有機率殞命（被貶除名）。未相得者回傳 null，不消耗 rng。
 export function remonstrate(state, officialId, rng) {
   if (!isBonded(state, officialId)) return null;

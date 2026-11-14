@@ -8,6 +8,7 @@ import { autoDecideMemorial } from './autodecide.js';
 import { applyOption, afterOption, monthlyTick, advanceMonth } from './turn.js';
 import { ORIGINS, applyOrigin } from './origin.js';
 import { seedRelations } from './relations.js';
+import { seedBondedCourtOfficial } from './bonds.js';
 import { PREFECTURES, tourTo } from './tour.js';
 import { drawPolicyCards, choosePolicyCard } from './cards.js';
 import { takeChain } from './chains.js';
@@ -164,6 +165,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
     : createInitialState(seed, { policy, mode });
   applyOrigin(state, origin ?? ORIGINS[Math.floor(makeRng([seed, 'origin'])() * ORIGINS.length)].id); // 出身（預設依 seed 輪替，使四種出身事件皆可達）
   seedRelations(state); // 開局臣子關係網
+  seedBondedCourtOfficial(state); // 開局即有一位相得之臣，死諫條件自第一月起可成立
   const triggered = {};
   const campaignSteps = {};
   const log = [];
