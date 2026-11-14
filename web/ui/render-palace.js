@@ -3,7 +3,7 @@ import { U, app } from './store.js';
 import { campaignActive, morningPair, pendingCase } from './game-flow.js';
 import { esc, levelWord } from './util.js';
 import { render } from './render-nav.js';
-import { FACILITIES, facilityLevels } from '../../src/facilities.js';
+import { FACILITIES, constructionOf, facilityLevels } from '../../src/facilities.js';
 
 // 宮城引擎（src/palace.js：pendingMarks、seasonFor）可能尚未合入；以動態匯入防護，缺漏時宮城照常呈現。
 let engine = {};
@@ -27,7 +27,7 @@ function markedSet(){
   try {
     const out = new Set();
     for (const x of Array.from(engine.pendingMarks(U.state) ?? [])) {
-      const v = typeof x === 'string' ? x : x && (x.zone ?? x.building ?? x.id ?? x.t);
+      const v = typeof x === 'string' ? x : x && (x.buildingId ?? x.zone ?? x.building ?? x.id ?? x.t);
       if (v) out.add(v);
     }
     return out;
@@ -81,10 +81,13 @@ export function renderPalace(){
     const cx = p.x + p.w/2, cy = p.y + p.h/2;
     const empty = level === 0;
     const label = empty ? '空地・可營造' : `第 ${level} 級`;
-    return `<g class="zone plot${empty ? ' empty' : ''}" role="button" tabindex="0" data-facility="${p.id}" aria-label="${def.name}，${label}">
+    const job = constructionOf(U.state)[p.id];
+    const dot = marks.has(p.id) ? `<circle class="mdot" cx="${p.x + p.w - 9}" cy="${p.y + 9}" r="5"/>` : '';
+    const sub = job ? `興建中 尚餘 ${job.monthsLeft} 月` : empty ? '點選營造' : esc(label);
+    return `<g class="zone plot${empty ? ' empty' : ''}" role="button" tabindex="0" data-facility="${p.id}" aria-label="${def.name}，${label}${marks.has(p.id) ? '，有待辦' : ''}">
       <rect class="tile" x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="5"/>
       <text x="${cx}" y="${cy-2}" text-anchor="middle">${def.name}</text>
-      <text class="sm" x="${cx}" y="${cy+12}" text-anchor="middle">${empty ? '點選營造' : esc(label)}</text></g>`;
+      <text class="sm" x="${cx}" y="${cy+12}" text-anchor="middle">${sub}</text>${dot}</g>`;
   };
   app.innerHTML = `
     <section class="card"><h2>宮城</h2>

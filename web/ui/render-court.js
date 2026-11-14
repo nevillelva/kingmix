@@ -30,6 +30,7 @@ import { campaignCard } from './render-campaign.js';
 import { heirPersonLabel } from './render-officials.js';
 import { markNewYearShown, openNianhao } from './overlays.js';
 import { deferButton, handleCardAct, policyCardsCard } from './render-cards.js';
+import { rulerEntryHTML } from './render-ruler.js';
 
 // 立繪：程序化 SVG。官帽依官職、印章色依品級、臉型與鬚由 (姓名) 決定。
 export function portrait(o){
@@ -157,7 +158,14 @@ export function wireSecond(ev){
   if (sk) sk.onclick = skipSecond;
 }
 
+// 朝堂頁：帝王面板入口與年初策卡置於各分支之前，確保任一朝堂畫面皆可見。
 export function renderCourt(){
+  renderCourtBody();
+  const top = `<div class="court-bar">${rulerEntryHTML()}</div>${policyCardsCard()}`;
+  app.insertAdjacentHTML('afterbegin', top);
+}
+
+function renderCourtBody(){
   const sb = scenarioBanner();
   if (campaignActive()) { app.innerHTML = sb + campaignCard(); return; }
   const dc = pendingCase();
@@ -190,7 +198,7 @@ export function renderCourt(){
   }
   const opts = ev.options.filter((o) => isAvailable(o) && optionOpen(U.state, o));
   const sp = pickSpeaker(U.state, ev);
-  app.innerHTML = sb + policyCardsCard() + memorialCard(`御覽・${esc(ev.name)}`, `
+  app.innerHTML = sb + memorialCard(`御覽・${esc(ev.name)}`, `
       <div class="kicker">奏摺</div>
       <h3>${esc(ev.name)}</h3>
       ${narrHtml(ev)}

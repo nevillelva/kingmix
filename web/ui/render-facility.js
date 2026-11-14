@@ -1,5 +1,5 @@
 // web/ui/render-facility.js：營造面板。顯示御花園、太醫院、翰林院之等級、下一級費用與效果，並可升級。
-import { FACILITIES, FACILITY_IDS, FACILITY_MAX_LEVEL, facilityLevels, upgradeFacility } from '../../src/facilities.js';
+import { FACILITIES, FACILITY_IDS, FACILITY_MAX_LEVEL, buildFacility, constructionOf, facilityLevels } from '../../src/facilities.js';
 import { STAT } from './labels.js';
 import { U, app } from './store.js';
 import { save } from './state-io.js';
@@ -10,6 +10,7 @@ const ERR_TEXT = {
   insufficient_treasury: '國庫不足，無法營造。',
   max_level: '此設施已至最高級。',
   unknown_facility: '查無此設施。',
+  in_progress: '此設施正在興建，待工成再議。',
 };
 
 // 效果文字：目前等級的每月加成，以及下一級的每月加成。
@@ -28,11 +29,14 @@ export function renderFacility(){
     const level = levels[id];
     const { cur, next } = effectText(def, level);
     const maxed = level >= FACILITY_MAX_LEVEL;
+    const job = constructionOf(U.state)[id];
     const cost = maxed ? null : def.levels[level].cost;
-    const can = !maxed && treasury >= cost;
+    const can = !maxed && !job && treasury >= cost;
     const btn = maxed
       ? '<button class="btn ghost" disabled>已至最高級</button>'
-      : `<button class="btn zhu" data-facility="${id}"${can ? '' : ' disabled'}>升級（國庫 ${cost}）</button>`;
+      : job
+        ? `<button class="btn ghost" disabled>興建中，尚餘 ${job.monthsLeft} 月</button>`
+        : `<button class="btn zhu" data-facility="${id}"${can ? '' : ' disabled'}>興建（國庫 ${cost}）</button>`;
     return `<section class="card"><div class="kicker">${esc(def.name)}</div>
       <h2>${esc(def.name)}　第 ${level} 級 / ${FACILITY_MAX_LEVEL}</h2>
       <p class="sub">${esc(cur)}　${esc(next)}</p>
@@ -47,11 +51,12 @@ export function renderFacility(){
     </section>
     ${cards}`;
 
+  // buildFacility 回傳 { state, ok, reason }：成功時回傳新狀態並開工，工期滿後由每月推進寫入新等級。
   app.querySelectorAll('[data-facility]').forEach(b => b.onclick = () => {
-    const res = upgradeFacility(U.state, b.dataset.facility);
-    if (res.error) { U.feedback = ERR_TEXT[res.error] ?? '無法營造。'; return render(); }
-    U.state = res;
-    U.feedback = `${FACILITIES[b.dataset.facility].name}已升至第 ${res.facilities[b.dataset.facility]} 級。`;
+    const res = buildFacility(U.state, b.dataset.facility);
+    if (!res.ok) { U.feedback = ERR_TEXT[res.reason] ?? '無法營造。'; return render(); }
+    U.state = res.state;
+    U.feedback = `${FACILITIES[b.dataset.facility].name}已開工興建。`;
     save();
     render();
   });

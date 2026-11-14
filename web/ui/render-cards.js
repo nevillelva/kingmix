@@ -20,16 +20,25 @@ Promise.all([
 export const has = (name) => typeof engine[name] === 'function';
 
 const cardLabel = (c) => esc(c.name ?? c.label ?? c.title ?? c.id ?? '策卡');
-const cardDesc = (c) => esc(c.desc ?? c.description ?? c.text ?? '');
+const cardDesc = (c) => esc(c.desc ?? c.description ?? c.text ?? cardEffectText(c));
+// 卡面效果：由 monthly 欄位列出，例如「農業 +0.4」。
+const cardEffectText = (c) => Object.entries(c.monthly ?? {}).map(([k, v]) => `${k} ${v > 0 ? '+' : ''}${v}`).join('　');
 
 // 每年（正月）三選一的策卡國策。已選定本年者不再顯示。
+// 抽卡只在本年首次呈現時進行一次，結果寫入 state.policyCards.offer，並以 flags.policy_offer_year 記年；
+// 之後重繪僅讀取既有 offer，不再重抽（drawPolicyCards 會覆寫 offer，故不可每次呼叫）。
 export function policyCardsCard() {
   const s = U.state;
   if (!s || !s.alive || s.month !== 1 || !has('drawPolicyCards') || !has('choosePolicyCard')) return '';
-  if ((s.flags || {}).policy_card_year === s.year) return '';
-  let cards = [];
-  try { cards = engine.drawPolicyCards(s, rng(s.year, 'policycards')) || []; } catch (e) { cards = []; }
-  if (!Array.isArray(cards) || cards.length === 0) return '';
+  s.flags = s.flags || {};
+  if (s.flags.policy_card_year === s.year) return '';
+  if (s.flags.policy_offer_year !== s.year) {
+    try { engine.drawPolicyCards(s, rng(s.year, 'policycards')); s.flags.policy_offer_year = s.year; } catch (e) { return ''; }
+  }
+  const ids = Array.isArray(s.policyCards?.offer) ? s.policyCards.offer : [];
+  const defs = engine.POLICY_CARDS || {};
+  const cards = ids.map((id) => ({ id, ...(defs[id] || {}) }));
+  if (cards.length === 0) return '';
   const syn = synergyLine();
   return `<section class="card" data-policy-cards="${s.year}"><h2>年度策卡國策</h2>
     <div class="kicker">${s.year} 年　・　三選一，擇一施行</div>
@@ -49,16 +58,18 @@ export function synergyLine() {
 }
 
 // 寶物賜予：列出庫中寶物，點選即賜予該官員或嬪妃。
-export function giveItemMenu(targetId) {
+export function giveItemMenu(targetId, kind = 'official') {
   if (!has('giveItem') || !has('listInventory')) {
     return `<div class="loy">賜寶：引擎尚未就緒</div>`;
   }
   let inv = [];
   try { inv = engine.listInventory(U.state) || []; } catch (e) { inv = []; }
-  if (!Array.isArray(inv) || inv.length === 0) return `<div class="loy">賜寶：庫中無寶物</div>`;
+  inv = inv.filter((it) => (it.count ?? 0) > 0);
+  if (inv.length === 0) return `<div class="loy">賜寶：庫中無寶物</div>`;
+  // data-arg 格式：itemId|targetKind|targetId（giveItem 需要目標種類）。
   return `<details class="giveitem"><summary class="btn ghost mini">賜寶</summary><div class="opts">` +
-    inv.map((it) => `<button class="opt" data-act="giveitem" data-arg="${esc(it.id)}|${esc(targetId)}">
-      <span class="mark">寶</span><span class="label">${esc(it.name ?? it.id)}</span></button>`).join('') +
+    inv.map((it) => `<button class="opt" data-act="giveitem" data-arg="${esc(it.id)}|${esc(kind)}|${esc(targetId)}">
+      <span class="mark">寶</span><span class="label">${esc(it.name ?? it.id)}（${it.count}）</span></button>`).join('') +
     `</div></details>`;
 }
 
@@ -68,25 +79,41 @@ export function deferButton(dc) {
   return `<button class="btn ghost mini" data-act="defer" data-arg="${esc(dc.id ?? dc.officialId ?? '')}" ${ok ? '' : 'disabled'}>稍後處理${ok ? '' : '（引擎尚未就緒）'}</button>`;
 }
 
+// 暫緩之案取回鈕（東廠頁）。
+export function flushButton() {
+  return `<button class="btn ghost mini" data-act="flushdefer" ${has('flushDeferredLeverage') ? '' : 'disabled'}>取回暫緩之案</button>`;
+}
+
 // 本卡片的行動分派，由 onAgency 先行呼叫；已處理則回傳 true。
+const REASON_TEXT = {
+  bad_target_kind: '賜寶對象不合。', not_owned: '庫中無此寶物。', no_target: '查無此人。',
+};
 export function handleCardAct(a, v) {
   if (a === 'pickcard') {
-    const r = engine.choosePolicyCard(U.state, v);
-    U.feedback = r && r.ok === false ? '此策卡未能施行。' : '策卡已定，施行於本年。';
-    if (!r || r.ok !== false) { U.state.flags = U.state.flags || {}; U.state.flags.policy_card_year = U.state.year; }
+    let r;
+    try { r = engine.choosePolicyCard(U.state, v); } catch (e) { r = null; }
+    const ok = !!r;
+    U.feedback = ok ? '策卡已定，施行於本年。' : '此策卡未能施行。';
+    if (ok) { U.state.flags = U.state.flags || {}; U.state.flags.policy_card_year = U.state.year; }
     save(); render(); return true;
   }
   if (a === 'giveitem') {
-    const [itemId, targetId] = v.split('|');
-    const r = engine.giveItem(U.state, itemId, targetId);
-    U.feedback = r && r.ok === false ? '賜寶未成。' : '寶物已賜出。';
+    const [itemId, kind, targetId] = v.split('|');
+    const r = engine.giveItem(U.state, itemId, kind, targetId);
+    U.feedback = r?.ok ? '寶物已賜出。' : `賜寶未成：${REASON_TEXT[r?.reason] ?? '無法賜予。'}`;
     save(); render(); return true;
   }
   if (a === 'defer') {
-    const r = engine.deferLeverage(U.state, v);
-    U.feedback = r && r.ok === false ? '稍後處理未成。' : '此案暫緩，留待後議。';
+    // deferLeverage 回傳布林值（true＝已暫緩）。
+    const ok = engine.deferLeverage(U.state, v) === true;
+    U.feedback = ok ? '此案暫緩，留待後議。' : '稍後處理未成。';
+    save(); render(); return true;
+  }
+  if (a === 'flushdefer') {
+    // flushDeferredLeverage 回傳還原為待決的案件陣列。
+    const back = engine.flushDeferredLeverage(U.state) || [];
+    U.feedback = back.length ? `暫緩之案 ${back.length} 件已取回，待處置。` : '並無暫緩之案。';
     save(); render(); return true;
   }
   return false;
 }
-
