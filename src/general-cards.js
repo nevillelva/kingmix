@@ -6,6 +6,14 @@
 import { ASSASSIN_LOW_LOYALTY } from './assassination.js';
 import { describeTraits, FACTION_NAMES } from './people.js';
 
+// 武將標記：不新增欄位，直接由既有武略（abilities.martial）推導。
+// 模型中沒有獨立的武職欄位（兵部尚書為文官職），故以武略達此值者視為武將；純函式，不影響模擬隨機序列。
+export const GENERAL_MARTIAL_MIN = 50;
+export function isGeneral(official) {
+  const martial = official && official.abilities ? official.abilities.martial : undefined;
+  return Number.isFinite(martial) && martial >= GENERAL_MARTIAL_MIN;
+}
+
 // 回傳卡片欄位；缺欄位時以 null 或預設文字代替，不拋例外。
 export function buildGeneralCard(official) {
   const o = official && typeof official === 'object' ? official : {};
