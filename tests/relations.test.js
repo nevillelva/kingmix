@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { createInitialState } from '../src/state.js';
 import { makeRng } from '../src/rng.js';
 import { isAvailable, recordEvent } from '../src/events.js';
-import { pickEvent } from '../src/sim.js';
+import { pickEvent, runSimulation } from '../src/sim.js';
 import { applyOption, afterOption, monthlyTick, advanceMonth } from '../src/turn.js';
 import { autoDecideMemorial } from '../src/autodecide.js';
 import { monthlyDrift } from '../src/diplomacy.js';
@@ -167,7 +167,8 @@ test('reachability: at least 15 of the 20 new events fire over 40 seeds x 40 yea
 test('balance: 死諫 (E420) averages at least 1 per 40-year run with relations active', () => {
   let e420 = 0;
   for (let seed = 1; seed <= SEEDS; seed++) {
-    e420 += runWithRelations({ seed: String(seed), months: FORTY_YEARS, events: allEvents }).triggered.E420 || 0;
+    // 走正式模擬路徑（runSimulation），含死諫保底與出身、關係網，量的是出貨版遊戲的實際次數。
+    e420 += runSimulation({ seed: String(seed), months: FORTY_YEARS, events: allEvents }).triggered.E420 || 0;
   }
   assert.ok(e420 / SEEDS >= 1, `E420 averages ${(e420 / SEEDS).toFixed(2)} per run (need >= 1)`);
 });
