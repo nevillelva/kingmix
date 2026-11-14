@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "source": "web feat-ui-war：兵種與戰報事件（E573–E584），待併入 data/events.json",
+  "events": [
+    {
+      "id": "E573",
+      "name": "騎兵擴編",
+      "speaker": "兵部尚書",
+      "narrative": "北境馬政稍定，邊將奏請增置騎營，以應草原部族奔襲之勢。然養馬耗糧，國庫未必寬裕，請陛下定奪。",
+      "when": { "every_years": 3, "chance": 0.3 },
+      "options": [
+        { "key": "A", "label": "增設騎營", "tone": "強硬", "effects": { "treasury": -80, "armament": 40, "military": 2 } },
+        { "key": "B", "label": "以驛馬充數", "tone": "節用", "effects": { "treasury": -20, "armament": 10 } },
+        { "key": "C", "label": "暫緩其議", "tone": "穩妥", "effects": { "benevolence": 2 } }
+      ]
+    },
+    {
+      "id": "E574",
+      "name": "盾兵改制",
+      "speaker": "兵部侍郎",
+      "narrative": "軍中盾甲多朽，前線士卒反映藤牌不堪箭矢，盾陣一破，步卒便無所倚。工部匠人願依舊制重造，所費不貲。",
+      "when": { "chance": 0.12, "armament_lt": 300 },
+      "options": [
+        { "key": "A", "label": "重造鐵盾", "tone": "穩妥", "effects": { "treasury": -50, "armament": 35 } },
+        { "key": "B", "label": "以木盾代之", "tone": "節用", "effects": { "treasury": -10, "armament": 10, "people": -2 } },
+        { "key": "C", "label": "不予改制", "tone": "保守", "effects": { "armament": -5 } }
+      ]
+    },
+    {
+      "id": "E575",
+      "name": "弓弩營練兵",
+      "speaker": "兵部侍郎",
+      "narrative": "善射之士多出邊郡，故老言弓弩齊發，可遏敵騎於百步之外。是否專設弓弩營，請陛下御斷。",
+      "when": { "chance": 0.12, "military_gt": 40 },
+      "options": [
+        { "key": "A", "label": "設弓弩營", "tone": "勤政", "effects": { "treasury": -60, "armament": 30 } },
+        { "key": "B", "label": "招募良家善射者", "tone": "仁厚", "effects": { "people": -2, "military": 3 } },
+        { "key": "C", "label": "不予重視", "tone": "冒險", "effects": { "armament": -10 } }
+      ]
+    },
+    {
+      "id": "E576",
+      "name": "長槍陣圖",
+      "speaker": "兵部尚書",
+      "narrative": "有老將獻長槍陣圖，言槍林列成三排，可拒騎兵於丈外。朝議分為兩端，或欲頒行全軍，或以為陣法難成。",
+      "when": { "chance": 0.12, "military_gt": 60 },
+      "options": [
+        { "key": "A", "label": "頒行槍陣圖", "tone": "穩妥", "effects": { "armament": 25, "military": 2 } },
+        { "key": "B", "label": "請老將親授", "tone": "周旋", "effects": { "treasury": -20, "military": 4 } },
+        { "key": "C", "label": "罷其操練", "tone": "仁厚", "effects": { "people": 4, "armament": -15 } }
+      ]
+    },
+    {
+      "id": "E577",
+      "name": "騎寇衝陣",
+      "speaker": "邊將",
+      "narrative": "草原騎兵夜襲，突入盾陣之外側，馬蹄踏亂前列。邊將請示：是以盾陣死守，抑或弓弩齊射，趁其陣亂而擊之。",
+      "when": { "every_years": 2, "chance": 0.1 },
+      "options": [
+        { "key": "A", "label": "盾陣迎擊", "tone": "強硬", "effects": { "war": { "prefecture": "hedong", "strength": 340, "reward": { "prestige": 5, "armament": 15 }, "loss": { "armament": -90, "people": -4 } } } },
+        { "key": "B", "label": "弓弩齊射", "tone": "勤政", "effects": { "war": { "prefecture": "hedong", "strength": 300, "reward": { "prestige": 4, "treasury": 30 }, "loss": { "armament": -60, "people": -3 } } } },
+        { "key": "C", "label": "退守城中", "tone": "保守", "effects": { "people": -5, "agriculture": -20 } }
+      ]
+    },
+    {
+      "id": "E578",
+      "name": "盾陣擋箭",
+      "speaker": "兵部侍郎",
+      "narrative": "敵軍弓手列於百步之外，箭雨如蝗，步卒傷亡日增。盾兵若能舉盾推進，或可逼近而破其陣；亦有人主張後撤以待變。",
+      "when": { "chance": 0.1, "military_gt": 50 },
+      "options": [
+        { "key": "A", "label": "盾陣推進", "tone": "強硬", "effects": { "war": { "prefecture": "yizhou", "strength": 300, "reward": { "prestige": 4, "treasury": 25 }, "loss": { "armament": -70, "people": -3 } } } },
+        { "key": "B", "label": "以盾護弩", "tone": "穩妥", "effects": { "treasury": -30, "armament": 10 } },
+        { "key": "C", "label": "後撤待變", "tone": "保守", "effects": { "prestige": -2, "people": 2 } }
+      ]
+    },
+    {
+      "id": "E579",
+      "name": "弓弩破槍陣",
+      "speaker": "邊將",
+      "narrative": "敵方槍陣森然，正面難攻。邊將請以弓弩從高處亂箭齊發，打亂其隊列，然箭矢耗費不少，且須有人誘敵離陣。",
+      "when": { "chance": 0.1, "military_gt": 50 },
+      "options": [
+        { "key": "A", "label": "亂箭齊發", "tone": "強硬", "effects": { "war": { "prefecture": "jingzhao", "strength": 320, "reward": { "prestige": 5, "armament": 20 }, "loss": { "armament": -65, "people": -4 } } } },
+        { "key": "B", "label": "遣使誘敵離陣", "tone": "周旋", "effects": { "treasury": -40, "benevolence": 2 } },
+        { "key": "C", "label": "按兵不動", "tone": "穩妥", "effects": { "armament": -5 } }
+      ]
+    },
+    {
+      "id": "E580",
+      "name": "長槍拒騎",
+      "speaker": "兵部尚書",
+      "narrative": "敵騎再度來襲，邊將欲以長槍列成拒馬之陣，槍尖朝外，以待騎兵自投。此陣成則可挫其鋒，然稍有潰亂，士卒便陷於馬下。",
+      "when": { "chance": 0.1, "military_gt": 60 },
+      "options": [
+        { "key": "A", "label": "列槍拒馬", "tone": "強硬", "effects": { "war": { "prefecture": "denglai", "strength": 330, "reward": { "prestige": 5, "military": 3 }, "loss": { "armament": -80, "military": -4 } } } },
+        { "key": "B", "label": "以騎兵側擊", "tone": "冒險", "effects": { "treasury": -30, "armament": -10 } },
+        { "key": "C", "label": "令其固守", "tone": "穩妥", "effects": { "people": 2 } }
+      ]
+    },
+    {
+      "id": "E581",
+      "name": "陣前單挑·霍去病",
+      "speaker": "武將",
+      "narrative": "敵陣中有猛將叫陣，請戰者稱其可效霍去病孤身深入之勇。若許其單騎出陣，勝則士氣大振，敗則損威失勢。",
+      "when": { "chance": 0.08, "military_gt": 70 },
+      "options": [
+        { "key": "A", "label": "許其單騎出陣", "tone": "強硬", "effects": { "war": { "prefecture": "hedong", "strength": 280, "reward": { "prestige": 6, "military": 3 }, "loss": { "prestige": -4, "military": -2 } } } },
+        { "key": "B", "label": "遣裨將代戰", "tone": "穩妥", "effects": { "armament": -10, "military": 1 } },
+        { "key": "C", "label": "以大局為重，阻之", "tone": "保守", "effects": { "benevolence": 3, "prestige": -2 } }
+      ]
+    },
+    {
+      "id": "E582",
+      "name": "陣前單挑·岳飛",
+      "speaker": "武將",
+      "narrative": "敵將挑戰之聲不絕於營外，部下請將軍出戰。將領自言願效岳武穆以少擊眾之志，若獲准，則生死繫於一騎一槍之間。",
+      "when": { "chance": 0.08, "military_gt": 80 },
+      "options": [
+        { "key": "A", "label": "准其出戰", "tone": "強硬", "effects": { "war": { "prefecture": "yizhou", "strength": 290, "reward": { "prestige": 6, "treasury": 30 }, "loss": { "prestige": -4, "armament": -40 } } } },
+        { "key": "B", "label": "命其固守營壘", "tone": "穩妥", "effects": { "armament": 5, "people": 2 } },
+        { "key": "C", "label": "請其還朝議功", "tone": "周旋", "effects": { "treasury": -20, "benevolence": 2 } }
+      ]
+    },
+    {
+      "id": "E583",
+      "name": "陣前單挑·李廣",
+      "speaker": "武將",
+      "narrative": "敵方有善射之將立於陣前，連發不止。舊將回憶李廣射石沒羽之事，請命其出陣與之對射，勝負全在一箭。",
+      "when": { "chance": 0.08, "military_gt": 60 },
+      "options": [
+        { "key": "A", "label": "許其對射", "tone": "冒險", "effects": { "war": { "prefecture": "jingzhao", "strength": 300, "reward": { "prestige": 5, "armament": 15 }, "loss": { "prestige": -3, "military": -3 } } } },
+        { "key": "B", "label": "以弓弩營代出", "tone": "穩妥", "effects": { "treasury": -25, "armament": 10 } },
+        { "key": "C", "label": "令其退守", "tone": "保守", "effects": { "people": 3, "prestige": -1 } }
+      ]
+    },
+    {
+      "id": "E584",
+      "name": "陣前單挑·呂布",
+      "speaker": "武將",
+      "narrative": "敵營有勇將呂布之稱者連斬數人，諸將股慄。有人請以轅門射戟之法，先以計折其銳氣，再令勇將單挑，勝之則威震四方。",
+      "when": { "chance": 0.08, "military_gt": 90 },
+      "options": [
+        { "key": "A", "label": "令勇將單挑", "tone": "強硬", "effects": { "war": { "prefecture": "yangzhou", "strength": 310, "reward": { "prestige": 6, "treasury": 40 }, "loss": { "prestige": -5, "armament": -60 } } } },
+        { "key": "B", "label": "先以計折其銳氣", "tone": "周旋", "effects": { "treasury": -30, "prestige": 2 } },
+        { "key": "C", "label": "避其鋒芒", "tone": "保守", "effects": { "armament": -10, "people": 2 } }
+      ]
+    }
+  ]
+}
