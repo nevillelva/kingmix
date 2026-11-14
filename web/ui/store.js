@@ -21,6 +21,7 @@ export const U = {
   lastScreen: null,
   guideArmed: false,
   lastBattle: null,
+  battlePrefs: { auto: false, speed: 1 }, // 戰報偏好（UI 狀態，不寫入存檔）
   mapSel: null,
   quarterCard: null,
   milestoneSeed: null,
