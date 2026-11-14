@@ -1,3 +1,4 @@
+import { eventsRange } from './_events-range.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -5,7 +6,7 @@ import { runSimulation } from '../src/sim.js';
 import { PREFECTURE_DEFS } from '../src/economy.js';
 
 const base = JSON.parse(readFileSync(new URL('../data/events.json', import.meta.url), 'utf8')).events;
-const war = JSON.parse(readFileSync(new URL('../data/events-war.json', import.meta.url), 'utf8')).events;
+const war = eventsRange(573, 584);
 
 const WAR_IDS = Array.from({ length: 12 }, (_, i) => `E${573 + i}`);
 const TONES = new Set(base.flatMap((e) => e.options.map((o) => o.tone)));
@@ -25,7 +26,7 @@ const PREFECTURES = new Set(PREFECTURE_DEFS.map((d) => d.id));
 test('war events file holds exactly E573–E584, unique and not already in events.json', () => {
   assert.deepEqual(war.map((e) => e.id), WAR_IDS);
   const baseIds = new Set(base.map((e) => e.id));
-  for (const id of WAR_IDS) assert.equal(baseIds.has(id), false, `${id} collides with events.json`);
+  for (const id of WAR_IDS) assert.equal(base.filter((e) => e.id === id).length, 1, `${id} must appear once in events.json`);
 });
 
 test('each war event matches the events.json schema', () => {

@@ -1,3 +1,4 @@
+import { eventsRange } from './_events-range.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -9,7 +10,7 @@ import { runSimulation } from '../src/sim.js';
 import { makeRng } from '../src/rng.js';
 
 const base = JSON.parse(readFileSync(new URL('../data/events.json', import.meta.url), 'utf8')).events;
-const itemEvents = JSON.parse(readFileSync(new URL('../data/events-items.json', import.meta.url), 'utf8')).events;
+const itemEvents = eventsRange(517, 526);
 const always = () => 0;
 const ev = (when) => ({ id: 'TEST', when });
 const ITEM_IDS = new Set(ITEMS.map((i) => i.id));
@@ -105,8 +106,7 @@ test('the item event file has exactly E517–E526, unique and clear of events.js
   const ids = itemEvents.map((e) => e.id);
   const expected = Array.from({ length: 10 }, (_, i) => `E${517 + i}`);
   assert.deepEqual(ids, expected);
-  const taken = new Set(base.map((e) => e.id));
-  for (const id of ids) assert.equal(taken.has(id), false, `${id} collides with data/events.json`);
+  for (const id of ids) assert.equal(base.filter((e) => e.id === id).length, 1, `${id} must appear once in data/events.json`);
 });
 
 test('item events match the events.json schema and use only known keys and item ids', () => {

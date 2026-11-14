@@ -6,6 +6,10 @@ import { isEligible, isAvailable, optionOpen, eventAllowed, recordEvent, EVENT_M
 import { makeRng } from './rng.js';
 import { autoDecideMemorial } from './autodecide.js';
 import { applyOption, afterOption, monthlyTick, advanceMonth } from './turn.js';
+import { ORIGINS, applyOrigin } from './origin.js';
+import { seedRelations } from './relations.js';
+import { PREFECTURES, tourTo } from './tour.js';
+import { drawPolicyCards, choosePolicyCard } from './cards.js';
 import { takeChain } from './chains.js';
 import { createScenarioState, evaluateScenario, SCENARIOS } from './scenarios.js';
 import { applyDongchangAction, DC_ACTIONS } from './dongchang.js';
@@ -128,10 +132,12 @@ function strategyOption(choose, state, event, seed, year, month) {
 }
 
 // scenario 為選用：省略時行為與原本相同（標準開局、回傳不含 scenario 欄位）。
-export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE, choose }) {
+export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE, choose, origin }) {
   const state = scenario
     ? createScenarioState(seed, resolveScenarioId(scenario), { policy, mode })
     : createInitialState(seed, { policy, mode });
+  applyOrigin(state, origin ?? ORIGINS[Math.floor(makeRng([seed, 'origin'])() * ORIGINS.length)].id); // 出身（預設依 seed 輪替，使四種出身事件皆可達）
+  seedRelations(state); // 開局臣子關係網
   const triggered = {};
   const campaignSteps = {};
   const log = [];
@@ -189,6 +195,11 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
       log.push({ year, month, event: 'CAMPAIGN', ...step });
     }
 
+    if (month === 1) { // 每年正月：抽卡（模擬以首張自動擇卡）；巡幸依年輪流至六府
+      const offer = drawPolicyCards(state, makeRng([seed, year, 'cards']));
+      if (offer.length) choosePolicyCard(state, offer[0]);
+      tourTo(state, PREFECTURES[year % PREFECTURES.length].id);
+    }
     monthlyDrift(state, year, month); // 鄰國好感月度漂移（與 web 的月結相同）
     monthlyTick(state, makeRng([seed, year, month, 'tick']));
     advanceMonth(state);

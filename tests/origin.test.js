@@ -1,3 +1,4 @@
+import { eventsRange } from './_events-range.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -5,7 +6,7 @@ import { ORIGINS, applyOrigin, originEvents } from '../src/origin.js';
 import { createInitialState, BOUNDS } from '../src/state.js';
 import { isEligible } from '../src/events.js';
 
-const { events: originEventList } = JSON.parse(readFileSync(new URL('../data/events-origin.json', import.meta.url), 'utf8'));
+const originEventList = eventsRange(501, 516);
 const always = () => 0; // chance 條件以 0 通過（rng() < val 恆真）
 
 test('ORIGINS: four origins with id, name, desc, pros, cons, statMods and unique ids', () => {

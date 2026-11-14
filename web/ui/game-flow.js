@@ -2,6 +2,7 @@
 import { DEFAULT_MODE, MODES } from '../../src/mode.js';
 import { createScenarioState, evaluateScenario } from '../../src/scenarios.js';
 import { createInitialState, setStat } from '../../src/state.js';
+import { seedRelations } from '../../src/relations.js';
 import { setAccessionPolicies } from '../../src/policy.js';
 import { EVENT_MAX_PER_RUN, isAvailable, optionOpen, recordEvent } from '../../src/events.js';
 import { takeChain } from '../../src/chains.js';
@@ -33,6 +34,7 @@ export function newGame(s, scenId, eraRaw, pols, modeKey){
     U.feedback = '本紀劇本載入失敗，已改為一般開局。';
   }
   setAccessionPolicies(U.state, list);
+  seedRelations(U.state); // 開局臣子關係網
   U.reviewedCount = 0;
   U.guideArmed = true;
   save(); U.tab = 'palace'; U.panel = null; U.pick1 = null; render();

@@ -1,3 +1,4 @@
+import { eventsRange } from './_events-range.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -14,7 +15,7 @@ import { makeRng } from '../src/rng.js';
 import { ensureCity } from '../src/city.js';
 
 const mainEvents = JSON.parse(readFileSync(new URL('../data/events.json', import.meta.url), 'utf8')).events;
-const tourEventList = JSON.parse(readFileSync(new URL('../data/events-tour.json', import.meta.url), 'utf8')).events;
+const tourEventList = eventsRange(547, 564);
 const byId = Object.fromEntries(tourEventList.map((e) => [e.id, e]));
 
 test('PREFECTURES mirror the six 府 of economy.js with map coordinates', () => {
@@ -95,7 +96,7 @@ test('event file: 18 unique ids E547–E564 with no collision in data/events.jso
   const ids = tourEventList.map((e) => e.id);
   assert.deepEqual(ids, Array.from({ length: 18 }, (_, i) => `E${547 + i}`));
   const mainIds = new Set(mainEvents.map((e) => e.id));
-  for (const id of ids) assert.equal(mainIds.has(id), false, `collision: ${id}`);
+  for (const id of ids) assert.equal(mainEvents.filter((e) => e.id === id).length, 1, `${id} must appear once in events.json`);
 });
 
 test('event schema matches data/events.json', () => {

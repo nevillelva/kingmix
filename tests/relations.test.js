@@ -1,3 +1,4 @@
+import { eventsRange } from './_events-range.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -18,7 +19,7 @@ import {
 } from '../src/relations.js';
 
 const base = JSON.parse(readFileSync(new URL('../data/events.json', import.meta.url), 'utf8')).events;
-const added = JSON.parse(readFileSync(new URL('../data/events-officials.json', import.meta.url), 'utf8')).events;
+const added = eventsRange(527, 546);
 const NEW_IDS = added.map((e) => e.id);
 const always0 = () => 0; // 擲骰恆得最小值：所有機率判定皆通過
 const never = () => { throw new Error('rng must not be consumed'); };

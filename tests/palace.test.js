@@ -1,3 +1,4 @@
+import { eventsRange } from './_events-range.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -9,7 +10,7 @@ import { runSimulation } from '../src/sim.js';
 import { makeRng } from '../src/rng.js';
 
 const { events: mainEvents } = JSON.parse(readFileSync(new URL('../data/events.json', import.meta.url), 'utf8'));
-const { events: palaceEvents } = JSON.parse(readFileSync(new URL('../data/events-palace.json', import.meta.url), 'utf8'));
+const palaceEvents = eventsRange(565, 572);
 
 const base = (treasury = 500) => {
   const s = createInitialState(11);
@@ -55,7 +56,7 @@ test('palace events have E565-E572, unique ids, and no collision with events.jso
   const ids = palaceEvents.map((e) => e.id);
   assert.deepEqual(ids, ['E565', 'E566', 'E567', 'E568', 'E569', 'E570', 'E571', 'E572']);
   const main = new Set(mainEvents.map((e) => e.id));
-  for (const id of ids) assert.ok(!main.has(id), `${id} collides with events.json`);
+  for (const id of ids) assert.equal(mainEvents.filter((e) => e.id === id).length, 1, `${id} must appear once in events.json`);
   for (const e of palaceEvents) {
     assert.ok(e.name && e.speaker && e.narrative, `${e.id} missing text`);
     assert.ok(e.options.length >= 2, `${e.id} needs options`);
