@@ -45,11 +45,13 @@ function seasonOf(){
   return SEASONS.includes(s) ? s : '';
 }
 
-// 設施空地：三處設施位於宮城西側與東北側，未營造時顯示為空地，點選即開啟營造面板。
+// 設施空地：五處設施（園林、醫館、武庫、翻書院、國子監）分置於宮城四側，未營造時顯示為空地，點選即開啟營造面板。
 const FACILITY_PLOTS = [
   {id:'garden',  x:22,  y:128, w:66, h:48},
   {id:'medical', x:22,  y:184, w:66, h:48},
   {id:'academy', x:232, y:128, w:66, h:48},
+  {id:'armory', x:232, y:184, w:66, h:48},
+  {id:'library', x:122, y:270, w:76, h:36},
 ];
 
 export function renderPalace(){
@@ -101,7 +103,7 @@ export function renderPalace(){
           <text class="compass" x="160" y="364" text-anchor="middle">玄武門</text>
           ${Z.map(zone).join('')}
           ${FACILITY_PLOTS.map(plot).join('')}
-          <text class="sm" x="160" y="264" text-anchor="middle">午朝廣場</text>
+          <text class="sm" x="160" y="250" text-anchor="middle">午朝廣場</text>
           ${season ? '<rect class="season" x="10" y="10" width="300" height="360" rx="6"/>' : ''}
         </svg>
       </div>
