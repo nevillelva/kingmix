@@ -122,6 +122,24 @@ export const SAVE_ERR = {
 
 export function saveMsg(text){ const m = document.getElementById('save-msg'); if (m) m.textContent = text; }
 
+// 備援：下載失敗或取消時，於存檔訊息區顯示存檔碼與「複製存檔碼」按鈕（不依賴 blob 下載）。
+export function saveCopyFallback(text, note){
+  const m = document.getElementById('save-msg');
+  if (!m) return;
+  m.textContent = '';
+  const t = document.createElement('p'); t.textContent = note; m.appendChild(t);
+  const ta = document.createElement('textarea');
+  ta.readOnly = true; ta.rows = 3; ta.value = text; ta.style.cssText = 'width:100%;font-size:11px';
+  m.appendChild(ta);
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'btn zhu mini'; btn.textContent = '複製存檔碼';
+  btn.onclick = async () => {
+    try { await navigator.clipboard.writeText(text); t.textContent = '已複製存檔碼，可貼到檔案保存。'; }
+    catch (e) { ta.focus(); ta.select(); t.textContent = '無法自動複製，請手動全選上方存檔碼後複製。'; }
+  };
+  m.appendChild(btn);
+}
+
 export async function exportGame(){
   if (!U.state) return saveMsg('尚無進行中的局，無法匯出。');
   let text, filename;
@@ -137,7 +155,7 @@ export async function exportGame(){
     try {
       await dl.save({ filename, data: text });
       return saveMsg('已匯出存檔。');
-    } catch (e) { return saveMsg('未完成匯出（已取消或無法儲存）。'); }
+    } catch (e) { return saveCopyFallback(text, '未完成匯出（已取消或無法儲存）。'); }
   }
   try {
     const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
@@ -146,7 +164,7 @@ export async function exportGame(){
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     saveMsg('已匯出存檔。');
-  } catch (e) { saveMsg('匯出失敗，請再試一次。'); }
+  } catch (e) { saveCopyFallback(text, '下載失敗，改用備援。'); }
 }
 
 export function importGame(file){
