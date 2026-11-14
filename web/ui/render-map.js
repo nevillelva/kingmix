@@ -46,7 +46,7 @@ function tourStatusText(state, id) {
   } catch (e) { return null; }
 }
 const ATTACK_REASON = {
-  unknown: '查無此府。', not_rebel: '此府民心尚安，並無叛亂，不可攻。', cooldown: '本年已攻過此府，須待來年再議。',
+  unknown: '查無此府。', not_rebel: '此府民心尚安，並無叛亂或失守，不可攻。', cooldown: '本年已攻過此府，須待來年再議。',
 };
 const TOUR_REASON = {
   unknown: '查無此府。', here: '天子已在此府。', busy: '巡幸之後正在整頓，尚未可再行。', treasury: '國庫不足，無力支付沿途費用。',
@@ -71,11 +71,13 @@ export function renderMap(){
     const sel = U.mapSel === def.id;
     const cap = captureStatus(U.state, def.id);
     const siege = cap.besieged ? '，攻城中' : '';
-    return `<g class="mzone${sel ? ' sel' : ''}${cap.besieged ? ' siege' : ''}" role="button" tabindex="0" data-pref="${def.id}" aria-label="${esc(def.name)}，城防 ${def2}，知府 ${esc(gov?.personName || gov?.name || '缺')}${siege}">
+    const unrest = cap.rebel ? '，叛亂' : cap.occupied ? '，敵方佔領' : '';
+    return `<g class="mzone${sel ? ' sel' : ''}${cap.besieged ? ' siege' : ''}" role="button" tabindex="0" data-pref="${def.id}" aria-label="${esc(def.name)}，城防 ${def2}，知府 ${esc(gov?.personName || gov?.name || '缺')}${siege}${unrest}">
       <path d="${sh.d}" fill="${defenseFill(def2)}" filter="url(#ink-wash)"/>
       ${cap.besieged ? `<path class="siege-ring" d="${sh.d}" fill="none" stroke="var(--vermilion)" stroke-width="2" stroke-dasharray="5 3" pointer-events="none"/>` : ''}
+      ${cap.rebel || cap.occupied ? `<path class="unrest-ring" d="${sh.d}" fill="none" stroke="var(--vermilion)" stroke-width="3" pointer-events="none"/>` : ''}
       <text x="${sh.x}" y="${sh.y}" text-anchor="middle">${esc(def.name)}</text>
-      <text class="mv" x="${sh.x}" y="${sh.y + 14}" text-anchor="middle">城防 ${def2}</text>
+      <text class="mv" x="${sh.x}" y="${sh.y + 14}" text-anchor="middle">城防 ${def2}${cap.rebel ? ' 叛' : cap.occupied ? ' 失' : ''}</text>
       ${governorBadge(sh.b[0], sh.b[1], initialOf(gov, p))}</g>`;
   }).join('');
   const edges = NEIGHBORS.map(n => {
@@ -102,6 +104,8 @@ export function renderMap(){
       <div class="row">城防 ${defense}　產值 ${Number(p.yield || 0).toFixed(2)}</div>
       <div class="track"><div class="fill${defense < 40 ? ' warn' : ''}" style="width:${defense}%"></div></div>
       ${statusText ? `<div class="row">${esc(statusText)}</div>` : ''}
+      ${cap.rebel ? `<div class="row" style="color:var(--vermilion)">叛亂：民心渙散，可遣兵攻城平定。</div>` : ''}
+      ${cap.occupied ? `<div class="row" style="color:var(--vermilion)">敵方佔領：此府失守，可遣兵攻回。</div>` : ''}
       ${cap.besieged ? `<div class="row" style="color:var(--vermilion)">攻城中：本年攻城未克，圍城待來年。</div>` : ''}
       ${events.length ? `<ul class="row" style="padding-left:18px">${events.map(e => `<li>${esc(e)}</li>`).join('')}</ul>` : ''}
       ${attackHint ? `<p class="sub" style="margin:8px 0 0">${esc(attackHint)}</p>` : ''}

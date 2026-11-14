@@ -23,8 +23,33 @@ export function ensureCity(state) {
       pref.defense = CITY_DEFENSE_INIT;
       pref.repairedYear = null;
     }
+    // 叛亂與敵方佔領（city-capture.js 的 tickRebellion 與 war.js 的戰敗結算使用）；舊存檔預設為無。
+    if (pref.rebelMonths === undefined) pref.rebelMonths = 0;
+    if (pref.rebel === undefined) pref.rebel = false;
+    if (pref.occupied === undefined) pref.occupied = false;
   }
   return state.prefectures;
+}
+
+// 失守時的史冊文字（40–80 字）。
+export function occupationText(name) {
+  return `${name}兵敗失守，敵軍據城而守，此府落入敵手。朝廷須遣兵攻城，方能收復，否則此府產出將大減。`;
+}
+
+// 敵方佔領：戰敗且戰事明確屬於某府時標記該府；已佔領者不重複寫入。未知府 id 時不動作。
+export function markOccupied(state, prefId) {
+  const pref = cityOf(state, prefId);
+  if (!pref || pref.occupied) return false;
+  pref.occupied = true;
+  state.chronicle.push({
+    kind: 'occupation',
+    prefecture: prefId,
+    prefectureName: pref.name,
+    year: state.year,
+    month: state.month,
+    text: occupationText(pref.name),
+  });
+  return true;
 }
 
 export function cityOf(state, prefId) {

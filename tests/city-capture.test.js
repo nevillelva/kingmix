@@ -15,6 +15,7 @@ function rebelState(seed) {
   const s = createInitialState(seed);
   ensureCapture(s);
   s.prefectures.find((p) => p.id === TARGET).morale = 10;
+  s.prefectures.find((p) => p.id === TARGET).rebel = true; // 叛亂須經月結判定（見 siege-triggers.test.js）
   return s;
 }
 
