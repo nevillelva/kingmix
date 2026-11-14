@@ -82,15 +82,40 @@ const NON_STATE_KEYS = new Set(['chance', 'every_years', 'months']);
 export function isStateGated(e) {
   return Object.keys(e.when || {}).some((k) => !NON_STATE_KEYS.has(k));
 }
+// 死諫保底（E420）：本局尚未進諫、且君臣相得的觸發條件已連續成立 PITY_AFTER_MONTHS 個月以上時，
+// 權重乘上 PITY_FACTOR，確保每局至少有機會見到死諫（本局上限仍為 EVENT_MAX_PER_RUN）。
+// 進諫一次後保底即關閉。以 state.flags.remon_eligible_since（開始成立的月序）記錄連續期間。
+export const REMON_EVENT_ID = 'E420';
+export const PITY_AFTER_MONTHS = 12;
+export const PITY_FACTOR = 40;
+const monthIndex = (state) => (state.year - 1) * 12 + (state.month - 1);
+export function pityMultiplier(e, state) {
+  if (e.id !== REMON_EVENT_ID) return 1;
+  if ((state.eventHistory?.counts?.[REMON_EVENT_ID] || 0) > 0) return 1;
+  if (state.chronicle?.some((c) => c.kind === 'remonstrance')) return 1;
+  const since = state.flags?.remon_eligible_since;
+  if (since === undefined) return 1;
+  return monthIndex(state) - since >= PITY_AFTER_MONTHS ? PITY_FACTOR : 1;
+}
 export function pickWeight(e, state) {
   let w = eventWeight(e, state);
   if (isStateGated(e)) w *= STATE_GATED_BOOST;
   const fired = state.eventHistory?.counts?.[e.id] || 0;
   w /= (1 + fired) ** FIRED_ALPHA;
-  const now = (state.year - 1) * 12 + (state.month - 1);
+  const now = monthIndex(state);
   const last = state.eventHistory?.last?.[e.id] ?? 0;
   w *= 1 + Math.min((now - last) / NEGLECT_MONTHS, NEGLECT_MAX_BONUS);
+  w *= pityMultiplier(e, state);
   return w;
+}
+
+// 記錄死諫的連續可觸發月序：每次抽選時更新（不受早朝第 2 則的 exclude 影響）；條件中斷即清除。
+function trackRemonEligibility(state, events, rng) {
+  const e = events.find((x) => x.id === REMON_EVENT_ID);
+  const open = !!e && isAvailable(e) && eventAllowed(state, e.id) && isEligible(state, e, rng);
+  state.flags = state.flags || {};
+  if (open) state.flags.remon_eligible_since ??= monthIndex(state);
+  else delete state.flags.remon_eligible_since;
 }
 
 // 被連鎖指向的事件只能經由連鎖觸發，不進入一般隨機抽選。
@@ -104,6 +129,7 @@ function chainTargetIds(events) {
 
 export function pickEvent(state, events, rng, exclude = null) {
   const targets = chainTargetIds(events);
+  trackRemonEligibility(state, events, rng);
   const eligible = events.filter((e) => !targets.has(e.id) && e.id !== exclude && isAvailable(e) && eventAllowed(state, e.id) && isEligible(state, e, rng));
   if (eligible.length === 0) return null;
   const total = eligible.reduce((sum, e) => sum + pickWeight(e, state), 0);
