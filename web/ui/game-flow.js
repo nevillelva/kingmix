@@ -242,7 +242,15 @@ export function ffAdvanceMonth(){
 export function ffStopNote(reason, done){
   if (!reason) return `已快進 ${done} 個月。`;
   if (reason === 'leverage') return `快進中止於東廠把柄（已推進 ${done} 個月）。請先於朝堂裁決此案；若暫時不理，可按「稍後處理」暫緩，再行快進。`;
-  return `快進中止：${FF_REASON_TEXT[reason]}（已推進 ${done} 個月）。`;
+  const ADVICE = {
+    treasury: '請於朝政行動中調整稅制或暫停修繕，待國庫回升後再快進。',
+    people: '請於朝堂安撫民心（賑濟、減稅）後再快進。',
+    power: '請於朝政行動中拉攏派系或減少改元等耗威儀之舉，待皇權回升後再快進。',
+    campaign: '親征之事須親自裁決，待班師後再快進。',
+    death: '',
+  };
+  const tip = ADVICE[reason] ? ` ${ADVICE[reason]}` : '';
+  return `快進中止：${FF_REASON_TEXT[reason]}（已推進 ${done} 個月）。${tip}`;
 }
 
 export function fastForward(){
