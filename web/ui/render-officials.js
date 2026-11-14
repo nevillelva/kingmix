@@ -1,5 +1,7 @@
 // web/ui/render-officials.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
 import { FACTIONS, isCourtOfficial, loyaltySafetyStatus } from '../../src/officials.js';
+import { ASSASSIN_LOW_LOYALTY } from '../../src/assassination.js';
+import { buildGeneralCard, isGeneral } from '../../src/general-cards.js';
 import { BOND_THRESHOLD, isBonded, sharedCount } from '../../src/bonds.js';
 import { PERSONALITIES, describeConsort, describeTraits } from '../../src/people.js';
 import { OFFICES, officeFit, officeHolder, suggestCandidate } from '../../src/offices.js';
@@ -12,7 +14,6 @@ import { TAX_TIERS, administrativeEfficiency, ensureEconomy } from '../../src/ec
 import { COLLECTIONS, collectionProgress } from '../../src/collections.js';
 import { chronicleLine } from '../../src/chronicle.js';
 import { tyrannyStatus } from '../../src/dongchang.js';
-import { buildGeneralCard } from '../../src/general-cards.js';
 import { U, app } from './store.js';
 import { ABIL, FAC, SCEN_LABEL, SCEN_STATUS, STAT, officeName } from './labels.js';
 import { esc, gapText, meter, reqText } from './util.js';
@@ -41,7 +42,7 @@ export function personCard(o){
       <div style="min-width:0"><div class="name">${esc(o.personName || o.name)}<span class="age">${o.age ?? '—'} 歲</span></div>
         <div class="tags"><span class="tag" style="color:${f.c};border-color:${f.c}">${esc(f.l)}</span>
         <span class="tag">${o.office ? esc(officeName(o.office)) : '閒置'}</span>${bonded ? '<span class="tag bond">君臣相得</span>' : ''}</div></div></div>
-    <div class="loy">忠誠 <b style="color:${o.loyalty<40?'var(--gold)':'var(--green)'}">${Math.round(o.loyalty)}</b> · 野心 ${Math.round(o.ambition)}</div>
+    <div class="loy">忠誠 <b style="color:${o.loyalty<ASSASSIN_LOW_LOYALTY?'var(--gold)':'var(--green)'}">${Math.round(o.loyalty)}</b> · 野心 ${Math.round(o.ambition)}</div>
     ${safetyLine(o, bonded)}
     <div class="abil">${Object.keys(ABIL).map(k => `<div>${ABIL[k]}<b>${o.abilities?.[k] ?? '—'}</b></div>`).join('')}</div>
     ${traits ? `<div class="tags">${traits}</div>` : ''}
@@ -106,8 +107,10 @@ export function renderOfficials(){
   const groups = FACTIONS.map(k => {
     const f = FAC(k);
     const list = court.filter(o => o.faction === k).sort((a, b) => b.loyalty - a.loyalty);
+    // 武將（武略達門檻）顯示將領卡；其餘朝臣維持原本的小卡。
+    const cards = list.map(o => (isGeneral(o) ? generalCard(o) : officialCard(o))).join('');
     return `<section class="card fgroup" aria-label="${f.l}"><h2 style="color:${f.c}">${f.l}　${list.length} 人</h2>
-      <div class="fgrid">${list.map(generalCard).join('') || '<p class="empty">此派無朝臣。</p>'}</div></section>`;
+      <div class="fgrid">${cards || '<p class="empty">此派無朝臣。</p>'}</div></section>`;
   }).join('');
   const localHtml = local.length ? `<section class="card fgroup" aria-label="外任知府"><h2>外任知府　${local.length} 人</h2>
       <div class="fgrid">${local.map(officialCard).join('')}</div></section>` : '';
@@ -146,10 +149,10 @@ export function generalCard(o){
 export function officialCard(o){
   const pol = POLICIES[FACTION_POLICY[o.faction]];
   const loy = Math.max(0, Math.min(100, o.loyalty));
-  const stance = loy >= 60 ? '效忠' : loy >= 40 ? '觀望' : '離心';
+  const stance = loy >= 60 ? '效忠' : loy >= ASSASSIN_LOW_LOYALTY ? '觀望' : '離心';
   return `<details class="fcard">
     <summary><span class="fname">${esc(o.personName || o.name)}</span><span class="fmeta">${o.office ? esc(officeName(o.office)) : '閒置'}</span>
-      <span class="floy"><span class="track"><span class="fill${loy < 40 ? ' warn' : ''}" style="width:${loy}%"></span></span><b>${Math.round(o.loyalty)}</b></span>
+      <span class="floy"><span class="track"><span class="fill${loy < ASSASSIN_LOW_LOYALTY ? ' warn' : ''}" style="width:${loy}%"></span></span><b>${Math.round(o.loyalty)}</b></span>
       <span class="fstance">${stance}${pol ? `　主「${esc(pol.name)}」` : ''}</span></summary>
     ${personCard(o)}</details>`;
 }
