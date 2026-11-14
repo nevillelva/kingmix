@@ -85,7 +85,7 @@ export function renderPalace(){
     const dot = marks.has(p.id) ? `<circle class="mdot" cx="${p.x + p.w - 9}" cy="${p.y + 9}" r="5"/>` : '';
     const sub = job ? `興建中 尚餘 ${job.monthsLeft} 月` : empty ? '點選營造' : esc(label);
     return `<g class="zone plot${empty ? ' empty' : ''}" role="button" tabindex="0" data-facility="${p.id}" aria-label="${def.name}，${label}${marks.has(p.id) ? '，有待辦' : ''}">
-      <rect class="tile" x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="5"/>
+      <rect class="tile" x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="5" pointer-events="all"/>
       <text x="${cx}" y="${cy-2}" text-anchor="middle">${def.name}</text>
       <text class="sm" x="${cx}" y="${cy+12}" text-anchor="middle">${sub}</text>${dot}</g>`;
   };

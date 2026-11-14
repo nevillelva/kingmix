@@ -19,7 +19,7 @@ import { fastForwardPause, flushDeferredLeverage } from '../../src/fastforward.j
 import { U, app } from './store.js';
 import { save } from './state-io.js';
 import { render } from './render-nav.js';
-import { rng } from './util.js';
+import { esc, rng } from './util.js';
 import { recordQuarterSnapshot } from './render-court.js';
 import { sfx } from './audio.js';
 import { STAT } from './labels.js';
@@ -75,6 +75,7 @@ export function morningPair(){
 
 export function finishMonth(keepFeedback){
   if (!keepFeedback) U.feedback = '';
+  U.ffNote = ''; // 快進的停下說明僅留到玩家下一步行動為止
   const endingYear = U.state.month === 12 ? U.state.year : null;
   try { monthlyDrift(U.state, U.state.year, U.state.month); } catch(e) {} // 鄰國好感月度漂移（外交）
   monthlyTick(U.state, rng('tick', U.state.year, U.state.month));
@@ -237,6 +238,13 @@ export function ffAdvanceMonth(){
   if (!U.state.alive) tryAccession(U.state);
 }
 
+// 快進停下時的說明：指出原因與玩家可採取的下一步，避免只剩短暫的浮動訊息。
+export function ffStopNote(reason, done){
+  if (!reason) return `已快進 ${done} 個月。`;
+  if (reason === 'leverage') return `快進中止於東廠把柄（已推進 ${done} 個月）。請先於朝堂裁決此案；若暫時不理，可按「稍後處理」暫緩，再行快進。`;
+  return `快進中止：${FF_REASON_TEXT[reason]}（已推進 ${done} 個月）。`;
+}
+
 export function fastForward(){
   if (!U.state || !U.state.alive) return;
   let reason = null, done = 0;
@@ -247,18 +255,21 @@ export function fastForward(){
     ffAdvanceMonth();
   }
   // 快進結束：暫緩之把柄還原為待決，交由玩家處置（見 src/fastforward.js）。
-  flushDeferredLeverage(U.state);
+  const back = flushDeferredLeverage(U.state);
+  const note = ffStopNote(reason, done) + (back.length ? ` 暫緩之案 ${back.length} 件已還原為待決。` : '');
   U.feedback = '';
+  U.ffNote = note;
   save();
   render();
-  ffToast(reason ? `快進中止：${FF_REASON_TEXT[reason]}（已推進 ${done} 個月）` : `已快進 ${done} 個月`);
+  ffToast(note);
 }
 
 export function ffMount(){
   if (!U.state || !U.state.alive) return;
   const card = document.createElement('section');
   card.className = 'card';
-  card.innerHTML = `<h2>快進</h2><p class="sub">系統代為批閱奏摺；遇駕崩、親征、東廠把柄，或國庫、民心、皇權告急即停。</p><button class="btn ghost" id="ff-btn" type="button">快進 12 個月</button>`;
+  const note = U.ffNote ? `<p class="sub" role="status" style="color:var(--vermilion);margin:0 0 10px">${esc(U.ffNote)}</p>` : '';
+  card.innerHTML = `<h2>快進</h2><p class="sub">系統代為批閱奏摺；遇駕崩、親征、東廠把柄，或國庫、民心、皇權告急即停。</p>${note}<button class="btn ghost" id="ff-btn" type="button">快進 12 個月</button>`;
   app.appendChild(card);
   document.getElementById('ff-btn').onclick = fastForward;
 }
