@@ -15,7 +15,7 @@ import { applyDongchangAction } from '../../src/dongchang.js';
 import { offerPeace, pickTactic, reconnoiter, startCampaign } from '../../src/campaign.js';
 import { TACTICS, formatBattleLog } from '../../src/war.js';
 import { autoDecideMemorial } from '../../src/autodecide.js';
-import { fastForwardPause, flushDeferredLeverage } from '../../src/fastforward.js';
+import { runFastForward } from '../../src/fastforward.js';
 import { U, app } from './store.js';
 import { save } from './state-io.js';
 import { render } from './render-nav.js';
@@ -247,15 +247,8 @@ export function ffStopNote(reason, done){
 
 export function fastForward(){
   if (!U.state || !U.state.alive) return;
-  let reason = null, done = 0;
-  for (; done < FF_MONTHS; done++) {
-    reason = fastForwardPause(U.state);
-    if (reason) break;
-    ffDecideMonth();
-    ffAdvanceMonth();
-  }
-  // 快進結束：暫緩之把柄還原為待決，交由玩家處置（見 src/fastforward.js）。
-  const back = flushDeferredLeverage(U.state);
+  // 停下與推進順序全部在 runFastForward 決定（見 src/fastforward.js）。
+  const { done, reason, back } = runFastForward(U.state, FF_MONTHS, () => { ffDecideMonth(); ffAdvanceMonth(); });
   const note = ffStopNote(reason, done) + (back.length ? ` 暫緩之案 ${back.length} 件已還原為待決。` : '');
   U.feedback = '';
   U.ffNote = note;
