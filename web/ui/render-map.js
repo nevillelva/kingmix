@@ -7,6 +7,7 @@ import { esc } from './util.js';
 import { fbLine, render } from './render-nav.js';
 import { save } from './state-io.js';
 import { INK_DEFS, INK_BACKDROP, MAP_CSS, governorBadge, defenseFill, peopleFill } from './map-svg.js';
+import { attackCity, captureStatus } from '../../src/city-capture.js';
 
 // 巡幸引擎（src/tour.js）與本檔平行開發：以動態匯入防禦式載入，尚未合入時退回待接線狀態。
 const tour = await import('../../src/tour.js').catch(() => null);
@@ -44,6 +45,9 @@ function tourStatusText(state, id) {
     return `民心 ${row.morale}　${row.visited ? '曾巡幸' : '未巡幸'}`;
   } catch (e) { return null; }
 }
+const ATTACK_REASON = {
+  unknown: '查無此府。', not_rebel: '此府民心尚安，並無叛亂，不可攻。', cooldown: '本年已攻過此府，須待來年再議。',
+};
 const TOUR_REASON = {
   unknown: '查無此府。', here: '天子已在此府。', busy: '巡幸之後正在整頓，尚未可再行。', treasury: '國庫不足，無力支付沿途費用。',
 };
@@ -65,8 +69,11 @@ export function renderMap(){
     const sh = MAP_SHAPE.pref[def.id];
     const gov = p ? governorOf(U.state, p) : null;
     const sel = U.mapSel === def.id;
-    return `<g class="mzone${sel ? ' sel' : ''}" role="button" tabindex="0" data-pref="${def.id}" aria-label="${esc(def.name)}，城防 ${def2}，知府 ${esc(gov?.personName || gov?.name || '缺')}">
+    const cap = captureStatus(U.state, def.id);
+    const siege = cap.besieged ? '，攻城中' : '';
+    return `<g class="mzone${sel ? ' sel' : ''}${cap.besieged ? ' siege' : ''}" role="button" tabindex="0" data-pref="${def.id}" aria-label="${esc(def.name)}，城防 ${def2}，知府 ${esc(gov?.personName || gov?.name || '缺')}${siege}">
       <path d="${sh.d}" fill="${defenseFill(def2)}" filter="url(#ink-wash)"/>
+      ${cap.besieged ? `<path class="siege-ring" d="${sh.d}" fill="none" stroke="var(--vermilion)" stroke-width="2" stroke-dasharray="5 3" pointer-events="none"/>` : ''}
       <text x="${sh.x}" y="${sh.y}" text-anchor="middle">${esc(def.name)}</text>
       <text class="mv" x="${sh.x}" y="${sh.y + 14}" text-anchor="middle">城防 ${def2}</text>
       ${governorBadge(sh.b[0], sh.b[1], initialOf(gov, p))}</g>`;
@@ -87,16 +94,21 @@ export function renderMap(){
   const defense = Math.max(0, Math.min(100, Math.round(p?.defense ?? 50)));
   const statusText = p && def ? tourStatusText(U.state, def.id) : null;
   const events = p && def ? tourEventLines(U.state, def.id) : [];
+  const cap = p && def ? captureStatus(U.state, def.id) : null;
+  const attackHint = cap && !cap.attackable ? (ATTACK_REASON[cap.reason] ?? '') : '';
   const detail = p && def ? `<div class="pdetail">
       <div class="name">${esc(def.name)}</div>
       <div class="row">知府 ${esc(gov?.personName || gov?.name || p.governor?.name || '缺')}　政 ${esc(gov?.abilities?.politics ?? p.governor?.abilities?.politics ?? '—')}　${p.output === 'agriculture' ? '農產' : '商產'}</div>
       <div class="row">城防 ${defense}　產值 ${Number(p.yield || 0).toFixed(2)}</div>
       <div class="track"><div class="fill${defense < 40 ? ' warn' : ''}" style="width:${defense}%"></div></div>
       ${statusText ? `<div class="row">${esc(statusText)}</div>` : ''}
+      ${cap.besieged ? `<div class="row" style="color:var(--vermilion)">攻城中：本年攻城未克，圍城待來年。</div>` : ''}
       ${events.length ? `<ul class="row" style="padding-left:18px">${events.map(e => `<li>${esc(e)}</li>`).join('')}</ul>` : ''}
+      ${attackHint ? `<p class="sub" style="margin:8px 0 0">${esc(attackHint)}</p>` : ''}
       ${U.mapNote ? `<p class="sub" role="status" style="color:var(--vermilion);margin:8px 0 0">${esc(U.mapNote)}</p>` : ''}
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
         <button class="btn" data-tour="${def.id}" ${hasTour ? '' : 'disabled aria-disabled="true"'}>${hasTour ? '巡幸' : '巡幸（巡幸功能待接線）'}</button>
+        <button class="btn" data-attack="${def.id}" ${cap?.attackable ? '' : 'disabled aria-disabled="true"'}>攻城${cap?.attackable ? `（成功機率約 ${Math.round(cap.chance * 100)}%）` : ''}</button>
         <button class="btn ghost" data-go-city="1">前往朝堂修繕城池</button>
       </div>
     </div>` : `<div class="pdetail"><p class="sub" style="margin:0">點選州府，檢視其知府、城防與巡幸狀況。點邊界鄰國可開外交面板。</p></div>`;
@@ -146,6 +158,15 @@ export function renderMap(){
     } else {
       U.mapNote = TOUR_REASON[r?.reason] ?? `巡幸未成：${r?.error?.message || '未知原因'}`;
     }
+    save();
+    render();
+  };
+  // 攻城由玩家主動觸發；結果寫入側欄（U.mapNote）。失敗時狀態僅依引擎變動，不影響其他府。
+  const attackBtn = app.querySelector('[data-attack]');
+  if (attackBtn) attackBtn.onclick = () => {
+    let r;
+    try { r = attackCity(U.state, attackBtn.dataset.attack); } catch (e) { r = { ok: false, reason: null, error: e }; }
+    U.mapNote = r?.ok ? r.text : (ATTACK_REASON[r?.reason] ?? `攻城未成：${r?.error?.message || '未知原因'}`);
     save();
     render();
   };
