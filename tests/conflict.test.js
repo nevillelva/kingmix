@@ -94,3 +94,47 @@ test('流程：本機蓋章後，雲端仍為舊版本時本機勝出', () => {
   assert.equal(resolveConflict(local, remote).winner, 'local');
   assert.equal(resolveConflict(local, remote).needsPrompt, true);
 });
+
+// ── 雲端衝突對話框的可達性（web/ui/state-io.js）。CLOUD_SAVE_ENABLED 於出貨版本保持 false；
+// 此測試將原始碼複本的旗標改為 true（匯入路徑改為絕對檔案 URL），驗證 checkCloudConflict 會呼叫 askConflict 並掛上對話框。
+import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
+
+const STATE_IO = new URL('../web/ui/state-io.js', import.meta.url);
+const ioSrc = readFileSync(STATE_IO, 'utf8');
+
+test('出貨版本的 CLOUD_SAVE_ENABLED 為 false', () => {
+  assert.match(ioSrc, /export const CLOUD_SAVE_ENABLED = false;/);
+});
+
+test('旗標開啟時，衝突判定會要求玩家確認並顯示衝突對話框', async () => {
+  const appended = [];
+  const stub = () => new Proxy(function () {}, {
+    get: (t, k) => (k === 'then' ? undefined : k === Symbol.toPrimitive ? () => '' : stub()),
+    apply: () => stub(), set: () => true,
+  });
+  const fakeDoc = { getElementById: () => null, createElement: () => stub(), body: { appendChild: (n) => appended.push(n) },
+    addEventListener() {}, querySelector: () => null, querySelectorAll: () => [] };
+  globalThis.document = fakeDoc;
+  globalThis.window = globalThis;
+  const local = { year: 2, saveVersion: 2, savedAt: 100, seed: 1 };
+  const remote = { year: 3, saveVersion: 5, savedAt: 200, seed: 1 };
+  globalThis.localStorage = { getItem: () => JSON.stringify({ seed: 1, state: local }), setItem() {}, removeItem() {} };
+
+  // 複本：旗標改為 true，相對匯入改寫為絕對 URL，並以 data: URL 載入。
+  let src = ioSrc.replace('export const CLOUD_SAVE_ENABLED = false;', 'export const CLOUD_SAVE_ENABLED = true;');
+  src = src.replace(/from '(\.\.?\/[^']+)'/g, (_, spec) => `from '${new URL(spec, STATE_IO).href}'`);
+  const mod = await import('data:text/javascript;base64,' + Buffer.from(src).toString('base64'));
+  assert.equal(mod.CLOUD_SAVE_ENABLED, true);
+
+  // 雲端存檔與本機不同 → resolveConflict 需要玩家確認。
+  const { resolveConflict } = await import('../src/conflict.js');
+  assert.equal(resolveConflict(local, remote).needsPrompt, true);
+
+  // 注入雲端快照後走 checkCloudConflict，對話框應掛上 body。
+  const U = (await import(new URL('./store.js', STATE_IO).href)).U;
+  U.cloud.snap = { exists: true, data: () => ({ seed: 1, state: remote }) };
+  mod.checkCloudConflict(); // 不等待：對話框等待玩家選擇
+  await new Promise((r) => setTimeout(r, 50));
+  assert.ok(appended.length >= 1, 'askConflict 應掛上對話框');
+});
