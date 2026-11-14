@@ -33,6 +33,9 @@ export function priorChoiceMatches(state, { event, option }) {
   return option === undefined ? true : c.option === option;
 }
 
+// 巡幸所在府（見 tour.js）：未設定 state.location 時視為京兆府（京師）。
+export const CAPITAL_PREFECTURE = 'jingzhao';
+
 export function isEligible(state, event, rng) {
   const when = event.when || {};
   const s = state.stats;
@@ -71,6 +74,8 @@ export function isEligible(state, event, rng) {
       case 'prior_choice': if (!priorChoiceMatches(state, val)) return false; break;
       // 持有收藏項目（見 collections.js）：項目 id 如 jiuding_1、sibao_wen、mingju_2。
       case 'has_item': if (!ownsItem(state, val)) return false; break;
+      // 巡幸所在府（見 tour.js）：事件只在皇帝所在州府發生。
+      case 'at_prefecture': if ((state.location ?? CAPITAL_PREFECTURE) !== val) return false; break;
       default: {
         // 通用數值條件：<stat>_lt / <stat>_gt，例如 prestige_lt、commerce_gt
         const m = key.match(/^([a-z]+)_(lt|gt)$/);
