@@ -67,8 +67,31 @@ paintSlots();
 
 paintSnd();
 
-try { U.events =(await (await fetch('../data/events.json')).json()).events; } catch (e) { U.events = []; }
+// 舊格式新年鍵 kingmix.newyear.<seed>.<year>（值為 '1'）於開機時清除；每種子一鍵 kingmix.newyear.<seed> 保留。
+function purgeLegacyNewYearKeys(){
+  try {
+    const dead = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('kingmix.newyear.') && /\.\d+$/.test(k.slice('kingmix.newyear.'.length)) && localStorage.getItem(k) === '1') dead.push(k);
+    }
+    dead.forEach(k => localStorage.removeItem(k));
+  } catch (e) {}
+}
+purgeLegacyNewYearKeys();
 
-render();
+let eventsOk = false;
+try {
+  const ev = (await (await fetch('../data/events.json')).json()).events;
+  if (Array.isArray(ev) && ev.length > 0) { U.events = ev; eventsOk = true; }
+} catch (e) { eventsOk = false; }
+
+if (!eventsOk) {
+  // 事件資料無法使用時不進入遊戲，於頁面顯示錯誤橫幅。
+  U.events = [];
+  app.innerHTML = '<div role="alert" class="card" style="color:var(--vermilion);margin-top:24px">事件資料載入失敗，請檢查 data/events.json</div>';
+} else {
+  render();
+}
 
 initCloud();

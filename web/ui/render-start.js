@@ -8,7 +8,7 @@ import { buildScroll } from '../../src/posthumous.js';
 import { evaluateDynasty } from '../../src/ending.js';
 import { chronicleLine } from '../../src/chronicle.js';
 import { U, app } from './store.js';
-import { clearSave, cloudSave, load, save } from './state-io.js';
+import { clearSave, cloudSave, discardCorruptSave, load, reasonText, save, saveTextFile } from './state-io.js';
 import { esc } from './util.js';
 import { newGame } from './game-flow.js';
 import { render } from './render-nav.js';
@@ -44,11 +44,23 @@ export function paintAccPolicies(){
   document.getElementById('acc-policy-hint').textContent = `已選 ${U.accPolicies.length} / ${ACCESSION_POLICY_MAX} 條。第一條為主策；輔策效果減半（暫定）。`;
 }
 
+// 本機自動存檔損毀時的提示卡：提供匯出損毀存檔與開新局（開新局前會另存備份）。
+function corruptCard(corrupt){
+  return `<section class="card" role="alert" aria-labelledby="corrupt-t">
+      <h2 id="corrupt-t">本機存檔損毀</h2>
+      <p class="sub" id="corrupt-d">瀏覽器中的自動存檔無法讀取（${esc(reasonText(corrupt.error))}），已停止使用。可先匯出損毀存檔留底，或開新局（開新局前會將損毀內容另存於瀏覽器備份）。</p>
+      <div style="margin-top:10px"><button class="btn ghost" id="corrupt-export">匯出損毀存檔</button>
+      <button class="btn zhu" id="corrupt-new">開新局</button></div>
+    </section>`;
+}
+
 export function renderStart(){
   const saved = load();
+  const corrupt = saved && saved.corrupt ? saved : null;
   const cs = cloudSave();
   const scenOpts = Object.values(SCENARIOS).map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
   app.innerHTML = `
+    ${corrupt ? corruptCard(corrupt) : ''}
     <section class="hero">
       <div class="seal-big" aria-hidden="true">帝</div>
       <h2>即位登基</h2>
@@ -117,6 +129,10 @@ export function renderStart(){
   if (c) c.onclick = () => { U.seed = saved.seed; U.state = saved.state; migrateEraLog(U.state); U.reviewedCount = (U.state.annals||[]).length; render(); };
   const cc = document.getElementById('ccont');
   if (cc) cc.onclick = () => { U.seed = cs.seed; U.state = cs.state; migrateEraLog(U.state); U.reviewedCount = (U.state.annals||[]).length; save(); render(); };
+  if (corrupt) {
+    document.getElementById('corrupt-export').onclick = () => saveTextFile(`kingmix-save-corrupt-${new Date().toISOString().slice(0, 10)}.json`, corrupt.raw);
+    document.getElementById('corrupt-new').onclick = () => { if (discardCorruptSave(corrupt.raw)) render(); };
+  }
 }
 
 // 結局：以諡號卷軸呈現，含諡號、四軸評分與生平紀事（含皇子夭折等紀錄）。

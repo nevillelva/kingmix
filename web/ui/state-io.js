@@ -1,5 +1,5 @@
 // web/ui/state-io.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
-import { exportSave, importSave, parseSave, serializeSave } from '../../src/save.js';
+import { SAVE_VERSION, STATE_SCHEMA_VERSION, exportSave, finalizeLoaded, importSave, restoreSave, serializeSave, writeAutoSave } from '../../src/save.js';
 import { resolveConflict, stampSave } from '../../src/conflict.js';
 import { eraYearText, migrateEraLog } from '../../src/era.js';
 import { U } from './store.js';
@@ -7,14 +7,53 @@ import { esc, useCap } from './util.js';
 import { render } from './render-nav.js';
 
 export const SAVE_KEY = 'kingmix-save-v1';
+// 損毀自動存檔的備份鍵（「開新局」前先另存，避免資料無聲遺失）。
+export const CORRUPT_BACKUP_KEY = 'kingmix-save-v1-corrupt-backup';
 
-// 寫入本機（不蓋版本、不推送雲端）。
-function writeLocal(seed, state){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({seed, state})); }catch(e){} }
+export const AUTO_SAVE_FAIL_MSG = '自動存檔失敗（瀏覽器儲存空間可能已滿），請匯出存檔備份';
 
-export function save(){
-  if (U.state) stampSave(U.state, Date.now());
+// 寫入本機自動存檔（v2 包裝，不推送雲端）。成功回傳 true；失敗時於存檔訊息區提示，記憶體進度保留。
+let autoSaveFailed = false;
+function writeLocal(seed, state){
+  const ok = writeAutoSave(globalThis.localStorage, SAVE_KEY, seed, state);
+  if (!ok) { autoSaveFailed = true; saveMsg(AUTO_SAVE_FAIL_MSG); }
+  else if (autoSaveFailed) { autoSaveFailed = false; saveMsg(''); }
+  return ok;
+}
+
+// 存檔排程：save() 不再同步寫入，改於瀏覽器閒置時（無 requestIdleCallback 則 setTimeout 0）合併寫入一次。
+// 頁面隱藏（pagehide、visibilitychange 為 hidden）時立即 flush，避免關頁前遺失進度。
+let saveDirty = false;
+let saveQueued = false;
+const runIdle = cb => (typeof requestIdleCallback === 'function'
+  ? requestIdleCallback(cb, { timeout: 2000 })
+  : setTimeout(cb, 0));
+
+export function flushSave(){
+  if (!saveDirty) return;
+  saveDirty = false;
+  if (!U.state) return;
   writeLocal(U.seed, U.state);
   cloudPush();
+}
+
+export function scheduleSave(){
+  if (U.state) {
+    if (!Number.isInteger(U.state.schemaVersion)) U.state.schemaVersion = STATE_SCHEMA_VERSION;
+    stampSave(U.state, Date.now());
+  }
+  saveDirty = true;
+  if (saveQueued) return;
+  saveQueued = true;
+  runIdle(() => { saveQueued = false; flushSave(); });
+}
+
+// 對外名稱與呼叫方式不變（仍為無參數的 save()），內部改走排程寫入。
+export function save(){ scheduleSave(); }
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('pagehide', flushSave);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
 }
 
 // 旗標：雲端存檔的衝突處理（版本比較與確認覆寫）已完成，但後端 db 尚未接上；在正式啟用前預設關閉。
@@ -31,7 +70,8 @@ export async function initCloud(){
     U.cloud.snap = await dbns.collection('data/users/' + uid).doc('save').get();
   } catch (e) { U.cloud.db = null; }
   await checkCloudConflict();
-  if (!U.state) render();
+  // 事件資料載入失敗時（U.events 為空）不得進入遊戲，錯誤橫幅保留於畫面上。
+  if (!U.state && U.events && U.events.length) render();
 }
 
 export function cloudDoc(){ return U.cloud.db.collection('data/users/' + U.cloud.uid).doc('save'); }
@@ -106,19 +146,41 @@ export function askConflict(local, remote, winner){
   });
 }
 
-export function load(){ try{ const r = localStorage.getItem(SAVE_KEY); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+// 讀取本機自動存檔：parseSave → migrateState → validateState。
+// 回傳 null（無存檔）、{ seed, state, version }（有效）或 { corrupt: true, error, errors, raw }（損毀）。
+// 舊格式（v1）讀到後寫回為 v2。
+export function load(){
+  let raw = null;
+  try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { return null; }
+  if (!raw) return null;
+  const r = restoreSave(raw);
+  if (!r.ok) return { corrupt: true, error: r.error, errors: r.errors, raw };
+  if (r.version !== SAVE_VERSION) writeLocal(r.seed, r.state);
+  return { seed: r.seed, state: r.state, version: r.version };
+}
 
 export function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+
+// 「開新局」於損毀存檔時使用：先另存備份，成功後才清除自動存檔。備份失敗則保留原檔並回傳 false。
+export function discardCorruptSave(raw){
+  try { localStorage.setItem(CORRUPT_BACKUP_KEY, raw); }
+  catch (e) { saveMsg('無法備份損毀存檔（儲存空間可能已滿），請先按「匯出損毀存檔」。'); return false; }
+  clearSave();
+  return true;
+}
 
 // ── 存檔匯出／匯入：引擎在 src/save.js；此處只負責下載、讀檔與中文訊息。
 export const SAVE_ERR = {
   invalid_json: '檔案不是存檔（無法解析）',
   future_version: '版本過新，請更新遊戲後再匯入',
+  future_schema: '存檔的遊戲版本過新，請更新遊戲後再讀取',
   missing_seed: '存檔不完整（缺少種子）',
   invalid_shape: '檔案不是存檔（格式不符）',
   invalid_version: '檔案不是存檔（版本號無效）',
   invalid_alive: '存檔內容不完整（存活狀態無效）',
 };
+// 驗證錯誤代碼（如 invalid_stat_treasury）未列入 SAVE_ERR 者，統一顯示為格式不完整。
+export const reasonText = code => SAVE_ERR[code] || '存檔內容不完整或格式錯誤';
 
 export function saveMsg(text){ const m = document.getElementById('save-msg'); if (m) m.textContent = text; }
 
@@ -148,6 +210,11 @@ export async function exportGame(){
     const d = new Date(), p = n => String(n).padStart(2, '0');
     filename = `kingmix-save-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
   } catch (e) { return saveMsg('匯出失敗，請再試一次。'); }
+  return saveTextFile(filename, text);
+}
+
+// 下載任意存檔字串（匯出存檔與匯出損毀存檔共用）。
+export async function saveTextFile(filename, text){
   // Artifacts 內 blob 下載無效，優先走 claude.use('downloads')；不可用時退回原本的 anchor 下載。
   let dl = null;
   try { dl = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null; } catch (e) { dl = null; }
@@ -170,8 +237,8 @@ export async function exportGame(){
 export function importGame(file){
   const reader = new FileReader();
   reader.onload = () => {
-    const r = importSave(String(reader.result));
-    if (!r.ok) return saveMsg(SAVE_ERR[r.error] || '匯入失敗：無法讀取存檔。');
+    const r = finalizeLoaded(importSave(String(reader.result)));
+    if (!r.ok) return saveMsg(reasonText(r.error));
     U.seed = r.seed; U.state = r.state; migrateEraLog(U.state);
     U.reviewedCount = (U.state.annals || []).length;
     U.panel = null; U.pick1 = null; U.feedback = ''; U.reviewPage = 'score'; U.tab = 'palace';
@@ -192,7 +259,7 @@ export const slotRaw = n => { try { return localStorage.getItem(slotKey(n)); } c
 export function slotLabel(n){
   const raw = slotRaw(n);
   if (raw === null) return '空';
-  const r = parseSave(raw);
+  const r = restoreSave(raw);
   if (!r.ok) return '無法讀取';
   try { return eraYearText(r.state); } catch (e) { return '無法讀取'; }
 }
@@ -225,8 +292,8 @@ export function slotWrite(n){
 export function slotLoad(n){
   const raw = slotRaw(n);
   if (raw === null) return saveMsg(`欄位 ${n} 是空的。`);
-  const r = parseSave(raw);
-  if (!r.ok) return saveMsg(`欄位 ${n} 無法讀取（${SAVE_ERR[r.error] || '存檔損毀'}）。`);
+  const r = restoreSave(raw);
+  if (!r.ok) return saveMsg(`欄位 ${n} 無法讀取（${reasonText(r.error)}）。`);
   U.seed = r.seed; U.state = r.state; migrateEraLog(U.state);
   U.reviewedCount = (U.state.annals || []).length;
   U.panel = null; U.pick1 = null; U.feedback = ''; U.reviewPage = 'score'; U.tab = 'palace';
