@@ -5,6 +5,7 @@ import { SCENARIOS } from '../../src/scenarios.js';
 import { ERA_REASON_TEXT, PRESET_ERAS, migrateEraLog, validateEra } from '../../src/era.js';
 import { DEFAULT_MODE, MODES } from '../../src/mode.js';
 import { ORIGINS, applyOrigin } from '../../src/origin.js';
+import { CARD_TAGS, OPENING_DECK_MAX, OPENING_DECK_MIN, POLICY_CARDS, openingPoolIds } from '../../src/cards.js';
 import { buildScroll } from '../../src/posthumous.js';
 import { evaluateDynasty } from '../../src/ending.js';
 import { chronicleLine } from '../../src/chronicle.js';
@@ -32,6 +33,22 @@ export function paintOrigins(){
       <span class="sub">利：${o.pros.map(esc).join('；')}</span><br>
       <span class="sub">弊：${o.cons.map(esc).join('；')}</span></button>`;
   }).join('');
+}
+
+// 開局策卡：可選卡池中點選 3–5 張作為本局卡池；不選則沿用全部策卡。
+export function paintOpeningDeck(){
+  const box = document.getElementById('opening-deck');
+  if (!box) return;
+  const pool = openingPoolIds(null);
+  box.innerHTML = pool.map(id => {
+    const c = POLICY_CARDS[id];
+    const on = U.openingDeck.includes(id);
+    const tags = c.tags.map(t => CARD_TAGS[t]).join('');
+    return `<button type="button" class="btn ${on ? 'zhu' : 'ghost'}" data-card="${esc(id)}" aria-pressed="${on}" style="text-align:left;white-space:normal">${on ? '已選：' : ''}${esc(c.name)}（${esc(tags)}）</button>`;
+  }).join('');
+  document.getElementById('opening-deck-hint').textContent = U.openingDeck.length === 0
+    ? `未選擇則沿用全部 ${pool.length} 張策卡。可選 ${OPENING_DECK_MIN}–${OPENING_DECK_MAX} 張作為本局卡池。`
+    : `已選 ${U.openingDeck.length} / ${OPENING_DECK_MIN}–${OPENING_DECK_MAX} 張。`;
 }
 
 export function paintAccPolicies(){
@@ -85,12 +102,27 @@ export function renderStart(){
       <label class="lbl">即位國策（選 1–2 條）</label>
       <div class="opts" id="acc-policy" style="grid-template-columns:1fr 1fr;margin:0"></div>
       <p class="sub" id="acc-policy-hint" style="margin:8px 0 0"></p>
+      <label class="lbl">開局策卡（選 ${OPENING_DECK_MIN}–${OPENING_DECK_MAX} 張作為本局卡池；不選則沿用全部策卡）</label>
+      <div class="opts" id="opening-deck" style="grid-template-columns:1fr 1fr;margin:0"></div>
+      <p class="sub" id="opening-deck-hint" style="margin:8px 0 0"></p>
       <div style="margin-top:14px"><button class="btn zhu" id="start">開始新局</button>
       ${cs && cs.state ? `<button class="btn ghost" id="ccont">繼續雲端進度（${new Date(cs.savedAt).toLocaleString('zh-TW')}）</button>` : ''}
       ${saved && saved.state ? '<button class="btn ghost" id="cont">繼續本機進度</button>' : ''}</div>
     </section>`;
   paintAccPolicies();
   paintOrigins();
+  paintOpeningDeck();
+  document.getElementById('opening-deck').onclick = e => {
+    const b = e.target.closest('[data-card]');
+    if (!b) return;
+    const id = b.dataset.card, hint = document.getElementById('opening-deck-hint');
+    if (U.openingDeck.includes(id)) {
+      U.openingDeck = U.openingDeck.filter(x => x !== id);
+    } else if (U.openingDeck.length < OPENING_DECK_MAX) {
+      U.openingDeck = openingPoolIds(null).filter(x => x === id || U.openingDeck.includes(x));
+    } else { paintOpeningDeck(); hint.textContent = `最多選 ${OPENING_DECK_MAX} 張，請先取消一張。`; return; }
+    paintOpeningDeck();
+  };
   document.getElementById('origin-cards').onclick = e => {
     const b = e.target.closest('[data-origin]');
     if (!b) return;
@@ -122,7 +154,12 @@ export function renderStart(){
       const v = validateEra(raw);
       if (!v.ok) { eraErr.textContent = ERA_REASON_TEXT[v.reason]; eraErr.hidden = false; return; }
     }
-    newGame(document.getElementById('seed').value.trim(), scenSel.value, raw, U.accPolicies.slice(), document.getElementById('mode').value);
+    const deckN = U.openingDeck.length;
+    if (deckN !== 0 && (deckN < OPENING_DECK_MIN || deckN > OPENING_DECK_MAX)) {
+      document.getElementById('opening-deck-hint').textContent = `開局策卡須選 ${OPENING_DECK_MIN}–${OPENING_DECK_MAX} 張，或全部不選。`;
+      return;
+    }
+    newGame(document.getElementById('seed').value.trim(), scenSel.value, raw, U.accPolicies.slice(), document.getElementById('mode').value, U.openingDeck.slice());
     // 即位出身於開局後套用（newGame 不接收出身參數），再存檔並重繪。
     if (U.state && !U.state.origin) { applyOrigin(U.state, originChoice); save(); render(); }
   };

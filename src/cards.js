@@ -44,17 +44,45 @@ export const SYNERGIES = Object.freeze([
 
 export const DRAW_SIZE = 3;
 export const MAX_ACTIVE_CARDS = 4; // 卡槽上限；超過時最早收入的一張會退出
+export const OPENING_DECK_MIN = 3; // 開局策卡（本局卡池）張數下限
+export const OPENING_DECK_MAX = 5; // 開局策卡（本局卡池）張數上限
 
 function ensureCardState(state) {
   if (!state.policyCards) state.policyCards = defaultOf('policyCards', state);
   return state.policyCards;
 }
 
-// 每年抽卡：自卡池（排除已在卡槽中者）不重複抽出 3 張，結果寫入 offer 供玩家擇一。
-// rng 須回傳 [0, 1)，確保同一 seed 可重現。回傳 id 陣列（副本）。
+// 可供開局選用的卡池：全部定義過的策卡，外加傳承解鎖掛點 state.legacyUnlocks.policyCards
+// 所列、且存在於 POLICY_CARDS 的卡（提案 3 尚未合併，目前無任何來源寫入此欄）。
+// state 可為 null（開局前尚無狀態），此時僅回傳基礎卡池。
+export function openingPoolIds(state = null) {
+  const extra = Array.isArray(state?.legacyUnlocks?.policyCards) ? state.legacyUnlocks.policyCards : [];
+  const unlocked = extra.filter((id) => POLICY_CARDS[id] && !POLICY_CARD_IDS.includes(id));
+  return [...POLICY_CARD_IDS, ...unlocked];
+}
+
+// 開局選卡：ids 須為 3–5 張、不重複、皆在 openingPoolIds 內，否則拋錯。
+// 結果依卡池順序正規化後寫入 policyCards.deck，與點選順序無關，故同種子同選擇結果一致。
+// deck 為 null（或缺漏）表示未自訂，抽卡沿用全部卡池。
+export function setOpeningDeck(state, ids) {
+  if (!Array.isArray(ids)) throw new Error('opening deck must be an array');
+  if (new Set(ids).size !== ids.length) throw new Error('opening deck has duplicates');
+  if (ids.length < OPENING_DECK_MIN || ids.length > OPENING_DECK_MAX) {
+    throw new Error(`opening deck size must be ${OPENING_DECK_MIN}-${OPENING_DECK_MAX}`);
+  }
+  const pool = openingPoolIds(state);
+  for (const id of ids) if (!pool.includes(id)) throw new Error(`card not in pool: ${id}`);
+  const pc = ensureCardState(state);
+  pc.deck = pool.filter((id) => ids.includes(id));
+  return state;
+}
+
+// 每年抽卡：自卡池（開局選定之本局卡池，未選則為全部卡池；排除已在卡槽中者）不重複抽出 3 張，
+// 結果寫入 offer 供玩家擇一。rng 須回傳 [0, 1)，確保同一 seed 可重現。回傳 id 陣列（副本）。
 export function drawPolicyCards(state, rng) {
   const pc = ensureCardState(state);
-  const pool = POLICY_CARD_IDS.filter((id) => !pc.active.includes(id));
+  const base = Array.isArray(pc.deck) ? pc.deck : openingPoolIds(state);
+  const pool = base.filter((id) => !pc.active.includes(id));
   const ids = [];
   for (let i = 0; i < DRAW_SIZE && pool.length > 0; i++) {
     const idx = Math.floor(rng() * pool.length);
