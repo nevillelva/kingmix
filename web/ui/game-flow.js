@@ -55,6 +55,10 @@ export function chainEvent(id){
 
 // 早朝兩則奏摺：第 1 則必出（連鎖優先），第 2 則 50%（與 sim.js 同一 rng 路徑）。
 // 每月開始時一次決定並存於 state.monthChain，同月重繪、行動後不改變。
+// TODO(A5，月初搬移計畫)：目前若 monthChain 不屬當月，本函式於「渲染」時才初始化，途中會呼叫 pickEvent，
+// 而 pickEvent 經 sim.js trackRemonEligibility 會寫入 state.flags.remon_eligible_since（render 中改寫 flags）。
+// 完整修法是把本段初始化搬到月初（finishMonth / ffAdvanceMonth 推進月份之後，於 advanceMonth 同一流程內完成），
+// 使 render 只讀 state.monthChain。此搬移涉及引擎（finishMonth、ffAdvanceMonth、sim.js），由其他代理處理，本次不搬。
 export function morningPair(){
   const key = `${U.state.year}-${U.state.month}`;
   if (!U.state.monthChain || U.state.monthChain.key !== key) U.state.monthChain = { key, id: takeChain(U.state) };
@@ -84,9 +88,10 @@ export function finishMonth(keepFeedback){
   save(); render();
 }
 
-export function chooseDC(action){ applyDongchangAction(U.state, pendingCase().id, action); sfx('pick'); finishMonth(); }
+export function chooseDC(action){ if (U.pendingAction) return; applyDongchangAction(U.state, pendingCase().id, action); sfx('pick'); finishMonth(); }
 
 export function chooseOption(opt, ev){
+  if (U.pendingAction) return; // 蓋章進行中，忽略重複操作（見 fx.js stampThen）
   const before = { ...U.state.stats };
   recordEvent(U.state, ev.id);
   applyOption(U.state, opt, rng('recruit', U.state.year, U.state.month));
@@ -108,6 +113,7 @@ export const applyFx = (st, eff) => {
 
 // 事件的征戰選項：先套用其餘效果，再開戰；戰事結束後才推進本月（tick）。
 export function startEventCampaign(opt, ev){
+  if (U.pendingAction) return;
   const { war, ...rest } = opt.effects || {};
   if (!war) return render();
   recordEvent(U.state, ev.id);
@@ -135,6 +141,7 @@ export function finishCampaignUI(f, prefix){
 }
 
 export function campAct(a, v){
+  if (U.pendingAction) return;
   const c = U.state.campaign;
   if (!c || c.status !== 'active') return render();
   if (a === 'camp-recon') {
@@ -224,7 +231,7 @@ export function ffStopNote(reason, done){
 }
 
 export function fastForward(){
-  if (!U.state || !U.state.alive) return;
+  if (!U.state || !U.state.alive || U.pendingAction) return;
   // 停下與推進順序全部在 runFastForward 決定（見 src/fastforward.js）。
   const { done, reason, back } = runFastForward(U.state, FF_MONTHS, () => { ffDecideMonth(); ffAdvanceMonth(); });
   const note = ffStopNote(reason, done) + (back.length ? ` 暫緩之案 ${back.length} 件已還原為待決。` : '');

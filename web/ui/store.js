@@ -17,7 +17,7 @@ export const U = {
   audioUnlocked: false,
   bgmTimer: null,
   bgmStep: 0,
-  stamping: false,
+  pendingAction: null, // 玩家操作進行中（'stamp'）；非 null 時其他玩家操作入口忽略
   lastScreen: null,
   guideArmed: false,
   lastBattle: null,
