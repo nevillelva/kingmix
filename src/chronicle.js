@@ -15,6 +15,8 @@ const HEIR_DEATH_CAUSE = { child_mortality: '幼年夭折', rivalry: '奪嫡失�
 const ASSASSIN_SOURCE = { tyranny: '暴政', remnant: '前朝遺臣', court: '朝堂江湖' };
 const ASSASSIN_OUTCOME = { blocked: '擋下', injured: '受傷', killed: '死亡' };
 
+import { FATE_END_TAG } from './fate-data.js';
+
 const orDash = (v) => (v === undefined || v === null || v === '' ? '—' : String(v));
 
 // 回傳 { text, tag }：text 為主文，tag 為右側標籤。任何欄位缺漏皆以「—」代替，絕不輸出 undefined。
@@ -44,6 +46,12 @@ export function chronicleLine(c) {
       text: `${orDash(c.name)}${died ? '於殿前死諫' : '進諫，陛下納之'} · ${orDash(c.year)}年${orDash(c.month)}月`,
       tag: died ? '死諫' : '納諫',
     };
+  }
+  if (c.kind === 'fate') {
+    return { text: orDash(c.text), tag: c.tag || '人物' };
+  }
+  if (c.kind === 'fate_end') {
+    return { text: orDash(c.text), tag: FATE_END_TAG[c.cause] ?? '善終' };
   }
   if (c.kind === 'heir_illness') {
     return { text: `皇子${orDash(c.name)}染疾 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '患病' };

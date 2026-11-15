@@ -21,6 +21,7 @@ import { tickCity } from './city.js';
 import { tickHarem, applyWaijiaCoupling, taihouPenalty } from './harem.js';
 import { applyFactionPressure } from './factions.js';
 import { scheduleChain } from './chains.js';
+import { tickFates, endFate } from './fates.js';
 import { recordSharedEvent } from './bonds.js';
 import { tickAssassination } from './assassination.js';
 import { DEFAULT_MODE, modeMonths } from './mode.js';
@@ -45,10 +46,11 @@ export function lowestLoyaltyOfficial(officials) {
 }
 
 // 移除官員：同時清除其官職、關閉其東廠案件、派系勢力微降。
-export function removeOfficial(state, official) {
+export function removeOfficial(state, official, cause = 'dismissed') {
   const idx = state.officials.indexOf(official);
   if (idx === -1) return;
   state.officials.splice(idx, 1);
+  endFate(state, 'official', official.id, cause);
   official.office = null;
   state.factions[official.faction] = Math.max(0, state.factions[official.faction] - 2);
   for (const c of state.dongchang.cases) {
@@ -181,7 +183,7 @@ function applyRemonstrance(state, choice) {
     state.chronicle.push({ ...base, outcome: 'accepted' });
   } else if (choice === 'reject') {
     state.chronicle.push({ ...base, outcome: 'died' });
-    removeOfficial(state, target);
+    removeOfficial(state, target, 'remonstrance');
   }
 }
 
@@ -246,6 +248,7 @@ export function monthlyTick(state, rng) {
   tickDongchang(state, r);
   tickHeirs(state);
   tickCrownPrince(state);
+  tickFates(state); // 人物命運線段落（見 fates.js）：僅寫入史冊，不改數值
   tickTutorTraits(state);
   tickTitles(state);
 
@@ -260,7 +263,7 @@ export function monthlyTick(state, rng) {
   // 刺殺：在月末死亡判定之後結算，皇帝遇刺身亡時 endReason 為 'assassinated'。
   if (state.alive) {
     const attempt = tickAssassination(state);
-    if (attempt?.official) removeOfficial(state, attempt.official);
+    if (attempt?.official) removeOfficial(state, attempt.official, 'slain');
   }
 
   // 忠誠取整（B8）：本月其他步驟（特質、東廠、太子等）亦可能改動忠誠，故於月末統一取整至小數二位。

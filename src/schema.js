@@ -35,6 +35,8 @@ export const SCHEMA = Object.freeze({
   relations: { type: ['array'], default: () => [] },
   // 共歷羈絆（bonds.js ensureBonds）
   bonds: { type: ['object'], default: () => ({ shared: {}, unlocked: {} }) },
+  // 人物命運線進度（fates.js，鍵為 "角色:id"）
+  fates: { type: ['object'], default: () => ({}) },
   // 後宮（harem.js ensureHarem）。fill: false：harem.js 的 tickHarem 以「無妃嬪且無 harem 欄位」
   // 作為整段略過的條件，故載入時不自動補上，僅於 ensureHarem 懶建立時使用此預設值。
   harem: {
