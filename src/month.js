@@ -3,6 +3,7 @@
 // 季度快照位於 web/ui/render-court.js，引擎不得匯入，故以回呼傳入。
 
 import { monthlyDrift } from './diplomacy.js';
+import { defaultOf } from './schema.js';
 import { monthlyTick, advanceMonth } from './turn.js';
 import { autoAppoint } from './selection.js';
 import { tryAccession } from './succession.js';
@@ -32,7 +33,7 @@ export function endOfMonth(state, opts = {}) {
   }
 
   if (opts.withAnnals !== false && endingYear !== null && state.alive) {
-    state.annals = state.annals || [];
+    state.annals = state.annals || defaultOf('annals', state);
     state.annals.push({
       year: endingYear, generation: state.dynasty.generation,
       treasury: Math.round(state.stats.treasury), people: Math.round(state.stats.people),

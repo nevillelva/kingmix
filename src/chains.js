@@ -4,9 +4,11 @@
 //   - 佇列存於 state.pendingChain（陣列，預設 []，懶建立；舊存檔相容）。
 //   - 每月至多取出一則；同月多則時，其餘順延至之後月份。
 
+import { defaultOf } from './schema.js';
+
 export function scheduleChain(state, eventId) {
   if (typeof eventId !== 'string' || eventId === '') throw new Error('chain requires an event id string');
-  if (!Array.isArray(state.pendingChain)) state.pendingChain = [];
+  if (!Array.isArray(state.pendingChain)) state.pendingChain = defaultOf('pendingChain', state);
   state.pendingChain.push(eventId);
   return state;
 }

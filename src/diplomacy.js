@@ -4,6 +4,7 @@
 import { makeRng } from './rng.js';
 import { BALANCE } from './balance.js';
 import { pushCapped, DIPLOMACY_LOG_CAP } from './caps.js';
+import { defaultOf } from './schema.js';
 
 // 四個鄰國：strength 為基礎兵力（與 ourStrength 同尺度，初始己方約 196）。
 export const NEIGHBORS = Object.freeze([
@@ -32,11 +33,7 @@ export function neighborById(id) {
 
 // 延遲建立外交狀態；回傳 state.diplomacy（以鄰國 id 為鍵）。
 export function diplomacyOf(state) {
-  if (!state.diplomacy) {
-    state.diplomacy = Object.fromEntries(
-      NEIGHBORS.map((n) => [n.id, { attitude: n.attitude, allied: false, kin: 0 }]),
-    );
-  }
+  if (!state.diplomacy) state.diplomacy = defaultOf('diplomacy', state);
   return state.diplomacy;
 }
 
@@ -177,7 +174,7 @@ export function diplomacyAction(state, action, id) {
 }
 
 export function recordDiplomacy(state, action, id, ok) {
-  state.diplomacyLog = state.diplomacyLog || [];
+  state.diplomacyLog = state.diplomacyLog || defaultOf('diplomacyLog', state);
   pushCapped(state.diplomacyLog, { turn: state.turn, action, neighbor: id, ok }, DIPLOMACY_LOG_CAP);
   return state.diplomacyLog.at(-1);
 }

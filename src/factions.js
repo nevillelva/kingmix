@@ -3,6 +3,7 @@
 // 門檻為 Phase 10 暫定值，待模擬校準。
 
 import { POLICIES } from './policy.js';
+import { defaultOf } from './schema.js';
 
 export const FACTION_FORCE_THRESHOLD = 50; // 勢力高於此值即逼迫國策
 export const FORCE_MONTHS = 6; // 持續高於門檻的月數，才真正改變國策（避免一時波動）
@@ -35,7 +36,7 @@ export function forcingFaction(factions) {
 }
 
 function ensurePressure(state) {
-  if (!state.factionPressure) state.factionPressure = { forcedFaction: null, forcedMonths: 0, forcedPolicies: [] };
+  if (!state.factionPressure) state.factionPressure = defaultOf('factionPressure', state);
   return state.factionPressure;
 }
 
