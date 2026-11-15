@@ -3,6 +3,7 @@
 
 import { makeRng } from './rng.js';
 import { BALANCE } from './balance.js';
+import { pushCapped, DIPLOMACY_LOG_CAP } from './caps.js';
 
 // 四個鄰國：strength 為基礎兵力（與 ourStrength 同尺度，初始己方約 196）。
 export const NEIGHBORS = Object.freeze([
@@ -177,7 +178,7 @@ export function diplomacyAction(state, action, id) {
 
 export function recordDiplomacy(state, action, id, ok) {
   state.diplomacyLog = state.diplomacyLog || [];
-  state.diplomacyLog.push({ turn: state.turn, action, neighbor: id, ok });
+  pushCapped(state.diplomacyLog, { turn: state.turn, action, neighbor: id, ok }, DIPLOMACY_LOG_CAP);
   return state.diplomacyLog.at(-1);
 }
 

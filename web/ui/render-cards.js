@@ -54,9 +54,8 @@ function policyOfferCard() {
   if (!s || !s.alive || s.month !== 1 || !has('drawPolicyCards') || !has('choosePolicyCard')) return '';
   s.flags = s.flags || {};
   if (s.flags.policy_card_year === s.year) return '';
-  if (s.flags.policy_offer_year !== s.year) {
-    try { engine.drawPolicyCards(s, rng(s.year, 'policycards')); s.flags.policy_offer_year = s.year; } catch (e) { return ''; }
-  }
+  // 月初已由 prepareMonth 抽定（A5）；此處僅讀取。尚未抽定者不顯示。
+  if (s.flags.policy_offer_year !== s.year) return '';
   const ids = Array.isArray(s.policyCards?.offer) ? s.policyCards.offer : [];
   const defs = engine.POLICY_CARDS || {};
   const cards = ids.map((id) => ({ id, ...(defs[id] || {}) }));

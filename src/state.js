@@ -3,6 +3,7 @@ import { createEra } from './era.js';
 import { ensureEconomy } from './economy.js';
 import { DEFAULT_MODE, modeMonths } from './mode.js';
 import { applyOrigin } from './origin.js';
+import { pushCapped, WARNINGS_CAP } from './caps.js';
 
 // 遊戲狀態與數值邊界。所有數值寫入都必須經過 setStat，確保越界會被截斷並記錄。
 
@@ -108,10 +109,10 @@ export function setStat(state, key, value, opts = {}) {
   let v = value;
   // silent：月結的自然漂移撞到上下限屬正常狀態，不記錄警告；事件效果越界才是設計問題
   if (v < bounds[0]) {
-    if (!opts.silent) state.warnings.push({ turn: state.turn, key, reason: 'floor', attempted: round2(v) });
+    if (!opts.silent) pushCapped(state.warnings, { turn: state.turn, key, reason: 'floor', attempted: round2(v) }, WARNINGS_CAP);
     v = bounds[0];
   } else if (v > bounds[1]) {
-    if (!opts.silent) state.warnings.push({ turn: state.turn, key, reason: 'ceiling', attempted: round2(v) });
+    if (!opts.silent) pushCapped(state.warnings, { turn: state.turn, key, reason: 'ceiling', attempted: round2(v) }, WARNINGS_CAP);
     v = bounds[1];
   }
   state.stats[key] = round2(v);

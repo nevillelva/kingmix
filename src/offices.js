@@ -1,3 +1,4 @@
+import { pushCapped, WARNINGS_CAP } from './caps.js';
 // 官職需求與任命。需求取自 docs/specs/offices.md。
 // 不達標仍可任命（保留玩家選擇權），但會記錄 unfit_office 警告。
 
@@ -36,7 +37,7 @@ export function assignOffice(state, officialId, officeKey) {
 
   const gaps = unmetRequirements(official, office.requires);
   if (gaps.length) {
-    state.warnings.push({ turn: state.turn, key: officeKey, reason: 'unfit_office', gaps });
+    pushCapped(state.warnings, { turn: state.turn, key: officeKey, reason: 'unfit_office', gaps }, WARNINGS_CAP);
   }
   return gaps;
 }

@@ -5,9 +5,8 @@ import { createInitialState, setStat } from '../../src/state.js';
 import { seedRelations } from '../../src/relations.js';
 import { seedBondedCourtOfficial } from '../../src/bonds.js';
 import { setAccessionPolicies } from '../../src/policy.js';
-import { EVENT_MAX_PER_RUN, isAvailable, optionOpen, recordEvent } from '../../src/events.js';
-import { takeChain } from '../../src/chains.js';
-import { pickEvent, pickSecondMemorial } from '../../src/selection.js';
+import { recordEvent } from '../../src/events.js';
+import { prepareMonth, chainEvent as chainEventEngine } from '../../src/month-start.js';
 import { endOfMonth } from '../../src/month.js';
 import { afterOption, applyOption } from '../../src/turn.js';
 import { applyDongchangAction } from '../../src/dongchang.js';
@@ -36,6 +35,7 @@ export function newGame(s, scenId, eraRaw, pols, modeKey){
   setAccessionPolicies(U.state, list);
   seedRelations(U.state); // 開局臣子關係網
   seedBondedCourtOfficial(U.state); // 開局即有一位相得之臣（與 sim.js 一致）
+  prepareMonth(U.state, U.events); // 月初準備：本月奏摺與政策卡（A5）
   U.reviewedCount = 0;
   U.guideArmed = true;
   save(); U.tab = 'palace'; U.panel = null; U.pick1 = null; render();
@@ -46,32 +46,14 @@ export function pendingCase(){ return (U.state.dongchang?.cases || []).find(c =>
 export function campaignActive(){ return !!(U.state.campaign && U.state.campaign.status === 'active'); }
 
 // 連鎖事件與 sim.js 相同：每月開始時取出一則（takeChain），同月重繪沿用同一結果，故記在 state.monthChain。
-export function chainEvent(id){
-  const e = id ? U.events.find(x => x.id === id) : null;
-  if (!e || !isAvailable(e)) return null;
-  if ((U.state.eventHistory?.counts?.[id] || 0) >= EVENT_MAX_PER_RUN) return null;
-  return e.options.some((o) => isAvailable(o) && optionOpen(U.state, o)) ? e : null;
-}
+export function chainEvent(id){ return chainEventEngine(U.state, U.events, id); }
 
-// 早朝兩則奏摺：第 1 則必出（連鎖優先），第 2 則 50%（與 sim.js 同一 rng 路徑）。
-// 每月開始時一次決定並存於 state.monthChain，同月重繪、行動後不改變。
-// TODO(A5，月初搬移計畫)：目前若 monthChain 不屬當月，本函式於「渲染」時才初始化，途中會呼叫 pickEvent，
-// 而 pickEvent 經 sim.js trackRemonEligibility 會寫入 state.flags.remon_eligible_since（render 中改寫 flags）。
-// 完整修法是把本段初始化搬到月初（finishMonth / ffAdvanceMonth 推進月份之後，於 advanceMonth 同一流程內完成），
-// 使 render 只讀 state.monthChain。此搬移涉及引擎（finishMonth、ffAdvanceMonth、sim.js），由其他代理處理，本次不搬。
+// 早朝兩則奏摺：本月奏摺已於月初由 prepareMonth（src/month-start.js）決定並存於 state.monthChain。
+// 此函式為純讀取，不抽選、不寫入狀態（A5）；若當月尚未準備，回傳空結果。
 export function morningPair(){
   const key = `${U.state.year}-${U.state.month}`;
-  if (!U.state.monthChain || U.state.monthChain.key !== key) U.state.monthChain = { key, id: takeChain(U.state) };
   const mc = U.state.monthChain;
-  if (!U.state.alive || pendingCase()) return { first: null, second: null, secondDone: false };
-  if (!('second' in mc)) {
-    const chained = chainEvent(mc.id);
-    const first = chained ?? pickEvent(U.state, U.events, rng('events', U.state.year, U.state.month));
-    mc.first = first ? first.id : null;
-    const second = pickSecondMemorial(U.state, U.events, rng(U.state.year, U.state.month, 'morning2'), mc.first);
-    mc.second = second ? second.id : null;
-    mc.secondDone = false;
-  }
+  if (!mc || mc.key !== key || !('second' in mc) || !U.state.alive || pendingCase()) return { first: null, second: null, secondDone: false };
   const byId = id => (id ? U.events.find(x => x.id === id) : null) || null;
   return { first: byId(mc.first), second: byId(mc.second), secondDone: !!mc.secondDone };
 }
@@ -85,6 +67,7 @@ export function finishMonth(keepFeedback){
     tickRng: rng('tick', U.state.year, U.state.month),
     onBeforeAdvance: () => recordQuarterSnapshot(),
   });
+  prepareMonth(U.state, U.events); // 新月開始：抽本月奏摺（A5）
   save(); render();
 }
 
@@ -188,6 +171,7 @@ export function ffToast(msg){
 
 // 代為批閱本月奏摺（早朝第一則與次奏），以 autoDecideMemorial 挑選。
 export function ffDecideMonth(){
+  prepareMonth(U.state, U.events);
   const pair = morningPair();
   if (pair.first) {
     const d = autoDecideMemorial(U.state, pair.first, U.seed, U.state.year, U.state.month);
@@ -213,6 +197,7 @@ export function ffDecideMonth(){
 // 快進不寫季度快照（與 finishMonth 的差異僅此一點，沿用原行為）。
 export function ffAdvanceMonth(){
   endOfMonth(U.state, { tickRng: rng('tick', U.state.year, U.state.month) });
+  prepareMonth(U.state, U.events);
 }
 
 // 快進停下時的說明：指出原因與玩家可採取的下一步，避免只剩短暫的浮動訊息。

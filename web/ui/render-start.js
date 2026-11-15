@@ -1,4 +1,5 @@
 // web/ui/render-start.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
+import { prepareMonth } from '../../src/month-start.js';
 import { ACCESSION_POLICY_MAX, POLICIES, POLICY_KEYS } from '../../src/policy.js';
 import { SCENARIOS } from '../../src/scenarios.js';
 import { ERA_REASON_TEXT, PRESET_ERAS, migrateEraLog, validateEra } from '../../src/era.js';
@@ -126,9 +127,9 @@ export function renderStart(){
     if (U.state && !U.state.origin) { applyOrigin(U.state, originChoice); save(); render(); }
   };
   const c = document.getElementById('cont');
-  if (c) c.onclick = () => { U.seed = saved.seed; U.state = saved.state; migrateEraLog(U.state); U.reviewedCount = (U.state.annals||[]).length; render(); };
+  if (c) c.onclick = () => { U.seed = saved.seed; U.state = saved.state; migrateEraLog(U.state); prepareMonth(U.state, U.events); U.reviewedCount = (U.state.annals||[]).length; render(); };
   const cc = document.getElementById('ccont');
-  if (cc) cc.onclick = () => { U.seed = cs.seed; U.state = cs.state; migrateEraLog(U.state); U.reviewedCount = (U.state.annals||[]).length; save(); render(); };
+  if (cc) cc.onclick = () => { U.seed = cs.seed; U.state = cs.state; migrateEraLog(U.state); prepareMonth(U.state, U.events); U.reviewedCount = (U.state.annals||[]).length; save(); render(); };
   if (corrupt) {
     document.getElementById('corrupt-export').onclick = () => saveTextFile(`kingmix-save-corrupt-${new Date().toISOString().slice(0, 10)}.json`, corrupt.raw);
     document.getElementById('corrupt-new').onclick = () => { if (discardCorruptSave(corrupt.raw)) render(); };
