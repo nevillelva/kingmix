@@ -38,16 +38,62 @@ export const PENTA = [293.66, 329.63, 369.99, 440, 493.88, 587.33, 659.25];
 
 export const PHRASE = [0,2,4,2,5,4,2,0, 3,1,4,6,4,2,1,0, 0,2,3,5,4,2,0,null];
 
-export function bgmTick(){
-  if (!U.soundOn || !U.audioCtx) return;
-  const idx = PHRASE[U.bgmStep % PHRASE.length]; U.bgmStep++;
-  if (idx !== null) qin(PENTA[idx], 0, 0.055);
-  if (U.bgmStep % 8 === 1) qin(PENTA[0] / 2, 0, 0.047);
+// 節拍間隔（秒）與前瞻量（秒）：計時器只負責「喚醒」排程，實際音符時刻以 AudioContext.currentTime 為準。
+export const BGM_STEP = 0.9;
+export const BGM_LOOKAHEAD = 0.15;
+export const BGM_TICK_MS = 100;
+
+// 前瞻排程（純函式，可測）：st = { next, step }，now 為音訊時鐘；每個落在 now+LOOKAHEAD 內的節拍交給 emit(freq, when, vol)。
+// next 為下一個節拍的絕對音訊時刻；未初始化或已落後時，自 now+0.05 重新起算。
+export function bgmLookahead(st, now, emit){
+  if (st.next == null || st.next < now) st.next = now + 0.05;
+  while (st.next < now + BGM_LOOKAHEAD) {
+    const idx = PHRASE[st.step % PHRASE.length]; st.step++;
+    const when = Math.max(0, st.next - now);
+    if (idx !== null) emit(PENTA[idx], when, 0.055);
+    if (st.step % 8 === 1) emit(PENTA[0] / 2, when, 0.047);
+    st.next += BGM_STEP;
+  }
 }
 
-export function startBgm(){ if (!U.bgmTimer && U.soundOn) U.bgmTimer = setInterval(bgmTick, 900); }
+function bgmSchedule(){
+  const ac = U.audioCtx;
+  if (!U.soundOn || !ac) return;
+  const st = U.bgmSched || (U.bgmSched = { next: null, step: U.bgmStep });
+  bgmLookahead(st, ac.currentTime, (freq, when, vol) => qin(freq, when, vol));
+  U.bgmStep = st.step;
+}
 
-export function stopBgm(){ if (U.bgmTimer) { clearInterval(U.bgmTimer); U.bgmTimer = null; } }
+function bgmHidden(){ return typeof document !== 'undefined' && document.visibilityState === 'hidden'; }
+
+// 啟動：分頁隱藏時不啟動，僅記下待恢復；stopBgm 會清除此待恢復標記。
+export function startBgm(){
+  if (U.bgmTimer || !U.soundOn) return;
+  if (bgmHidden()) { U.bgmResume = true; return; }
+  U.bgmSched = null;
+  U.bgmTimer = setInterval(bgmSchedule, BGM_TICK_MS);
+}
+
+// 暫停（分頁隱藏時）：停止計時器，但保留待恢復標記。
+export function pauseBgm(){
+  if (U.bgmTimer) { clearInterval(U.bgmTimer); U.bgmTimer = null; U.bgmResume = true; }
+}
+
+// 恢復（回到前景）：若先前因隱藏而暫停，重新啟動。
+export function resumeBgm(){
+  if (!U.bgmResume || bgmHidden()) return;
+  U.bgmResume = false;
+  startBgm();
+}
+
+export function stopBgm(){
+  if (U.bgmTimer) { clearInterval(U.bgmTimer); U.bgmTimer = null; }
+  U.bgmResume = false;
+}
+
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('visibilitychange', () => { if (bgmHidden()) pauseBgm(); else resumeBgm(); });
+}
 
 export function unlockAudio(){
   const ac = audioReady();

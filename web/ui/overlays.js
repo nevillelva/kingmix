@@ -4,6 +4,7 @@ import { U } from './store.js';
 import { esc } from './util.js';
 import { finishMonth } from './game-flow.js';
 import { sfx } from './audio.js';
+import { openDialog } from './dialog.js';
 
 // ── 新手提要：僅新局首月顯示；關閉後寫入 localStorage（失敗則本次工作階段內隱藏）
 export const GUIDE_KEY = 'kingmix-guide-v1';
@@ -35,27 +36,23 @@ export function guideMount(){
 export function openResignDialog(){
   const heir = U.state.dynasty.crownPrince ? U.state.heirs.find(h => h.id === U.state.dynasty.crownPrince) : null;
   const who = heir ? `太子${esc(heir.personName || heir.name)}` : '成年皇子中擇定之人';
-  const ov = document.createElement('div');
-  ov.className = 'dlg-ov';
-  ov.innerHTML = `<div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-t" aria-describedby="dlg-d">
+  openDialog({
+    html: `<div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-t" aria-describedby="dlg-d">
       <h2 id="dlg-t">禪位予皇子</h2>
       <p id="dlg-d">禪位即結束本世，由${who}即位。此舉不可復原，史冊將記下此次禪位。</p>
       <div class="dlg-btns"><button type="button" class="btn ghost mini" data-dlg="cancel">取消</button>
         <button type="button" class="btn zhu mini" data-dlg="ok">確認禪位</button></div>
-    </div>`;
-  const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); };
-  const onKey = e => { if (e.key === 'Escape') close(); };
-  ov.addEventListener('click', e => {
-    if (e.target === ov) return close();
-    const b = e.target.closest('[data-dlg]');
-    if (!b) return;
-    if (b.dataset.dlg === 'cancel') return close();
-    close();
-    confirmResign();
+    </div>`,
+    initialFocus: '[data-dlg="cancel"]',
+    onClick: (e, close) => {
+      if (e.target === close.el) return close();
+      const b = e.target.closest('[data-dlg]');
+      if (!b) return;
+      if (b.dataset.dlg === 'cancel') return close();
+      close();
+      confirmResign();
+    },
   });
-  document.addEventListener('keydown', onKey);
-  document.body.appendChild(ov);
-  ov.querySelector('[data-dlg="cancel"]').focus();
 }
 
 export function confirmResign(){
@@ -83,23 +80,18 @@ export function markNewYearShown(){
 }
 
 export function openNianhao(title, sub){
-  const ov = document.createElement('div');
-  ov.className = 'nianhao';
-  ov.setAttribute('role', 'dialog');
-  ov.setAttribute('aria-modal', 'true');
-  ov.setAttribute('aria-label', '年號');
-  ov.innerHTML = `<div class="nh-card">
+  openDialog({
+    className: 'nianhao',
+    attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-label': '年號' },
+    html: `<div class="nh-card">
       <div class="nh-kicker">第${U.state.dynasty.generation}世 · ${U.state.year}年</div>
       <div class="nh-title">${esc(title)}</div>
       <div class="nh-sub">${esc(sub)}</div>
-      <button type="button" class="btn zhu nh-close">點擊繼續</button></div>`;
-  const onKey = e => { if (e.key === 'Escape') close(); };
-  const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); };
-  ov.addEventListener('click', close);
-  document.addEventListener('keydown', onKey);
-  document.body.appendChild(ov);
+      <button type="button" class="btn zhu nh-close">點擊繼續</button></div>`,
+    onClick: (e, close) => close(),
+    initialFocus: '.nh-close',
+  });
   sfx('bell');
-  ov.querySelector('.nh-close').focus();
 }
 
 export function showNewYear(){
