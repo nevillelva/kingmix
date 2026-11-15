@@ -9,7 +9,10 @@
 //   - 無任何關係時 stepRelations 為 no-op，且不消耗 rng。
 //   - 本模組只寫入 state；呼叫端（turn.js 月結）負責接線，見 stepRelations 註解。
 
+import { defaultOf } from './schema.js';
+
 import { isCourtOfficial, FACTIONS } from './officials.js';
+import { makeRng } from './rng.js';
 
 export const REL_KINDS = Object.freeze(['teacher', 'marriage', 'rival']);
 export const SPREAD_KINDS = Object.freeze(['teacher', 'marriage']); // 連坐沿師生、姻親傳遞；孿敵不連坐
@@ -30,7 +33,7 @@ const DECISION_FLAGS = ['rel_order_disband', 'rel_order_purge', 'rel_order_pardo
 const clampLoyalty = (v) => Math.min(100, Math.max(0, v));
 
 function ensureRelState(state) {
-  if (!state.relState) state.relState = { known: null, impeachment: null, guilt: [], spared: null };
+  if (!state.relState) state.relState = defaultOf('relState', state);
   return state.relState;
 }
 
@@ -109,7 +112,7 @@ function dismiss(state, official) {
 
 // 月結：結黨、互參、連坐。須於 monthlyTick 之後、advanceMonth 之前呼叫（見回報中的接線說明）。
 // 無任何關係時直接回傳，不改動狀態、不消耗 rng。
-export function stepRelations(state, rng) {
+export function stepRelations(state, rng = makeRng([state.seed, 'relations', state.turn])) {
   if (!state.relations || state.relations.length === 0) return state;
   const rs = ensureRelState(state);
   const flags = state.flags;

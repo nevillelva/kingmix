@@ -4,7 +4,7 @@
 import { U } from './store.js';
 import { esc, rng } from './util.js';
 import { save } from './state-io.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 import { EFFECT } from './labels.js';
 
 // 可選引擎：匯入失敗或匯出名稱不存在時維持空物件，各處以 typeof 檢查。
@@ -54,9 +54,8 @@ function policyOfferCard() {
   if (!s || !s.alive || s.month !== 1 || !has('drawPolicyCards') || !has('choosePolicyCard')) return '';
   s.flags = s.flags || {};
   if (s.flags.policy_card_year === s.year) return '';
-  if (s.flags.policy_offer_year !== s.year) {
-    try { engine.drawPolicyCards(s, rng(s.year, 'policycards')); s.flags.policy_offer_year = s.year; } catch (e) { return ''; }
-  }
+  // 月初已由 prepareMonth 抽定（A5）；此處僅讀取。尚未抽定者不顯示。
+  if (s.flags.policy_offer_year !== s.year) return '';
   const ids = Array.isArray(s.policyCards?.offer) ? s.policyCards.offer : [];
   const defs = engine.POLICY_CARDS || {};
   const cards = ids.map((id) => ({ id, ...(defs[id] || {}) }));

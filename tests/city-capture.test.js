@@ -19,7 +19,10 @@ function rebelState(seed) {
   return s;
 }
 
+// 開局兵部尚書（武略 80）的戰力 200 不屬於本測試所設定的兵力，故歸零以隔離。
 function withForces(s, { armament, military, defense }) {
+  const commander = s.officials.find((o) => o.office === 'war');
+  if (commander) commander.abilities.martial = 0;
   s.stats.armament = armament;
   s.stats.military = military;
   s.prefectures.find((p) => p.id === TARGET).defense = defense;

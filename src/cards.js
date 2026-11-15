@@ -2,6 +2,8 @@
 // 卡牌帶有「標籤」，兩張不同卡各帶一個指定標籤時觸發協同加成（見 SYNERGIES）。
 // 數值為暫定值：月修正皆在 BOUNDS 範圍內，且不動朝臣忠誠／派系，以免影響死諫與君臣相得。
 
+import { defaultOf } from './schema.js';
+
 export const CARD_TAGS = Object.freeze({
   agri: '農',
   commerce: '商',
@@ -44,7 +46,7 @@ export const DRAW_SIZE = 3;
 export const MAX_ACTIVE_CARDS = 4; // 卡槽上限；超過時最早收入的一張會退出
 
 function ensureCardState(state) {
-  if (!state.policyCards) state.policyCards = { active: [], offer: null };
+  if (!state.policyCards) state.policyCards = defaultOf('policyCards', state);
   return state.policyCards;
 }
 

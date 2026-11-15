@@ -1,6 +1,7 @@
 // 套用選項效果、每月結算、推進時間。
 
 import { setStat, FACTION_BASE } from './state.js';
+import { defaultOf } from './schema.js';
 import { makeRng } from './rng.js';
 import { officeHolder } from './offices.js';
 import { generateOfficial, isCourtOfficial } from './officials.js';
@@ -26,6 +27,7 @@ import { DEFAULT_MODE, modeMonths } from './mode.js';
 import { applyFacilityMonthly, advanceConstruction } from './facilities.js';
 import { stepRelations } from './relations.js';
 import { tickRebellion } from './city-capture.js';
+import { trimCapped, WARNINGS_CAP, DIPLOMACY_LOG_CAP } from './caps.js';
 
 // 官員名單上限：朝臣 12 人（開局 4 人加進士招募）＋ 六府知府 6 人。
 export const MAX_OFFICIALS = 18;
@@ -57,7 +59,8 @@ export function removeOfficial(state, official) {
   }
 }
 
-export function applyOption(state, option, rng = makeRng(['option', state.turn])) {
+// 預設 rng 一律含 state.seed（B5）：不同種子的局不得共用同一回合的亂數串。
+export function applyOption(state, option, rng = makeRng([state.seed, 'option', state.turn])) {
   applyEffectsOnly(state, option.effects || {}, rng);
   return state;
 }
@@ -69,7 +72,7 @@ export const CHAIN_CHANCE = 0.25;
 export function afterOption(state, event, option) {
   const effects = option.effects || {};
   // 記錄先前選擇（供 prior_choice 條件）：每事件保留最近一次所選選項。
-  state.choices = state.choices || {};
+  state.choices = state.choices || defaultOf('choices', state);
   state.choices[event.id] = { option: option.key };
   // 連鎖以機率觸發（種子決定）：每次選中皆必定排程會使後續事件過多，平衡會偏移。
   if (effects.chain && makeRng([state.seed, state.year, state.month, 'chain', event.id])() < CHAIN_CHANCE) {
@@ -202,7 +205,7 @@ function applyOfficeEffects(state) {
 
 // 每月結算（Phase 2 暫定公式，待無頭模擬校準）
 export function monthlyTick(state, rng) {
-  const r = rng ?? makeRng(['tick', state.turn]);
+  const r = rng ?? makeRng([state.seed, 'tick', state.turn]);
   const g = (k) => state.stats[k];
 
   drift(state, 'treasury', g('treasury') + Math.round((g('agriculture') + g('commerce')) / 60) - 12);
@@ -213,7 +216,7 @@ export function monthlyTick(state, rng) {
   drift(state, 'charm', g('charm') + (g('health') >= 50 ? 1.5 : 0)); // 後宮成長（暫定）
   if (state.facilities) applyFacilityMonthly(state); // 宮城設施每月加成（無設施時為 no-op）
   advanceConstruction(state); // 宮城興建進度（無進行中工程時為 no-op）
-  stepRelations(state, makeRng(['relations', state.turn])); // 臣子關係：結黨／互參／連坐（無關係時為 no-op）
+  stepRelations(state, makeRng([state.seed, 'relations', state.turn])); // 臣子關係：結黨／互參／連坐（無關係時為 no-op）
 
   applyOfficeEffects(state);
   applyPolicyEffects(state);
@@ -233,7 +236,8 @@ export function monthlyTick(state, rng) {
     if (isLoyaltyFrozen(state, o)) continue; // 君臣相得：忠誠不再月月流失（見 bonds.js）
     const influence = state.factions[o.faction];
     const drift = (influence - FACTION_BASE) / 100 - o.ambition / 200;
-    o.loyalty = Math.min(100, Math.max(0, o.loyalty + drift));
+    // 忠誠取整至小數二位，避免浮點誤差累積（B8）。
+    o.loyalty = Math.round(Math.min(100, Math.max(0, o.loyalty + drift)) * 100) / 100;
   }
 
   applyTraitEffects(state);
@@ -258,6 +262,13 @@ export function monthlyTick(state, rng) {
     const attempt = tickAssassination(state);
     if (attempt?.official) removeOfficial(state, attempt.official);
   }
+
+  // 忠誠取整（B8）：本月其他步驟（特質、東廠、太子等）亦可能改動忠誠，故於月末統一取整至小數二位。
+  for (const o of state.officials) o.loyalty = Math.round(o.loyalty * 100) / 100;
+
+  // 無上限陣列收斂（M2）：警告與外交紀錄只保留最近 200 筆。史冊不設上限。
+  if (state.warnings) trimCapped(state.warnings, WARNINGS_CAP);
+  if (state.diplomacyLog) trimCapped(state.diplomacyLog, DIPLOMACY_LOG_CAP);
   return state;
 }
 
@@ -270,6 +281,7 @@ export function advanceMonth(state) {
     state.age += 1;
     advanceHeirs(state);
   }
+  // 'abdicated' 為「滿齡致仕」（年滿 62 自動退位），不是玩家禪位；玩家禪位為 'resigned'。代碼值不改，以免破壞既有統計。
   if (state.alive && state.age >= 62) {
     state.alive = false;
     state.endReason = 'abdicated';

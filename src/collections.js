@@ -3,6 +3,7 @@
 // 集齊一套時，該套的永久加成（一次性提升對應屬性）只套用一次。
 
 import { setStat } from './state.js';
+import { defaultOf } from './schema.js';
 
 export const COLLECTIONS = {
   jiuding: {
@@ -59,7 +60,7 @@ export function collectItem(state, item) {
   if (!setId) throw new Error(`unknown collection item: ${item}`);
   if (state.flags[itemFlag(item)]) return { added: false, completed: null };
   state.flags[itemFlag(item)] = true;
-  state.collections = state.collections || { bonuses: [] };
+  state.collections = state.collections || defaultOf('collections', state);
   const before = collectionProgress(state, setId);
   const set = COLLECTIONS[setId];
   const justCompleted = before.complete && !state.collections.bonuses.includes(setId);

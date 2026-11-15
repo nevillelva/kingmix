@@ -9,7 +9,8 @@
 //   occupation   戰敗失守、遭敵方佔領（city.js markOccupied）：含 text
 //   （無 kind）  駕崩或禪位後的世代紀錄（succession.js 的 tryAccession）
 
-const END_WORD = { death: '駕崩', abdicated: '高年致仕', '禪位': '禪位', assassinated: '遇刺' };
+// 結束原因代碼：resigned＝禪位（B6 由中文改為英文代碼）；'禪位' 保留為舊存檔相容。
+const END_WORD = { death: '駕崩', abdicated: '高年致仕', resigned: '禪位', '禪位': '禪位', assassinated: '遇刺' };
 const HEIR_DEATH_CAUSE = { child_mortality: '幼年夭折', rivalry: '奪嫡失勢' };
 const ASSASSIN_SOURCE = { tyranny: '暴政', remnant: '前朝遺臣', court: '朝堂江湖' };
 const ASSASSIN_OUTCOME = { blocked: '擋下', injured: '受傷', killed: '死亡' };

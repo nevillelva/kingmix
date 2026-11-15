@@ -1,6 +1,7 @@
 // web/ui/labels.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
 import { PREFECTURE_DEFS } from '../../src/economy.js';
 import { MODES } from '../../src/mode.js';
+import { PERSONALITIES } from '../../src/people.js';
 
 export const STAT = {
   health:{l:'健康',ref:100}, literature:{l:'文學',ref:200}, military:{l:'兵力',ref:200}, power:{l:'權勢',ref:200},
@@ -8,6 +9,12 @@ export const STAT = {
   people:{l:'民心',ref:100}, agriculture:{l:'農業',ref:500}, commerce:{l:'商業',ref:600}, armament:{l:'軍備',ref:500},
   heaven:{l:'天命',ref:100}
 };
+
+// 皇子個性（立儲面板顯示用）；舊存檔無個性者顯示「—」。
+export function heirPersonLabel(h){
+  const p = PERSONALITIES.find(x => x.id === h.personality);
+  return p ? `${p.name}：${p.description}` : '個性未明';
+}
 
 export const FACTION = { qingliu:{l:'清流',c:'#4E7D5B'}, xunggui:{l:'勳貴',c:'#B48A3C'}, hanmen:{l:'寒門',c:'#2E5E7E'} };
 
@@ -45,7 +52,7 @@ export const SEASON = {1:'winter',2:'winter',3:'spring',4:'spring',5:'spring',6:
 
 export const SCEN_LABEL = { age:'年歲', power:'權勢', people:'民心', treasury:'國庫', turn:'在位月數' };
 
-export const END_WORD = { death:'駕崩', abdicated:'高年致仕', '禪位':'禪位' };
+export const END_WORD = { death:'駕崩', abdicated:'高年致仕', resigned:'禪位', '禪位':'禪位', assassinated:'遇刺' };
 
 export const SCEN_STATUS = { ongoing:'進行中', won:'已成功', failed:'已失敗' };
 
@@ -53,4 +60,4 @@ export const REASON = { cooldown:'本府本年已修繕', busy:'已有戰事在�
 
 export const MODE_TEXT = Object.fromEntries(Object.values(MODES).map(m => [m.key, m.label]));
 
-export const LEGACY_END = { '禪位': '禪位', death: '駕崩', abdicated: '高年致仕', short_end: '短局終局' };
+export const LEGACY_END = { resigned: '禪位', '禪位': '禪位', death: '駕崩', abdicated: '高年致仕', assassinated: '遇刺', short_end: '短局終局' };

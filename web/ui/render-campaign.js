@@ -2,8 +2,7 @@
 import { TACTICS, formatBattleLog, nominalStrength } from '../../src/war.js';
 import { MAX_ROUNDS, RECON_GRAIN_COST, WINS_NEEDED } from '../../src/campaign.js';
 import { U } from './store.js';
-import { esc } from './util.js';
-import { fbLine } from './render-nav.js';
+import { esc, fbLine } from './util.js';
 import { battleTickMs, nextBattleSpeed, visibleRoundCount, battleFrames } from '../../src/war-autoplay.js';
 
 // 兵種相剋（騎→盾→弓→槍→騎：前者剋後者）。僅作戰報圖示，不改動戰術數值。
@@ -39,8 +38,8 @@ function startScrollTimer() {
 function paintScroll() {
   if (typeof document === 'undefined') return;
   document.querySelectorAll('.battle-scroll').forEach((box) => {
-    box.querySelectorAll('li[data-i]').forEach((li) => {
-      li.hidden = Number(li.dataset.i) >= scroll.shown;
+    box.querySelectorAll('li[data-line-index]').forEach((li) => {
+      li.hidden = Number(li.dataset.lineIndex) >= scroll.shown;
     });
     const speedBtn = box.parentElement?.querySelector('[data-battle="speed"]');
     if (speedBtn) speedBtn.textContent = `加速 x${U.battlePrefs.speed}`;
@@ -110,7 +109,7 @@ export function battleScrollHTML(rounds = []) {
     const f = frames[i];
     const mark = r.line && r.line.includes('剋敵') ? '▲' : r.line && r.line.includes('遭') ? '▼' : '●';
     const tone = r.won ? 'win' : 'lose';
-    return `<li data-i="${i}" class="${tone}"${i >= scroll.shown ? ' hidden' : ''}><span class="rd-mark" aria-hidden="true">${mark}</span><span>${esc(line)}${r.starved ? '（粮絕，戰力減損）' : ''}</span><span class="rd-bar" aria-label="我方${f.oursPct}％、敵方${f.enemyPct}％" style="display:inline-block;width:60px;height:6px;margin-left:6px;vertical-align:middle;background:linear-gradient(to right,var(--ours,#5a7fb0) ${f.oursPct}%,var(--enemy,#b0604a) ${f.oursPct}%)"></span></li>`;
+    return `<li data-line-index="${i}" class="${tone}"${i >= scroll.shown ? ' hidden' : ''}><span class="rd-mark" aria-hidden="true">${mark}</span><span>${esc(line)}${r.starved ? '（粮絕，戰力減損）' : ''}</span><span class="rd-bar" aria-label="我方${f.oursPct}％、敵方${f.enemyPct}％" style="display:inline-block;width:60px;height:6px;margin-left:6px;vertical-align:middle;background:linear-gradient(to right,var(--ours,#5a7fb0) ${f.oursPct}%,var(--enemy,#b0604a) ${f.oursPct}%)"></span></li>`;
   }).join('');
   const empty = rounds.length ? '' : '<li class="sub">尚無回合。</li>';
   return `<div class="battle-wrap">

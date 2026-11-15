@@ -1,3 +1,4 @@
+// @slow
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -86,10 +87,17 @@ test('without scouting, a neighbor campaign starts with no intel', () => {
   assert.equal(campaign.intel, 'none');
 });
 
+// 開局兵部尚書（武略 80）會使我方戰力倍增，使鄰國戰役幾乎必勝、偵查效果被飽和掩蓋；
+// 本測試驗證的是偵查機制本身，故將開局武將的武略歸零，維持原本的勢均力敵前提。
+const noGeneral = (s) => {
+  const commander = s.officials.find((o) => o.office === 'war');
+  if (commander) commander.abilities.martial = 0;
+  return s;
+};
 test('scouted campaigns win more often than unscouted ones at even strength (same seeds, same tactics)', () => {
-  const even = Array.from({ length: 200 }, (_, i) => ourStrength(createInitialState(`e${i}`), makeRng(['e', i]))).reduce((a, b) => a + b, 0) / 200;
+  const even = Array.from({ length: 200 }, (_, i) => ourStrength(noGeneral(createInitialState(`e${i}`)), makeRng(['e', i]))).reduce((a, b) => a + b, 0) / 200;
   const run = (scouted, i) => {
-    const s = createInitialState(`sw${i}`);
+    const s = noGeneral(createInitialState(`sw${i}`));
     if (scouted) scoutNeighbor(s, 'west');
     startCampaign(s, { strength: even, reward: {}, loss: {} }, { neighborId: 'west' });
     const picks = ['assault', 'hold', 'ambush'];

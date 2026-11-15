@@ -1,11 +1,11 @@
 // web/ui/render-nav.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
 import { eraYearText } from '../../src/era.js';
-import { SCENARIOS } from '../../src/scenarios.js';
 import { milestoneFor } from '../../src/milestones.js';
 import { U, app } from './store.js';
-import { ffMount, ffToast, pendingCase } from './game-flow.js';
-import { actionsCard, crownChoiceCard, renderCourt, renderReview, reviewPending, showQuarterCard, slotsCard } from './render-court.js';
-import { lastBattleCard } from './render-campaign.js';
+import { setRenderer } from './render-bus.js';
+import { ffMount, ffToast } from './game-flow.js';
+import { renderCourt, renderReview, reviewPending } from './render-court.js';
+import { showQuarterCard } from './render-quarter.js';
 import { STAT, TOP_GAUGES } from './labels.js';
 import { esc, levelWord, pctOf } from './util.js';
 import { renderPalace } from './render-palace.js';
@@ -17,11 +17,6 @@ import { renderGallery } from './render-gallery.js';
 import { renderFacility } from './render-facility.js';
 import { renderEnding, renderStart } from './render-start.js';
 import { guideMount, showNewYear } from './overlays.js';
-
-// 朝堂的行動卡（僅在無待決案件、尚未駕崩時出現）
-export function actionsSection(){
-  return (!pendingCase() && U.state.alive) ? crownChoiceCard() + actionsCard() + slotsCard() + lastBattleCard() : '';
-}
 
 export function calendar(){
   document.getElementById('when').textContent = `第${U.state.dynasty.generation}世 · ${eraYearText(U.state)}${U.state.month}月 · ${U.state.age}歲`;
@@ -36,17 +31,6 @@ export function topGauges(){
     return `<div class="gauge ${cls}" title="${STAT[k].l}"><span>${STAT[k].l}</span>
       <div class="bar"><i style="width:${pctOf(k).toFixed(1)}%"></i></div><b>${lw}</b></div>`;
   }).join('');
-}
-
-export function fbLine(){ return `<div class="fbline" role="status">${U.feedback ? esc(U.feedback) : ''}</div>`; }
-
-export function scenarioBanner(){
-  const s = U.state.scenario;
-  if (!s || s.status === 'ongoing') return '';
-  const def = SCENARIOS[s.id];
-  if (!def) return '';
-  return `<section class="card"><div class="kicker">本紀結果</div><h2>${esc(def.name)}・${s.status === 'won' ? '成功' : '失敗'}</h2>
-    <div class="sub">${esc(def.goalText)}　國祚未盡，仍可續治。</div></section>`;
 }
 
 // 底部功能鈕：朝堂、後宮、輿圖、東廠、史冊（手機優先的圓形鈕列）。宮城仍為主畫面，故由殿宇頁頂端的「← 返回宮城」返回。
@@ -123,3 +107,5 @@ export function render(){
   showNewYear();
   inkFlash(U.tab);
 }
+
+setRenderer(render);

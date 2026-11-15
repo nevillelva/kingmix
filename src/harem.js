@@ -4,6 +4,7 @@
 // 數值為 Phase 10 暫定值。
 
 import { makeRng } from './rng.js';
+import { defaultOf } from './schema.js';
 
 export const DEMAND_KINDS = ['爵位', '田產', '科舉名額'];
 export const DEMAND_CHANCE = 1 / 24; // 每位妃嬪每月提出請求的機率
@@ -58,7 +59,7 @@ function resolveDueDemands(state, h) {
 
 function ensureHarem(state) {
   if (!state.harem) {
-    state.harem = { demands: [], nextDemandId: 1, waijia: {}, dominant: null, taihou: { power: 0 } };
+    state.harem = defaultOf('harem', state);
   }
   return state.harem;
 }

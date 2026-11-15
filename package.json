@@ -2,9 +2,12 @@
   "name": "kingmix",
   "private": true,
   "type": "module",
-  "description": "皇帝養成綜合版（Phase 1：核心骨架與無頭模擬）",
+  "description": "皇帝養成綜合版（引擎、無頭模擬與網頁介面）",
   "scripts": {
     "test": "node --test",
+    "test:fast": "node --test $(grep -L '^// @slow' tests/*.test.js)",
+    "build:artifact": "node scripts/build-artifact.js dist/artifact",
+    "check:cycles": "node scripts/check-cycles.js",
     "sim": "node scripts/simulate.js"
   },
   "engines": {

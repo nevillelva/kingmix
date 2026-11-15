@@ -1,16 +1,15 @@
+import { pruneNewYearKeys } from './newyear-keys.js';
 // web/ui/game-flow.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
 import { DEFAULT_MODE, MODES } from '../../src/mode.js';
-import { createScenarioState, evaluateScenario } from '../../src/scenarios.js';
+import { createScenarioState } from '../../src/scenarios.js';
 import { createInitialState, setStat } from '../../src/state.js';
 import { seedRelations } from '../../src/relations.js';
 import { seedBondedCourtOfficial } from '../../src/bonds.js';
 import { setAccessionPolicies } from '../../src/policy.js';
-import { EVENT_MAX_PER_RUN, isAvailable, optionOpen, recordEvent } from '../../src/events.js';
-import { takeChain } from '../../src/chains.js';
-import { autoAppoint, pickEvent, pickSecondMemorial } from '../../src/sim.js';
-import { monthlyDrift } from '../../src/diplomacy.js';
-import { advanceMonth, afterOption, applyOption, monthlyTick } from '../../src/turn.js';
-import { tryAccession } from '../../src/succession.js';
+import { recordEvent } from '../../src/events.js';
+import { prepareMonth, chainEvent as chainEventEngine } from '../../src/month-start.js';
+import { endOfMonth } from '../../src/month.js';
+import { afterOption, applyOption } from '../../src/turn.js';
 import { applyDongchangAction } from '../../src/dongchang.js';
 import { offerPeace, pickTactic, reconnoiter, startCampaign } from '../../src/campaign.js';
 import { TACTICS, formatBattleLog } from '../../src/war.js';
@@ -18,14 +17,15 @@ import { autoDecideMemorial } from '../../src/autodecide.js';
 import { runFastForward } from '../../src/fastforward.js';
 import { U, app } from './store.js';
 import { save } from './state-io.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 import { esc, rng } from './util.js';
-import { recordQuarterSnapshot } from './render-court.js';
+import { recordQuarterSnapshot } from './render-quarter.js';
 import { sfx } from './audio.js';
 import { STAT } from './labels.js';
 
 export function newGame(s, scenId, eraRaw, pols, modeKey){
   U.seed = s || String(Math.floor(Math.random()*1e9));
+  pruneNewYearKeys(U.seed); // M1：開新局時清除其他種子的新年鍵
   const list = pols && pols.length ? pols : ['agrarian'];
   const opts = { policy: list[0], era: eraRaw, mode: MODES[modeKey] ? modeKey : DEFAULT_MODE };
   try {
@@ -37,6 +37,7 @@ export function newGame(s, scenId, eraRaw, pols, modeKey){
   setAccessionPolicies(U.state, list);
   seedRelations(U.state); // 開局臣子關係網
   seedBondedCourtOfficial(U.state); // 開局即有一位相得之臣（與 sim.js 一致）
+  prepareMonth(U.state, U.events); // 月初準備：本月奏摺與政策卡（A5）
   U.reviewedCount = 0;
   U.guideArmed = true;
   save(); U.tab = 'palace'; U.panel = null; U.pick1 = null; render();
@@ -47,60 +48,35 @@ export function pendingCase(){ return (U.state.dongchang?.cases || []).find(c =>
 export function campaignActive(){ return !!(U.state.campaign && U.state.campaign.status === 'active'); }
 
 // 連鎖事件與 sim.js 相同：每月開始時取出一則（takeChain），同月重繪沿用同一結果，故記在 state.monthChain。
-export function chainEvent(id){
-  const e = id ? U.events.find(x => x.id === id) : null;
-  if (!e || !isAvailable(e)) return null;
-  if ((U.state.eventHistory?.counts?.[id] || 0) >= EVENT_MAX_PER_RUN) return null;
-  return e.options.some((o) => isAvailable(o) && optionOpen(U.state, o)) ? e : null;
-}
+export function chainEvent(id){ return chainEventEngine(U.state, U.events, id); }
 
-// 早朝兩則奏摺：第 1 則必出（連鎖優先），第 2 則 50%（與 sim.js 同一 rng 路徑）。
-// 每月開始時一次決定並存於 state.monthChain，同月重繪、行動後不改變。
+// 早朝兩則奏摺：本月奏摺已於月初由 prepareMonth（src/month-start.js）決定並存於 state.monthChain。
+// 此函式為純讀取，不抽選、不寫入狀態（A5）；若當月尚未準備，回傳空結果。
 export function morningPair(){
   const key = `${U.state.year}-${U.state.month}`;
-  if (!U.state.monthChain || U.state.monthChain.key !== key) U.state.monthChain = { key, id: takeChain(U.state) };
   const mc = U.state.monthChain;
-  if (!U.state.alive || pendingCase()) return { first: null, second: null, secondDone: false };
-  if (!('second' in mc)) {
-    const chained = chainEvent(mc.id);
-    const first = chained ?? pickEvent(U.state, U.events, rng('events', U.state.year, U.state.month));
-    mc.first = first ? first.id : null;
-    const second = pickSecondMemorial(U.state, U.events, rng(U.state.year, U.state.month, 'morning2'), mc.first);
-    mc.second = second ? second.id : null;
-    mc.secondDone = false;
-  }
+  if (!mc || mc.key !== key || !('second' in mc) || !U.state.alive || pendingCase()) return { first: null, second: null, secondDone: false };
   const byId = id => (id ? U.events.find(x => x.id === id) : null) || null;
   return { first: byId(mc.first), second: byId(mc.second), secondDone: !!mc.secondDone };
 }
 
+// 月結一律經 endOfMonth（src/month.js）；tick 亂數與無頭模擬之 [seed, year, month, 'tick'] 不同，故沿用網頁既有的 rng 路徑。
+// 季度快照須在 advanceMonth 之前（此時 state.month 為剛結束之月），以 onBeforeAdvance 傳入。
 export function finishMonth(keepFeedback){
   if (!keepFeedback) U.feedback = '';
   U.ffNote = ''; // 快進的停下說明僅留到玩家下一步行動為止
-  const endingYear = U.state.month === 12 ? U.state.year : null;
-  try { monthlyDrift(U.state, U.state.year, U.state.month); } catch(e) {} // 鄰國好感月度漂移（外交）
-  monthlyTick(U.state, rng('tick', U.state.year, U.state.month));
-  recordQuarterSnapshot(); // 季度結算：月底快照（須在 advanceMonth 之前，此時 state.month 為剛結束之月）
-  advanceMonth(U.state);
-  if (U.state.scenario) { try { evaluateScenario(U.state); } catch(e) {} }
-  if (endingYear !== null && U.state.alive) {
-    U.state.annals = U.state.annals || [];
-    U.state.annals.push({
-      year: endingYear, generation: U.state.dynasty.generation,
-      treasury: Math.round(U.state.stats.treasury), people: Math.round(U.state.stats.people),
-      military: Math.round(U.state.stats.military), agriculture: Math.round(U.state.stats.agriculture),
-      wars: U.state.wars.length, wins: U.state.wars.filter(w => w.won).length,
-      officials: U.state.officials.length, consorts: (U.state.consorts||[]).length,
-      dc: U.state.dongchang.cases.filter(c => c.status !== 'closed').length
-    });
-  }
-  autoAppoint(U.state);
-  if (!U.state.alive) tryAccession(U.state);
+  endOfMonth(U.state, {
+    tickRng: rng('tick', U.state.year, U.state.month),
+    onBeforeAdvance: () => recordQuarterSnapshot(),
+  });
+  prepareMonth(U.state, U.events); // 新月開始：抽本月奏摺（A5）
   save(); render();
 }
 
-export function chooseDC(action){ applyDongchangAction(U.state, pendingCase().id, action); sfx('pick'); finishMonth(); }
+export function chooseDC(action){ if (U.pendingAction) return; applyDongchangAction(U.state, pendingCase().id, action); sfx('pick'); finishMonth(); }
 
 export function chooseOption(opt, ev){
+  if (U.pendingAction) return; // 蓋章進行中，忽略重複操作（見 fx.js stampThen）
   const before = { ...U.state.stats };
   recordEvent(U.state, ev.id);
   applyOption(U.state, opt, rng('recruit', U.state.year, U.state.month));
@@ -122,6 +98,7 @@ export const applyFx = (st, eff) => {
 
 // 事件的征戰選項：先套用其餘效果，再開戰；戰事結束後才推進本月（tick）。
 export function startEventCampaign(opt, ev){
+  if (U.pendingAction) return;
   const { war, ...rest } = opt.effects || {};
   if (!war) return render();
   recordEvent(U.state, ev.id);
@@ -149,6 +126,7 @@ export function finishCampaignUI(f, prefix){
 }
 
 export function campAct(a, v){
+  if (U.pendingAction) return;
   const c = U.state.campaign;
   if (!c || c.status !== 'active') return render();
   if (a === 'camp-recon') {
@@ -195,6 +173,7 @@ export function ffToast(msg){
 
 // 代為批閱本月奏摺（早朝第一則與次奏），以 autoDecideMemorial 挑選。
 export function ffDecideMonth(){
+  prepareMonth(U.state, U.events);
   const pair = morningPair();
   if (pair.first) {
     const d = autoDecideMemorial(U.state, pair.first, U.seed, U.state.year, U.state.month);
@@ -217,25 +196,10 @@ export function ffDecideMonth(){
 }
 
 // 單月推進：與 finishMonth 相同的月末流程，但不存檔、不重繪（由快進結束時一次處理）。
+// 快進不寫季度快照（與 finishMonth 的差異僅此一點，沿用原行為）。
 export function ffAdvanceMonth(){
-  const endingYear = U.state.month === 12 ? U.state.year : null;
-  try { monthlyDrift(U.state, U.state.year, U.state.month); } catch(e) {}
-  monthlyTick(U.state, rng('tick', U.state.year, U.state.month));
-  advanceMonth(U.state);
-  if (U.state.scenario) { try { evaluateScenario(U.state); } catch(e) {} }
-  if (endingYear !== null && U.state.alive) {
-    U.state.annals = U.state.annals || [];
-    U.state.annals.push({
-      year: endingYear, generation: U.state.dynasty.generation,
-      treasury: Math.round(U.state.stats.treasury), people: Math.round(U.state.stats.people),
-      military: Math.round(U.state.stats.military), agriculture: Math.round(U.state.stats.agriculture),
-      wars: U.state.wars.length, wins: U.state.wars.filter(w => w.won).length,
-      officials: U.state.officials.length, consorts: (U.state.consorts||[]).length,
-      dc: U.state.dongchang.cases.filter(c => c.status !== 'closed').length
-    });
-  }
-  autoAppoint(U.state);
-  if (!U.state.alive) tryAccession(U.state);
+  endOfMonth(U.state, { tickRng: rng('tick', U.state.year, U.state.month) });
+  prepareMonth(U.state, U.events);
 }
 
 // 快進停下時的說明：指出原因與玩家可採取的下一步，避免只剩短暫的浮動訊息。
@@ -254,7 +218,7 @@ export function ffStopNote(reason, done){
 }
 
 export function fastForward(){
-  if (!U.state || !U.state.alive) return;
+  if (!U.state || !U.state.alive || U.pendingAction) return;
   // 停下與推進順序全部在 runFastForward 決定（見 src/fastforward.js）。
   const { done, reason, back } = runFastForward(U.state, FF_MONTHS, () => { ffDecideMonth(); ffAdvanceMonth(); });
   const note = ffStopNote(reason, done) + (back.length ? ` 暫緩之案 ${back.length} 件已還原為待決。` : '');

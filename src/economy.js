@@ -7,6 +7,7 @@ import { makeRng } from './rng.js';
 import { factionsBalanced, BALANCED_EFFICIENCY } from './factions.js';
 import { FACTIONS } from './officials.js';
 import { attachPerson } from './people.js';
+import { defaultOf } from './schema.js';
 
 export const TAX_TIERS = ['低', '中', '高'];
 export const TAX_EFFECTS = {
@@ -84,8 +85,8 @@ export function attachGovernors(state) {
 
 // 懶初始化：不改動稅制預設（中）；州府建立時一併把知府併入官員名單。
 export function ensureEconomy(state) {
-  if (!state.economy) state.economy = { tax: '中', efficiency: 1 };
-  if (!state.prefectures) state.prefectures = createPrefectures(state.seed);
+  if (!state.economy) state.economy = defaultOf('economy', state);
+  if (!state.prefectures) state.prefectures = defaultOf('prefectures', state);
   attachGovernors(state);
   return state.economy;
 }
@@ -127,11 +128,16 @@ export function tickEconomy(state) {
 }
 
 // 州府產出結算（與 tickEconomy 分開，tickEconomy 本身不改動數值）。
+// 叛亂州府產出乘數：REBEL_YIELD_MULT。依使用者決定，叛亂不減產，回到基準（1.0）。
+// 常數保留以便日後調整（例如改回 0.5 即為診斷報告建議的減半預設）。
+export const REBEL_YIELD_MULT = 1.0;
+
 export function applyPrefectureYield(state) {
   ensureEconomy(state);
   for (const pref of state.prefectures) {
-    setStat(state, 'treasury', state.stats.treasury + pref.yield * YIELD_TREASURY, { silent: true });
-    setStat(state, 'people', state.stats.people + (pref.yield - 1) * YIELD_PEOPLE, { silent: true });
+    const mult = pref.rebel === true ? REBEL_YIELD_MULT : 1;
+    setStat(state, 'treasury', state.stats.treasury + pref.yield * mult * YIELD_TREASURY, { silent: true });
+    setStat(state, 'people', state.stats.people + (pref.yield - 1) * mult * YIELD_PEOPLE, { silent: true });
   }
   return state;
 }

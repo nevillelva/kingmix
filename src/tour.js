@@ -8,6 +8,7 @@
 //   state.prefectures[].visited 是否曾巡幸過
 
 import { PREFECTURE_DEFS } from './economy.js';
+import { defaultOf } from './schema.js';
 import { ensureCity } from './city.js';
 import { setStat } from './state.js';
 import { CAPITAL_PREFECTURE } from './events.js';
@@ -48,8 +49,8 @@ const monthIndex = (state) => (state.year - 1) * 12 + (state.month - 1);
 
 // 懶初始化：補上所在府、巡幸紀錄、各府民心與巡訪紀錄。回傳州府陣列（含城防）。
 export function ensureTour(state) {
-  if (state.location === undefined) state.location = CAPITAL_PREFECTURE;
-  if (!state.tour) state.tour = { busyUntil: -1 };
+  if (state.location === undefined) state.location = defaultOf('location', state);
+  if (!state.tour) state.tour = defaultOf('tour', state);
   for (const pref of ensureCity(state)) {
     if (pref.morale === undefined) pref.morale = MORALE_INIT;
     if (pref.visited === undefined) pref.visited = false;
