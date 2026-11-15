@@ -61,7 +61,7 @@ export function openResignDialog(){
 export function confirmResign(){
   if (!U.state || !U.state.alive) return;
   U.state.campaign = null;
-  U.state.alive = false; U.state.endReason = '禪位';
+  U.state.alive = false; U.state.endReason = 'resigned';
   U.feedback = '';
   finishMonth();
 }

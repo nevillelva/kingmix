@@ -45,7 +45,7 @@ export const SEASON = {1:'winter',2:'winter',3:'spring',4:'spring',5:'spring',6:
 
 export const SCEN_LABEL = { age:'年歲', power:'權勢', people:'民心', treasury:'國庫', turn:'在位月數' };
 
-export const END_WORD = { death:'駕崩', abdicated:'高年致仕', '禪位':'禪位' };
+export const END_WORD = { death:'駕崩', abdicated:'高年致仕', resigned:'禪位', '禪位':'禪位', assassinated:'遇刺' };
 
 export const SCEN_STATUS = { ongoing:'進行中', won:'已成功', failed:'已失敗' };
 
@@ -53,4 +53,4 @@ export const REASON = { cooldown:'本府本年已修繕', busy:'已有戰事在�
 
 export const MODE_TEXT = Object.fromEntries(Object.values(MODES).map(m => [m.key, m.label]));
 
-export const LEGACY_END = { '禪位': '禪位', death: '駕崩', abdicated: '高年致仕', short_end: '短局終局' };
+export const LEGACY_END = { resigned: '禪位', '禪位': '禪位', death: '駕崩', abdicated: '高年致仕', assassinated: '遇刺', short_end: '短局終局' };

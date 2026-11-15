@@ -10,6 +10,7 @@
 //   - 本模組只寫入 state；呼叫端（turn.js 月結）負責接線，見 stepRelations 註解。
 
 import { isCourtOfficial, FACTIONS } from './officials.js';
+import { makeRng } from './rng.js';
 
 export const REL_KINDS = Object.freeze(['teacher', 'marriage', 'rival']);
 export const SPREAD_KINDS = Object.freeze(['teacher', 'marriage']); // 連坐沿師生、姻親傳遞；孿敵不連坐
@@ -109,7 +110,7 @@ function dismiss(state, official) {
 
 // 月結：結黨、互參、連坐。須於 monthlyTick 之後、advanceMonth 之前呼叫（見回報中的接線說明）。
 // 無任何關係時直接回傳，不改動狀態、不消耗 rng。
-export function stepRelations(state, rng) {
+export function stepRelations(state, rng = makeRng([state.seed, 'relations', state.turn])) {
   if (!state.relations || state.relations.length === 0) return state;
   const rs = ensureRelState(state);
   const flags = state.flags;
