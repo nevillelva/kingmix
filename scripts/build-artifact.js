@@ -70,8 +70,16 @@ export function buildArtifact(outDir, { root = ROOT, log = () => {} } = {}) {
   copyFileSync(join(root, 'web', 'index.html'), join(out, 'index.html'));
 
   const uiDir = join(root, 'web', 'ui');
+  // 事件資料內嵌為 ES 模組（ui/events-data.js），避免發布殼層無法以相對路徑 fetch data/events.json。
+  const eventsJson = readFileSync(join(root, 'data', 'events.json'), 'utf8');
+  writeFileSync(join(out, 'ui', 'events-data.js'), `export default ${JSON.stringify(JSON.parse(eventsJson))};\n`);
+  const EVENT_FETCH = "(await (await fetch('../data/events.json')).json()).events";
   for (const f of readdirSync(uiDir).filter(f => f.endsWith('.js')).sort()) {
-    const text = readFileSync(join(uiDir, f), 'utf8');
+    let text = readFileSync(join(uiDir, f), 'utf8');
+    if (f === 'main.js') {
+      if (!text.includes(EVENT_FETCH)) throw new Error('main.js 找不到事件 fetch 片段，無法內嵌');
+      text = text.replace(EVENT_FETCH, "(await import('./events-data.js')).default.events");
+    }
     writeFileSync(join(out, 'ui', f), rewriteImports(text, 'artifact'));
   }
   cpSync(join(root, 'src'), join(out, 'src'), { recursive: true });
