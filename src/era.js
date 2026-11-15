@@ -1,4 +1,5 @@
 import { setStat } from './state.js';
+import { defaultOf } from './schema.js';
 
 // 年號：純展示與行動資料，不得進入任何 RNG（年號不影響種子決定性）。
 
@@ -90,7 +91,7 @@ export function migrateEraLog(state) {
 
 // 改元：耗威儀、每 12 個月最多一次，寫入 state.chronicle（kind 為 'era'）。
 export function changeEra(state, raw) {
-  if (!state.era) state.era = createEra(null, state.year);
+  if (!state.era) state.era = defaultOf('era', state);
   const v = validateEra(raw);
   if (!v.ok) return { ok: false, reason: v.reason };
   if (eraCooldownRemaining(state) > 0) return { ok: false, reason: 'cooldown', remaining: eraCooldownRemaining(state) };

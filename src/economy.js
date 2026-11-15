@@ -7,6 +7,7 @@ import { makeRng } from './rng.js';
 import { factionsBalanced, BALANCED_EFFICIENCY } from './factions.js';
 import { FACTIONS } from './officials.js';
 import { attachPerson } from './people.js';
+import { defaultOf } from './schema.js';
 
 export const TAX_TIERS = ['低', '中', '高'];
 export const TAX_EFFECTS = {
@@ -84,8 +85,8 @@ export function attachGovernors(state) {
 
 // 懶初始化：不改動稅制預設（中）；州府建立時一併把知府併入官員名單。
 export function ensureEconomy(state) {
-  if (!state.economy) state.economy = { tax: '中', efficiency: 1 };
-  if (!state.prefectures) state.prefectures = createPrefectures(state.seed);
+  if (!state.economy) state.economy = defaultOf('economy', state);
+  if (!state.prefectures) state.prefectures = defaultOf('prefectures', state);
   attachGovernors(state);
   return state.economy;
 }

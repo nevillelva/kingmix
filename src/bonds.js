@@ -3,13 +3,14 @@
 // 注意：事件本身不帶官員 ID，共歷事件須由呼叫端明確 recordSharedEvent。
 
 import { BALANCE } from './balance.js';
+import { defaultOf } from './schema.js';
 
 export const BOND_NAME = '君臣相得';
 export const BOND_THRESHOLD = BALANCE.BOND_THRESHOLD;
 export const REMONSTRATE_DEATH_CHANCE = 0.25;
 
 function ensureBonds(state) {
-  state.bonds = state.bonds || { shared: {}, unlocked: {} };
+  state.bonds = state.bonds || defaultOf('bonds', state);
   return state.bonds;
 }
 

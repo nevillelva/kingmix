@@ -9,6 +9,8 @@
 //   - 無任何關係時 stepRelations 為 no-op，且不消耗 rng。
 //   - 本模組只寫入 state；呼叫端（turn.js 月結）負責接線，見 stepRelations 註解。
 
+import { defaultOf } from './schema.js';
+
 import { isCourtOfficial, FACTIONS } from './officials.js';
 import { makeRng } from './rng.js';
 
@@ -31,7 +33,7 @@ const DECISION_FLAGS = ['rel_order_disband', 'rel_order_purge', 'rel_order_pardo
 const clampLoyalty = (v) => Math.min(100, Math.max(0, v));
 
 function ensureRelState(state) {
-  if (!state.relState) state.relState = { known: null, impeachment: null, guilt: [], spared: null };
+  if (!state.relState) state.relState = defaultOf('relState', state);
   return state.relState;
 }
 

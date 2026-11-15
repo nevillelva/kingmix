@@ -8,9 +8,10 @@
 // createInitialState 的結構，不覆寫既有值）；validateState 回傳錯誤代碼清單，空陣列即有效。
 
 import { BOUNDS, createInitialState } from './state.js';
+import { SCHEMA_VERSION, applySchemaDefaults } from './schema.js';
 
 export const SAVE_VERSION = 2;
-export const STATE_SCHEMA_VERSION = 1;
+export const STATE_SCHEMA_VERSION = SCHEMA_VERSION;
 
 const defaultNow = () => new Date().toISOString();
 
@@ -100,6 +101,12 @@ export function migrateState(state) {
     fillMissing(out, base);
   } catch (e) {
     // 基準建立失敗（例如未知模式）時保留原狀態，交由 validateState 回報。
+  }
+  // 頂層懶初始化欄位（見 schema.js）：只補缺、不覆寫。
+  try {
+    applySchemaDefaults(out);
+  } catch (e) {
+    // 預設值工廠失敗（例如種子無效）時保留已補的欄位，交由 validateState 回報。
   }
   if (!Number.isInteger(out.schemaVersion)) out.schemaVersion = STATE_SCHEMA_VERSION;
   return out;

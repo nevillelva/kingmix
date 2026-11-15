@@ -3,6 +3,7 @@ import { isBonded, sharedCount } from './bonds.js';
 import { isCourtOfficial } from './officials.js';
 import { ensureCity } from './city.js';
 import { ownsItem } from './collections.js';
+import { defaultOf } from './schema.js';
 
 import { canDiplomacy } from './diplomacy.js';
 
@@ -124,7 +125,7 @@ export function eventAllowed(state, id) {
 
 // 只有真正被選中並套用的事件才記錄，渲染時的預覽不記錄。
 export function recordEvent(state, id) {
-  state.eventHistory = state.eventHistory || { counts: {}, last: {} };
+  state.eventHistory = state.eventHistory || defaultOf('eventHistory', state);
   const h = state.eventHistory;
   h.counts[id] = (h.counts[id] || 0) + 1;
   h.last[id] = monthIndex(state);

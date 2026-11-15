@@ -18,6 +18,8 @@
 //   妃嬪：寵愛 +GIFT_FAVOR_CONSORT（上限 100）。
 //   數值（GIFT_LOYALTY_OFFICIAL、GIFT_FAVOR_CONSORT）為暫定，見本檔常數。
 
+import { defaultOf } from './schema.js';
+
 export const ITEMS = Object.freeze([
   { id: 'yujian', name: '御賜寶劍', desc: '皇帝親賜之劍，象徵天恩，可賜予重臣以示信任。' },
   { id: 'danyao', name: '丹藥', desc: '丹房所進之丹，珍貴難得，賜予妃嬪或近臣可示恩寵。' },
@@ -35,7 +37,7 @@ function assertItem(itemId) {
 }
 
 function ensureInventory(state) {
-  state.inventory = state.inventory || {};
+  state.inventory = state.inventory || defaultOf('inventory', state);
   return state.inventory;
 }
 
