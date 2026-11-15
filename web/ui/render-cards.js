@@ -26,9 +26,10 @@ const cardDesc = (c) => esc(c.desc ?? c.description ?? c.text ?? cardEffectText(
 const cardEffectText = (c) => Object.entries(c.monthly ?? {}).map(([k, v]) => `${k} ${v > 0 ? '+' : ''}${v}`).join('　');
 
 // 策卡名稱與效果文字（效果以中文屬性名列出，例如「商業 +0.6　國庫 +2」）。
-const policyName = (id) => { const c = engine.POLICY_CARDS?.[id]; return c ? (c.name ?? c.label ?? id) : id; };
+const policyDef = (id) => engine.policyCardDef?.(id);
+const policyName = (id) => { const c = policyDef(id); return c ? (c.name ?? c.label ?? id) : id; };
 const policyEffectText = (id) => {
-  const c = engine.POLICY_CARDS?.[id];
+  const c = policyDef(id);
   return Object.entries(c?.monthly ?? {}).map(([k, v]) => `${EFFECT[k] ?? k} ${v > 0 ? '+' : ''}${v}`).join('　');
 };
 
@@ -57,8 +58,7 @@ function policyOfferCard() {
   // 月初已由 prepareMonth 抽定（A5）；此處僅讀取。尚未抽定者不顯示。
   if (s.flags.policy_offer_year !== s.year) return '';
   const ids = Array.isArray(s.policyCards?.offer) ? s.policyCards.offer : [];
-  const defs = engine.POLICY_CARDS || {};
-  const cards = ids.map((id) => ({ id, ...(defs[id] || {}) }));
+  const cards = ids.map((id) => ({ id, ...(policyDef(id) || {}) }));
   if (cards.length === 0) return '';
   const syn = synergyLine();
   return `<section class="card" data-policy-cards="${s.year}"><h2>年度策卡國策</h2>
