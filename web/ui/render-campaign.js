@@ -2,8 +2,7 @@
 import { TACTICS, formatBattleLog, nominalStrength } from '../../src/war.js';
 import { MAX_ROUNDS, RECON_GRAIN_COST, WINS_NEEDED } from '../../src/campaign.js';
 import { U } from './store.js';
-import { esc } from './util.js';
-import { fbLine } from './render-nav.js';
+import { esc, fbLine } from './util.js';
 import { battleTickMs, nextBattleSpeed, visibleRoundCount, battleFrames } from '../../src/war-autoplay.js';
 
 // 兵種相剋（騎→盾→弓→槍→騎：前者剋後者）。僅作戰報圖示，不改動戰術數值。

@@ -16,9 +16,9 @@ import { autoDecideMemorial } from '../../src/autodecide.js';
 import { runFastForward } from '../../src/fastforward.js';
 import { U, app } from './store.js';
 import { save } from './state-io.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 import { esc, rng } from './util.js';
-import { recordQuarterSnapshot } from './render-court.js';
+import { recordQuarterSnapshot } from './render-quarter.js';
 import { sfx } from './audio.js';
 import { STAT } from './labels.js';
 

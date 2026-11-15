@@ -4,7 +4,7 @@
 import { U } from './store.js';
 import { esc, rng } from './util.js';
 import { save } from './state-io.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 import { EFFECT } from './labels.js';
 
 // 可選引擎：匯入失敗或匯出名稱不存在時維持空物件，各處以 typeof 檢查。

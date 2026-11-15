@@ -7,6 +7,7 @@
     "test": "node --test",
     "test:fast": "node --test $(grep -L '^// @slow' tests/*.test.js)",
     "build:artifact": "node scripts/build-artifact.js dist/artifact",
+    "check:cycles": "node scripts/check-cycles.js",
     "sim": "node scripts/simulate.js"
   },
   "engines": {

@@ -2,7 +2,7 @@
 import { U, app } from './store.js';
 import { campaignActive, morningPair, pendingCase } from './game-flow.js';
 import { esc, levelWord } from './util.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 import { FACILITIES, constructionOf, facilityLevels } from '../../src/facilities.js';
 
 // 宮城引擎（src/palace.js：pendingMarks、seasonFor）可能尚未合入；以動態匯入防護，缺漏時宮城照常呈現。

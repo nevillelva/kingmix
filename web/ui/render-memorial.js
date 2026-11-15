@@ -8,7 +8,7 @@ import { esc, hsh, rng } from './util.js';
 import { DIPLO_LABEL, EFFECT, FAC, STAT } from './labels.js';
 import { sfx } from './audio.js';
 import { save } from './state-io.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 import { stampThen } from './fx.js';
 
 // 立繪：程序化 SVG。官帽依官職、印章色依品級、臉型與鬚由 (姓名) 決定。

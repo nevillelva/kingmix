@@ -2,7 +2,7 @@
 import { U } from './store.js';
 import { reduceMotion } from './util.js';
 import { SEASON } from './labels.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 
 // 回合鍵：年與月（同一月內的操作共用同一回合）。
 export const turnKey = (s) => (s ? `${s.year}-${s.month}` : null);

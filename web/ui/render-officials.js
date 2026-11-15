@@ -3,7 +3,7 @@ import { FACTIONS, isCourtOfficial, loyaltySafetyStatus } from '../../src/offici
 import { ASSASSIN_LOW_LOYALTY } from '../../src/assassination.js';
 import { buildGeneralCard, isGeneral } from '../../src/general-cards.js';
 import { BOND_THRESHOLD, isBonded, sharedCount } from '../../src/bonds.js';
-import { PERSONALITIES, describeConsort, describeTraits } from '../../src/people.js';
+import { describeConsort, describeTraits } from '../../src/people.js';
 import { OFFICES, officeFit, officeHolder, suggestCandidate } from '../../src/offices.js';
 import { POLICIES } from '../../src/policy.js';
 import { FACTION_POLICY } from '../../src/factions.js';
@@ -16,9 +16,11 @@ import { chronicleLine } from '../../src/chronicle.js';
 import { tyrannyStatus } from '../../src/dongchang.js';
 import { U, app } from './store.js';
 import { ABIL, FAC, SCEN_LABEL, SCEN_STATUS, STAT, officeName } from './labels.js';
-import { esc, gapText, meter, reqText } from './util.js';
+
+export { heirPersonLabel } from './labels.js';
+import { esc, fbLine, gapText, meter, reqText } from './util.js';
 import { actionsLeft, portrait, pressureLine } from './render-court.js';
-import { fbLine } from './render-nav.js';
+
 import { openResignDialog } from './overlays.js';
 import { deferButton, flushButton, giveItemMenu } from './render-cards.js';
 import { renderRelationsCard } from './render-relations.js';
@@ -267,8 +269,3 @@ export function renderThrone(){
   document.getElementById('resign').onclick = openResignDialog;
 }
 
-// 皇子個性（立儲面板顯示用）；舊存檔無個性者顯示「—」。
-export function heirPersonLabel(h){
-  const p = PERSONALITIES.find(x => x.id === h.personality);
-  return p ? `${p.name}：${p.description}` : '個性未明';
-}

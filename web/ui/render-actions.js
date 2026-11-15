@@ -14,12 +14,11 @@ import { remonstrate } from '../../src/bonds.js';
 import { SLOTS, canTakeSlot, slotCost } from '../../src/slots.js';
 import { U } from './store.js';
 import { esc, rng } from './util.js';
-import { FAC, FACTION, REASON, officeName } from './labels.js';
+import { FAC, FACTION, REASON, heirPersonLabel, officeName } from './labels.js';
 import { sfx } from './audio.js';
 import { save } from './state-io.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 import { campAct } from './game-flow.js';
-import { heirPersonLabel } from './render-officials.js';
 import { markNewYearShown, openNianhao } from './overlays.js';
 import { handleCardAct } from './render-cards.js';
 

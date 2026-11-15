@@ -6,6 +6,9 @@ import { NEED_LABEL, STAT } from './labels.js';
 
 export const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+// 功能回報行：顯示最近一次操作回饋（U.feedback）。
+export const fbLine = () => `<div class="fbline" role="status">${U.feedback ? esc(U.feedback) : ''}</div>`;
+
 export const rng = (...parts) => makeRng([U.seed, ...parts]);
 
 export const reduceMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);

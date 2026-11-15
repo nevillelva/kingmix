@@ -5,7 +5,7 @@ import { eraYearText, migrateEraLog } from '../../src/era.js';
 import { prepareMonth } from '../../src/month-start.js';
 import { U } from './store.js';
 import { esc, useCap } from './util.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 
 export const SAVE_KEY = 'kingmix-save-v1';
 // 損毀自動存檔的備份鍵（「開新局」前先另存，避免資料無聲遺失）。

@@ -3,7 +3,7 @@ import { snapshotStats, summarizeQuarter } from '../../src/quarterly.js';
 import { U, app } from './store.js';
 import { esc } from './util.js';
 import { STAT } from './labels.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 
 export function recordQuarterSnapshot(){
   if (!U.state || !U.state.alive) return;

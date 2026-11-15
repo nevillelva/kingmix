@@ -3,7 +3,7 @@ import { FACILITIES, FACILITY_IDS, FACILITY_MAX_LEVEL, buildFacility, constructi
 import { STAT } from './labels.js';
 import { U, app } from './store.js';
 import { save } from './state-io.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 import { esc } from './util.js';
 
 const ERR_TEXT = {

@@ -12,7 +12,7 @@ import { U, app } from './store.js';
 import { clearSave, cloudSave, discardCorruptSave, load, reasonText, save, saveTextFile } from './state-io.js';
 import { esc } from './util.js';
 import { newGame } from './game-flow.js';
-import { render } from './render-nav.js';
+import { render } from './render-bus.js';
 import { SCEN_STATUS } from './labels.js';
 import { sfx } from './audio.js';
 

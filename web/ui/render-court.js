@@ -1,5 +1,6 @@
 // web/ui/render-court.js：朝堂頁彙整（奏摺、行動、季度等分檔見各 render-*.js，本檔保留既有 export 名稱以 re-export）。
 import { pickSpeaker } from '../../src/speaker.js';
+import { SCENARIOS } from '../../src/scenarios.js';
 import { isAvailable, optionOpen } from '../../src/events.js';
 import { DC_ACTIONS } from '../../src/dongchang.js';
 import { buildGazette } from '../../src/gazette.js';
@@ -8,10 +9,10 @@ import { POLICIES } from '../../src/policy.js';
 import { U, app } from './store.js';
 import { esc } from './util.js';
 import { DC_HINT, DC_LABEL, FAC } from './labels.js';
-import { actionsSection, render, scenarioBanner } from './render-nav.js';
+import { render } from './render-bus.js';
 import { stampThen } from './fx.js';
 import { campaignActive, chooseDC, chooseOption, finishMonth, morningPair, pendingCase, startEventCampaign } from './game-flow.js';
-import { campaignCard } from './render-campaign.js';
+import { campaignCard, lastBattleCard } from './render-campaign.js';
 import { deferButton, policyCardsCard } from './render-cards.js';
 import { rulerEntryHTML } from './render-ruler.js';
 import { memorialCard, effChips, affectedPortraits, narrHtml, secondMemorialCard, wireSecond, wireMemorialSwipe, portrait, speakerCardHtml, chooseSecond, skipSecond } from './render-memorial.js';
@@ -19,6 +20,21 @@ import { recordQuarterSnapshot, showQuarterCard } from './render-quarter.js';
 import { ACTION_LIMIT, agency, actionsLeft, useAction, actionsCard, crownChoiceCard, onAgency, slotsCard, onSlot } from './render-actions.js';
 
 export { portrait, memorialCard, effChips, speakerCardHtml, affectedPortraits, narrHtml, secondMemorialCard, chooseSecond, skipSecond, wireSecond, recordQuarterSnapshot, showQuarterCard, ACTION_LIMIT, agency, actionsLeft, useAction, actionsCard, crownChoiceCard, onAgency, slotsCard, onSlot, wireMemorialSwipe };
+
+// 本紀結果橫幅（劇本達成或失敗時顯示於朝堂頂端）。
+function scenarioBanner(){
+  const s = U.state.scenario;
+  if (!s || s.status === 'ongoing') return '';
+  const def = SCENARIOS[s.id];
+  if (!def) return '';
+  return `<section class="card"><div class="kicker">本紀結果</div><h2>${esc(def.name)}・${s.status === 'won' ? '成功' : '失敗'}</h2>
+    <div class="sub">${esc(def.goalText)}　國祚未盡，仍可續治。</div></section>`;
+}
+
+// 朝堂的行動卡（僅在無待決案件、尚未駕崩時出現）
+function actionsSection(){
+  return (!pendingCase() && U.state.alive) ? crownChoiceCard() + actionsCard() + slotsCard() + lastBattleCard() : '';
+}
 
 // 朝堂頁：帝王面板入口與年初策卡置於各分支之前，確保任一朝堂畫面皆可見。
 export function renderCourt(){
