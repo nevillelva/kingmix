@@ -69,12 +69,17 @@ export function confirmResign(){
 // ── 新年年號覆蓋層：每逢一月第一次進入時顯示，點擊或 Esc 關閉；每局每年一次。改元時亦即時顯示 ──
 export const shownNewYear = new Set();
 
-export function newYearKey(){ return `kingmix.newyear.${U.seed}.${U.state.year}`; }
+// 每個種子只存一鍵 kingmix.newyear.<seed>，值為最後顯示的年份（舊格式鍵於 main.js 開機時清除）。
+export function newYearKey(){ return `kingmix.newyear.${U.seed}`; }
+
+function lastNewYearShown(key){
+  try { const v = localStorage.getItem(key); return v === null ? null : Number(v); } catch (e) { return null; }
+}
 
 export function markNewYearShown(){
   const key = newYearKey();
-  shownNewYear.add(key);
-  try { localStorage.setItem(key, '1'); } catch (e) {}
+  shownNewYear.add(`${key}#${U.state.year}`);
+  try { localStorage.setItem(key, String(U.state.year)); } catch (e) {}
 }
 
 export function openNianhao(title, sub){
@@ -99,9 +104,8 @@ export function openNianhao(title, sub){
 
 export function showNewYear(){
   if (!U.state || !U.state.alive || U.state.month !== 1) return;
-  const key = newYearKey();
-  if (shownNewYear.has(key)) return;
-  shownNewYear.add(key);
-  try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) {}
+  const key = newYearKey(), year = U.state.year, mark = `${key}#${year}`;
+  if (shownNewYear.has(mark) || lastNewYearShown(key) === year) return;
+  markNewYearShown();
   openNianhao(eraYearText(U.state), '新歲伊始，萬象更新。');
 }

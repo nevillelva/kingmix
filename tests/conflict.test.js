@@ -117,7 +117,8 @@ test('旗標開啟時，衝突判定會要求玩家確認並顯示衝突對話�
     addEventListener() {}, querySelector: () => null, querySelectorAll: () => [] };
   globalThis.document = fakeDoc;
   globalThis.window = globalThis;
-  const local = { year: 2, saveVersion: 2, savedAt: 100, seed: 1 };
+  // 本機存檔需為結構完整的狀態（load 會經 validateState 驗證），故以 createInitialState 為底。
+  const local = { ...(await import('../src/state.js')).createInitialState(1), year: 2, saveVersion: 2, savedAt: 100 };
   const remote = { year: 3, saveVersion: 5, savedAt: 200, seed: 1 };
   globalThis.localStorage = { getItem: () => JSON.stringify({ seed: 1, state: local }), setItem() {}, removeItem() {} };
 
