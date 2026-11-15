@@ -4,3 +4,6 @@ node_modules/
 
 # CodeGraph local index (generated, never committed)
 .codegraph/
+
+# 發布產物（build-artifact.js 輸出）
+dist/
