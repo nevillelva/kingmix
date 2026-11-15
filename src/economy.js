@@ -127,11 +127,16 @@ export function tickEconomy(state) {
 }
 
 // 州府產出結算（與 tickEconomy 分開，tickEconomy 本身不改動數值）。
+// 叛亂州府產出減半：REBEL_YIELD_MULT。【可回退的設計預設】取自診斷報告 4 節「中優先 6」之建議值，
+// 非經校準的定值；若要還原，將此常數改為 1 即可（叛亂府仍按一般產出結算）。
+export const REBEL_YIELD_MULT = 0.5;
+
 export function applyPrefectureYield(state) {
   ensureEconomy(state);
   for (const pref of state.prefectures) {
-    setStat(state, 'treasury', state.stats.treasury + pref.yield * YIELD_TREASURY, { silent: true });
-    setStat(state, 'people', state.stats.people + (pref.yield - 1) * YIELD_PEOPLE, { silent: true });
+    const mult = pref.rebel === true ? REBEL_YIELD_MULT : 1;
+    setStat(state, 'treasury', state.stats.treasury + pref.yield * mult * YIELD_TREASURY, { silent: true });
+    setStat(state, 'people', state.stats.people + (pref.yield - 1) * mult * YIELD_PEOPLE, { silent: true });
   }
   return state;
 }

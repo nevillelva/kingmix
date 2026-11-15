@@ -76,6 +76,13 @@ export function createInitialState(seed, opts = {}) {
         id: 'o4', name: '翰林學士', loyalty: 80, ambition: 10, faction: 'qingliu', office: null,
         abilities: { intellect: 75, politics: 50, martial: 45, command: 30, virtue: 75 },
       },
+      {
+        // 開局武將：兵部尚書（武職，見 general-cards.js MILITARY_OFFICES）。
+        // 設計預設（可回退）：報告建議開局給 1 名初始武將，派系取勳貴（開局勳貴僅 1 人，平衡派系人數）；
+        // 智力 65 達兵部需求（intellect 60），武略為五項最高。
+        id: 'o5', name: '兵部尚書', loyalty: 70, ambition: 25, faction: 'xunggui', office: 'war',
+        abilities: { intellect: 65, politics: 45, martial: 80, command: 70, virtue: 50 },
+      },
     ],
     factions: { qingliu: 34, xunggui: 33, hanmen: 33 },
     consorts: [],

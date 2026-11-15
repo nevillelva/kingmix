@@ -85,7 +85,11 @@ test('event war: raising enemy strength lowers the aggregate win rate', () => {
   const rateAt = (strength) => {
     let wins = 0;
     for (let i = 0; i < 2000; i++) {
-      if (resolveWar(createInitialState('mono'), { strength, reward: {}, loss: {} }, makeRng(['agg', i]), () => {})) wins++;
+      // 開局兵部尚書的武略歸零，使名目戰力維持 195 的原基準（見 state.js o5）
+      const s = createInitialState('mono');
+      const commander = s.officials.find((o) => o.office === 'war');
+      if (commander) commander.abilities.martial = 0;
+      if (resolveWar(s, { strength, reward: {}, loss: {} }, makeRng(['agg', i]), () => {})) wins++;
     }
     return wins / 2000;
   };

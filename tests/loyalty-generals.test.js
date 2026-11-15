@@ -5,6 +5,7 @@ import { createInitialState } from '../src/state.js';
 import { ASSASSIN_LOW_LOYALTY } from '../src/assassination.js';
 import { MILITARY_OFFICES, isGeneral, buildGeneralCard } from '../src/general-cards.js';
 import { generateOfficial, isCourtOfficial } from '../src/officials.js';
+import { assignOffice } from '../src/offices.js';
 import { makeRng } from '../src/rng.js';
 
 const uiSource = readFileSync(new URL('../web/ui/render-officials.js', import.meta.url), 'utf8');
@@ -84,17 +85,17 @@ test('只有武將才走將領卡：render-officials 以 isGeneral 分流，非�
   assert.match(uiSource, /isGeneral\(o\) \? generalCard\(o\) : officialCard\(o\)/);
 });
 
-test('開局朝堂四位官員皆無武職，故無將領卡（依職位判定的結果）', () => {
+test('開局朝堂五位官員中僅兵部尚書（o5）為武職，故開局恰有一張將領卡（依職位判定的結果）', () => {
   const s = createInitialState('mix-check');
   const court = s.officials.filter(isCourtOfficial);
-  assert.equal(court.length, 4, '朝臣為四位（知府另計，不在朝堂分組）');
-  assert.equal(court.filter(isGeneral).length, 0);
+  assert.equal(court.length, 5, '朝臣為五位（含 o5 兵部尚書；知府另計，不在朝堂分組）');
+  assert.deepEqual(court.filter(isGeneral).map((o) => o.id), ['o5']);
 });
 
 test('兵部尚書任命後，該官員判為武將並可產生將領卡資料，其餘朝臣維持非武將', () => {
   const s = createInitialState('mix-check');
-  const target = s.officials.find((o) => o.id === 'o3');
-  target.office = 'war';
+  // 經 assignOffice 任命：同一官職只能一人，原任兵部尚書（o5）卸任
+  assignOffice(s, 'o3', 'war');
   const gens = s.officials.filter(isGeneral);
   assert.deepEqual(gens.map((o) => o.id), ['o3']);
   assert.equal(buildGeneralCard(gens[0]).office, 'war');
