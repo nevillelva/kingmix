@@ -1,3 +1,4 @@
+import { pruneNewYearKeys } from './newyear-keys.js';
 // web/ui/state-io.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
 import { SAVE_VERSION, STATE_SCHEMA_VERSION, exportSave, finalizeLoaded, importSave, restoreSave, serializeSave, writeAutoSave } from '../../src/save.js';
 import { resolveConflict, stampSave } from '../../src/conflict.js';
@@ -98,7 +99,7 @@ export async function checkCloudConflict(){
   if (!r.needsPrompt) return;
   const choice = await askConflict(raw.state, remote.state, r.winner);
   if (choice === 'remote') {
-    U.seed = remote.seed !== undefined ? remote.seed : raw.seed;
+    U.seed = remote.seed !== undefined ? remote.seed : raw.seed; pruneNewYearKeys(U.seed);
     U.state = remote.state; migrateEraLog(U.state); prepareMonth(U.state, U.events);
     U.reviewedCount = (U.state.annals || []).length;
     U.panel = null; U.pick1 = null; U.feedback = ''; U.reviewPage = 'score'; U.tab = 'palace';
@@ -109,7 +110,7 @@ export async function checkCloudConflict(){
     const local = raw.state;
     local.saveVersion = Math.max(Number.isFinite(local.saveVersion) ? local.saveVersion : 0,
       Number.isFinite(remote.state.saveVersion) ? remote.state.saveVersion : 0);
-    U.seed = raw.seed; U.state = local; migrateEraLog(U.state); prepareMonth(U.state, U.events);
+    U.seed = raw.seed; pruneNewYearKeys(U.seed); U.state = local; migrateEraLog(U.state); prepareMonth(U.state, U.events);
     U.reviewedCount = (U.state.annals || []).length;
     save();
     saveMsg('已保留本機存檔並同步至雲端。');
@@ -241,7 +242,7 @@ export function importGame(file){
   reader.onload = () => {
     const r = finalizeLoaded(importSave(String(reader.result)));
     if (!r.ok) return saveMsg(reasonText(r.error));
-    U.seed = r.seed; U.state = r.state; migrateEraLog(U.state); prepareMonth(U.state, U.events);
+    U.seed = r.seed; pruneNewYearKeys(U.seed); U.state = r.state; migrateEraLog(U.state); prepareMonth(U.state, U.events);
     U.reviewedCount = (U.state.annals || []).length;
     U.panel = null; U.pick1 = null; U.feedback = ''; U.reviewPage = 'score'; U.tab = 'palace';
     save(); render(); saveMsg('已匯入存檔。');
@@ -297,7 +298,7 @@ export function slotLoad(n){
   if (raw === null) return saveMsg(`欄位 ${n} 是空的。`);
   const r = restoreSave(raw);
   if (!r.ok) return saveMsg(`欄位 ${n} 無法讀取（${reasonText(r.error)}）。`);
-  U.seed = r.seed; U.state = r.state; migrateEraLog(U.state); prepareMonth(U.state, U.events);
+  U.seed = r.seed; pruneNewYearKeys(U.seed); U.state = r.state; migrateEraLog(U.state); prepareMonth(U.state, U.events);
   U.reviewedCount = (U.state.annals || []).length;
   U.panel = null; U.pick1 = null; U.feedback = ''; U.reviewPage = 'score'; U.tab = 'palace';
   save(); render(); paintSlots(); saveMsg(`已讀取欄位 ${n}。`);

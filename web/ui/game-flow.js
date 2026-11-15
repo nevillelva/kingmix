@@ -1,3 +1,4 @@
+import { pruneNewYearKeys } from './newyear-keys.js';
 // web/ui/game-flow.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
 import { DEFAULT_MODE, MODES } from '../../src/mode.js';
 import { createScenarioState } from '../../src/scenarios.js';
@@ -24,6 +25,7 @@ import { STAT } from './labels.js';
 
 export function newGame(s, scenId, eraRaw, pols, modeKey){
   U.seed = s || String(Math.floor(Math.random()*1e9));
+  pruneNewYearKeys(U.seed); // M1：開新局時清除其他種子的新年鍵
   const list = pols && pols.length ? pols : ['agrarian'];
   const opts = { policy: list[0], era: eraRaw, mode: MODES[modeKey] ? modeKey : DEFAULT_MODE };
   try {
