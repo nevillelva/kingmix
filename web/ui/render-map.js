@@ -59,6 +59,23 @@ function tourEventLines(state, id) {
   } catch (e) { return []; }
 }
 
+// 輿圖 SVG 快取：SVG 標記由府城防、知府、攻城、鄰國關係與選取府決定；標記的 hash 未變時重用既有節點，
+// 不重新解析與建立 DOM。點擊行為與 data 屬性仍由 renderMap 每次重新綁定。
+let mapCache = { hash: null, node: null };
+function hashText(s) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return `${h.toString(36)}:${s.length}`;
+}
+function mapSvgNode(markup) {
+  const hash = hashText(markup);
+  if (mapCache.node && mapCache.hash === hash) return mapCache.node;
+  const tpl = document.createElement('template');
+  tpl.innerHTML = markup;
+  mapCache = { hash, node: tpl.content.firstElementChild };
+  return mapCache.node;
+}
+
 export function renderMap(){
   const prefs = ensureCity(U.state);
   const d = diplomacyOf(U.state);
@@ -85,7 +102,7 @@ export function renderMap(){
     const s = d[n.id];
     const tag = s.allied ? '盟' : s.kin > 0 ? '婚' : '';
     return `<g class="medge" role="button" tabindex="0" data-nb="${n.id}" aria-label="${esc(n.name)}，好感 ${s.attitude}，開外交面板">
-      <path d="${sh.d}" filter="url(#ink-edge)"/>
+      <path d="${sh.d}" filter="url(#ink-wash)"/>
       <text x="${sh.x}" y="${sh.y}" text-anchor="middle">${esc(n.name)}</text>
       <text class="mv" x="${sh.x}" y="${sh.y + 14}" text-anchor="middle">好感 ${s.attitude}${tag ? ' ' + tag : ''}</text></g>`;
   }).join('');
@@ -117,6 +134,9 @@ export function renderMap(){
       </div>
     </div>` : `<div class="pdetail"><p class="sub" style="margin:0">點選州府，檢視其知府、城防與巡幸狀況。點邊界鄰國可開外交面板。</p></div>`;
 
+  const svgMarkup = `<svg viewBox="0 0 340 322" role="group" aria-label="全國輿圖，六府與四鄰">${INK_DEFS}${INK_BACKDROP}${edges}${zones}</svg>`;
+  const mapNode = mapSvgNode(svgMarkup);
+
   app.innerHTML = `
     ${MAP_CSS}
     ${fbLine()}
@@ -128,17 +148,11 @@ export function renderMap(){
         <span><i style="background:${defenseFill(90)}"></i>高</span>
       </div>
       <div class="map-wrap">
-        <div class="plan map">
-          <svg viewBox="0 0 340 322" role="group" aria-label="全國輿圖，六府與四鄰">
-            ${INK_DEFS}
-            ${INK_BACKDROP}
-            ${edges}
-            ${zones}
-          </svg>
-        </div>
+        <div class="plan map" data-map-slot></div>
         ${detail}
       </div>
     </section>`;
+  app.querySelector('[data-map-slot]')?.appendChild(mapNode);
 
   app.querySelectorAll('[data-pref]').forEach(g => {
     const go = () => { U.mapSel = g.dataset.pref; U.mapNote = ''; render(); };

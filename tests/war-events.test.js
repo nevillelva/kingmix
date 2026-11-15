@@ -1,3 +1,4 @@
+// @slow
 import { eventsRange } from './_events-range.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
