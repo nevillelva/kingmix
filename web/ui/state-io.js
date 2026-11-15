@@ -168,6 +168,7 @@ export async function exportGame(){
 }
 
 export function importGame(file){
+  if (U.pendingAction) return; // 蓋章進行中不匯入
   const reader = new FileReader();
   reader.onload = () => {
     const r = importSave(String(reader.result));
@@ -223,6 +224,7 @@ export function slotWrite(n){
 }
 
 export function slotLoad(n){
+  if (U.pendingAction) return; // 蓋章進行中不讀檔
   const raw = slotRaw(n);
   if (raw === null) return saveMsg(`欄位 ${n} 是空的。`);
   const r = parseSave(raw);
