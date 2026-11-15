@@ -20,6 +20,7 @@ import { tickEconomy, applyPrefectureYield } from './economy.js';
 import { tickCity } from './city.js';
 import { tickHarem, applyWaijiaCoupling, taihouPenalty } from './harem.js';
 import { applyFactionPressure } from './factions.js';
+import { tickLatePressure } from './late-pressure.js';
 import { scheduleChain } from './chains.js';
 import { recordSharedEvent } from './bonds.js';
 import { tickAssassination } from './assassination.js';
@@ -229,6 +230,7 @@ export function monthlyTick(state, rng) {
   const tp = taihouPenalty(state);
   if (tp) drift(state, 'power', g('power') + tp);
   applyFactionPressure(state);
+  tickLatePressure(state); // 後期壓力：知府割據、權臣坐大、天災連鎖（見 late-pressure.js）
 
   // 派系勢力影響官員忠誠：勢力高於中性則忠誠微升，低於則微降
   // 野心越高，忠誠每月流失越快（野心/200）；派系勢力則加減忠誠

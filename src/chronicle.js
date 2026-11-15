@@ -7,6 +7,9 @@
 //   city_capture 攻城佔點（city-capture.js）：州府名、年月
 //   rebellion    府民心連續低落而叛亂（city-capture.js tickRebellion）：含 text
 //   occupation   戰敗失守、遭敵方佔領（city.js markOccupied）：含 text
+//   autonomy     知府離心割據（late-pressure.js tickAutonomy）：州府名、知府名
+//   minister     權臣坐大（late-pressure.js tickMinister）：權臣名、派系
+//   disaster     天災（late-pressure.js tickDisasters）：州府名
 //   （無 kind）  駕崩或禪位後的世代紀錄（succession.js 的 tryAccession）
 
 // 結束原因代碼：resigned＝禪位（B6 由中文改為英文代碼）；'禪位' 保留為舊存檔相容。
@@ -34,6 +37,15 @@ export function chronicleLine(c) {
   }
   if (c.kind === 'rebellion') {
     return { text: orDash(c.text ?? `${orDash(c.prefectureName)}叛亂 · ${orDash(c.year)}年${orDash(c.month)}月`), tag: '叛亂' };
+  }
+  if (c.kind === 'autonomy') {
+    return { text: orDash(c.text ?? `${orDash(c.prefectureName)}知府${orDash(c.governor)}離心割據 · ${orDash(c.year)}年${orDash(c.month)}月`), tag: '割據' };
+  }
+  if (c.kind === 'minister') {
+    return { text: `${orDash(c.name)}權傾朝野 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '權臣' };
+  }
+  if (c.kind === 'disaster') {
+    return { text: `${orDash(c.prefectureName)}遭逢天災 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '天災' };
   }
   if (c.kind === 'occupation') {
     return { text: orDash(c.text ?? `${orDash(c.prefectureName)}失守 · ${orDash(c.year)}年${orDash(c.month)}月`), tag: '失守' };
