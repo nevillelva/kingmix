@@ -14,7 +14,7 @@ export const OFFICES = {
   chancellor: { name: '丞相', requires: { intellect: 60, politics: 60, loyalty: 80 } },
   revenue: { name: '戶部尚書', requires: { intellect: 60, politics: 60, virtue: 60 } },
   works: { name: '工部尚書', requires: { intellect: 60 } },
-  war: { name: '兵部尚書', requires: { intellect: 60 } },
+  war: { name: '兵部尚書', requires: { intellect: 60 } }, // 武職（見 general-cards.js MILITARY_OFFICES）
   tutor: { name: '太傅', requires: { intellect: 60, martial: 40, virtue: 60 } },
   ...PREFECT_OFFICES,
 };
