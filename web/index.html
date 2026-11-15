@@ -341,7 +341,7 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
     <div class="gauges" id="gauges" aria-label="國勢概況"></div>
     <div class="milestone" id="milestone" aria-live="polite"></div>
   </header>
-  <main id="app"></main>
+  <main id="app"><div class="boot-loading" id="boot-loading" role="status">載入中…</div></main>
 </div>
 <nav class="tabs" id="nav" aria-label="分頁"><div class="in" id="tabs"></div></nav>
 <div class="snow" id="snow" hidden aria-hidden="true"></div>
@@ -368,6 +368,8 @@ input.seed:focus-visible,select.seed:focus-visible{outline:2px solid var(--gold)
 @media (max-width:480px){.slot-row{gap:4px}.slot-name{min-width:0;width:100%}.slot-row .snd{padding:3px 8px;flex:1 1 auto}}
 </style>
 <style>
+/* 首屏載入提示（靜態、純 CSS；render() 完成後由 main.js 移除） */
+.boot-loading{text-align:center;padding:48px 0;color:var(--ink-soft);font-size:14px;letter-spacing:.1em}
 /* 底部分頁遮擋：朝臣等長頁底部預留分頁列高度 */
 #app{padding-bottom:calc(48px + env(safe-area-inset-bottom,0px))}
 /* 新手提要（首月，可關閉；關閉後寫入 kingmix-guide-v1） */

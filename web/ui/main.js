@@ -86,12 +86,16 @@ try {
   if (Array.isArray(ev) && ev.length > 0) { U.events = ev; eventsOk = true; }
 } catch (e) { eventsOk = false; }
 
+// 首屏載入提示：render() 完成後（或錯誤橫幅顯示後）移除；失敗路徑不得覆蓋錯誤橫幅。
+const removeBootHint = () => document.getElementById('boot-loading')?.remove();
+
 if (!eventsOk) {
   // 事件資料無法使用時不進入遊戲，於頁面顯示錯誤橫幅。
   U.events = [];
   app.innerHTML = '<div role="alert" class="card" style="color:var(--vermilion);margin-top:24px">事件資料載入失敗，請檢查 data/events.json</div>';
+  removeBootHint();
 } else {
-  render();
+  try { render(); } finally { removeBootHint(); }
 }
 
 initCloud();

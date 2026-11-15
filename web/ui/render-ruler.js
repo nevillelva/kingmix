@@ -4,6 +4,7 @@ import { COLLECTIONS } from '../../src/collections.js';
 import { eraName } from '../../src/era.js';
 import { U } from './store.js';
 import { esc } from './util.js';
+import { openDialog } from './dialog.js';
 
 // 五維：文、武、魅、健康、威望。max 為雷達圖的正規化上限（取自 state.js 的 BOUNDS）。
 export const RULER_DIMS = Object.freeze([
@@ -95,20 +96,16 @@ export function rulerEntryHTML() {
 
 // 以對話框開啟帝王面板；Esc 或點擊背景即關閉。
 export function openRulerDialog() {
-  const ov = document.createElement('div');
-  ov.className = 'dlg-ov';
-  ov.innerHTML = `<div class="dlg ruler-dlg" role="dialog" aria-modal="true" aria-label="帝王面板">
+  openDialog({
+    html: `<div class="dlg ruler-dlg" role="dialog" aria-modal="true" aria-label="帝王面板">
       ${renderRuler(U)}
       <div class="dlg-btns"><button type="button" class="btn zhu mini" data-ruler="close">返回朝堂</button></div>
-    </div>`;
-  const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); };
-  const onKey = (e) => { if (e.key === 'Escape') close(); };
-  ov.addEventListener('click', (e) => {
-    if (e.target === ov || e.target.closest('[data-ruler="close"]')) close();
+    </div>`,
+    initialFocus: '[data-ruler="close"]',
+    onClick: (e, close) => {
+      if (e.target === close.el || e.target.closest('[data-ruler="close"]')) close();
+    },
   });
-  document.addEventListener('keydown', onKey);
-  document.body.appendChild(ov);
-  ov.querySelector('[data-ruler="close"]').focus();
 }
 
 if (typeof document !== 'undefined') {
