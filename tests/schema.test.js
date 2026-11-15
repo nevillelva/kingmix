@@ -29,7 +29,7 @@ function sentinelFor(name) {
 }
 
 test('SCHEMA_VERSION 與 save.js 的 STATE_SCHEMA_VERSION 一致', () => {
-  assert.equal(SCHEMA_VERSION, 1);
+  assert.equal(SCHEMA_VERSION, 2);
   assert.equal(STATE_SCHEMA_VERSION, SCHEMA_VERSION);
 });
 
