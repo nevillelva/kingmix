@@ -2,23 +2,25 @@
 
 設計規格見 [docs/specs/](docs/specs/README.md)，那裡是權威來源。
 
-## Phase 1：核心骨架
+## Phase 1：核心骨架（早期紀錄，部分數字已過時）
 
 - `src/rng.js`：確定性隨機（同一種子、同一回合，結果必定相同）
 - `src/state.js`：狀態與數值邊界；越界會截斷並記錄警告
 - `src/events.js`：事件資格判斷
 - `src/turn.js`：套用選項、每月結算、推進時間
 - `src/sim.js`：無頭模擬
-- `data/events.json`：首批事件（來自 `docs/specs/events-batch1.md`）
+- `data/events.json`：事件資料（首批來自 `docs/specs/events-batch1.md`，現已擴充）
 
 ## 指令
 
 ```bash
-npm test                 # 執行測試
+npm test                 # 執行全部測試（耗時較長）
+npm run test:fast        # 略過檔案頂部標註 // @slow 的耗時測試；需 POSIX shell，見 docs/release.md
+npm run build:artifact   # 建置可發布的網頁目錄 dist/artifact，見 docs/release.md
 npm run sim -- demo 10   # 以種子 demo 模擬 10 年，輸出 JSON 摘要
 ```
 
-## 目前刻意留到後續階段的內容
+## 目前刻意留到後續階段的內容（早期紀錄，未必反映現況，以 docs/specs/ 為準）
 
 - 東廠、皇子、太傅（E004 選項 B、E008 整個事件）：Phase 2 / Phase 4
 - 外戚坐大（E010）：需要聲色成長機制（後宮系統），Phase 2 啟用
@@ -66,15 +68,15 @@ npm run sim -- demo 10   # 以種子 demo 模擬 10 年，輸出 JSON 摘要
 
 - `src/succession.js`：皇子繼位、先帝遺產衰減、王朝結束
 - `src/ending.js`：多軸結局評價
-- 40 條事件（`data/events.json`）
+- 事件資料見 `data/events.json`（早期寫為 40 條，已過時；`npm run build:artifact` 會印出實際事件數）
 - 規格與校準紀錄見 [docs/specs/phase4-5-dynasty.md](docs/specs/phase4-5-dynasty.md)
 
 ## 可玩介面（web/）
 
 - `web/index.html`：單頁、手機優先，僅含版面與樣式，腳本以 `<script type="module" src="ui/main.js">` 載入。主畫面為宮城平面圖，點選殿宇進入朝堂（太和殿）、朝臣與任免（校場）、後宮與慈寧宮、東廠、帝王（御書房）
-- `web/ui/`：介面模組（原為 index.html 內嵌腳本，依畫面與職責拆分）：`main.js`（啟動與事件綁定，唯一入口）、`store.js`（共用可變狀態 `U`）、`util.js`、`labels.js`（顯示名稱表）、`audio.js`、`fx.js`、`overlays.js`、`state-io.js`（存檔、雲端、多存檔欄位）、`game-flow.js`（月份推進、親征、快進）、`render-nav.js`（分派與導覽）、`render-start.js`、`render-court.js`、`render-palace.js`、`render-map.js`、`render-officials.js`、`render-campaign.js`、`render-legacy.js`
-- 模組引用 `../../src/`、`../../data/` 的相對路徑：在 repo 中為 `web/ui/` 上溯至根目錄；發布為 Artifact 時，`ui/` 與 `src/`、`data/` 同層，瀏覽器解析 `../../` 時在根目錄截止，路徑同樣有效
-- 發布為 Artifact 時，需一併上傳 `index.html`、`ui/*.js`（17 個）、`src/`、`data/`，並保留相對路徑；本機預覽可在 `web/` 內建立指向 `../src`、`../data` 的符號連結（即 `web/src`、`web/data`）後以靜態伺服器開啟
+- `web/ui/`：介面模組共 23 個（原為 index.html 內嵌腳本，依畫面與職責拆分）：`main.js`（啟動與事件綁定，唯一入口）、`store.js`（共用可變狀態 `U`）、`util.js`、`labels.js`（顯示名稱表）、`audio.js`、`fx.js`、`overlays.js`、`state-io.js`（存檔、雲端、多存檔欄位）、`game-flow.js`（月份推進、親征、快進）、`render-nav.js`（分派與導覽）；畫面渲染：`render-start.js`、`render-palace.js`、`render-court.js`、`render-officials.js`、`render-campaign.js`、`render-map.js` 與 `map-svg.js`（輿圖與其水墨素材）、`render-legacy.js`、`render-cards.js`、`render-facility.js`、`render-gallery.js`、`render-relations.js`、`render-ruler.js`
+- 模組以 `../../src/`、`../../data/` 引用根目錄資源，這在 repo 內有效（`web/ui/` 上溯兩層即根目錄）。發布為 Artifact 時 `ui/` 與 `src/`、`data/` 不再同層，因此不能原樣上傳：`scripts/build-artifact.js` 只在複本的 `ui/` 內把它們改寫為 `../src/`、`../data/`，repo 內的 `web/ui/` 原始檔不會被修改
+- 發布為 Artifact：執行 `npm run build:artifact`，會產生 `index.html`、`ui/*.js`（23 個）、`src/`、`data/` 並完成路徑改寫與檢查，步驟見 [docs/release.md](docs/release.md)。本機預覽可在 `web/` 內建立指向 `../src`、`../data` 的符號連結（即 `web/src`、`web/data`）後以靜態伺服器開啟
 - 進度存於 localStorage（僅限本瀏覽器），同一種子與同一月份會得到相同奏摺
 
 ### 時段介面對照（gap-ui-slots，僅介面）

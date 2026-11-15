@@ -2,6 +2,8 @@
 // 只提供濾鏡、裝飾筆觸與府印徽章；版圖座標與互動仍由 render-map.js 掌握。
 
 // 水墨暈染：以噪聲位移讓邊緣不規則，再以模糊疊一層淡墨，模擬宣紙渲染。
+// 注意：ink-edge（feTurbulence + feDisplacementMap）成本高，只能套在靜態裝飾層 INK_BACKDROP；
+// 府縣與鄰國等可互動路徑改用 ink-wash（僅模糊與位移陰影）。
 export const INK_DEFS = `<defs>
   <filter id="ink-edge" x="-10%" y="-10%" width="120%" height="120%">
     <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="7" result="n"/>
