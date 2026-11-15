@@ -97,7 +97,7 @@ test('governors are officials: six of them, one per prefecture, and all appointa
     assert.ok(typeof o.personName === 'string' && o.personName === o.name);
   }
   // 知府不是朝臣：不被「忠誠最低」類事件選中
-  assert.ok(s.officials.filter((o) => !o.prefecture).length === 5); // 朝臣五位（含開局兵部尚書 o5）
+  assert.ok(s.officials.filter((o) => !o.prefecture).length === 4);
 });
 
 test('a vacant prefecture yields at the vacancy rate; an appointed governor restores the normal yield', () => {

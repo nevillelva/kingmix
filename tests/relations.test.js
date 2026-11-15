@@ -49,7 +49,7 @@ test('relationsForGraph lists court officials as nodes and drops edges to prefec
   addRelation(s, 'o1', 'o4', 'teacher');
   addRelation(s, 'o1', 'p1', 'rival');
   const g = relationsForGraph(s);
-  assert.deepEqual(g.nodes.map((n) => n.id), ['o1', 'o2', 'o3', 'o4', 'o5']);
+  assert.deepEqual(g.nodes.map((n) => n.id), ['o1', 'o2', 'o3', 'o4']);
   assert.deepEqual(g.nodes[0], { id: 'o1', name: '丞相', faction: 'qingliu' });
   assert.deepEqual(g.edges, [{ a: 'o1', b: 'o4', kind: 'teacher' }]);
 });

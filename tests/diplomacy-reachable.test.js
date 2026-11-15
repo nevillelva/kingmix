@@ -88,7 +88,7 @@ test('without scouting, a neighbor campaign starts with no intel', () => {
 });
 
 // 開局兵部尚書（武略 80）會使我方戰力倍增，使鄰國戰役幾乎必勝、偵查效果被飽和掩蓋；
-// 本測試驗證的是偵查機制本身，故將開局武將的武略歸零，維持原本的勢均力敵前提（見 state.js o5）。
+// 本測試驗證的是偵查機制本身，故將開局武將的武略歸零，維持原本的勢均力敵前提。
 const noGeneral = (s) => {
   const commander = s.officials.find((o) => o.office === 'war');
   if (commander) commander.abilities.martial = 0;
