@@ -281,6 +281,7 @@ export function advanceMonth(state) {
     state.age += 1;
     advanceHeirs(state);
   }
+  // 'abdicated' 為「滿齡致仕」（年滿 62 自動退位），不是玩家禪位；玩家禪位為 'resigned'。代碼值不改，以免破壞既有統計。
   if (state.alive && state.age >= 62) {
     state.alive = false;
     state.endReason = 'abdicated';

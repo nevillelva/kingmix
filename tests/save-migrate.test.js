@@ -107,3 +107,14 @@ test('writeAutoSave 成功時寫入 v2 包裝並回傳 true', () => {
   assert.equal(parsed.state.seed, s.seed);
   assert.equal(encodeAutoSave(s.seed, s, { now: () => 'T' }).includes('"savedAt":"T"'), true);
 });
+
+test('B6：舊存檔中文 endReason「禪位」遷移為英文代碼 resigned（含世代紀錄）', () => {
+  const s = freshState();
+  s.alive = false;
+  s.endReason = '禪位';
+  s.chronicle = [{ generation: 1, endedInYear: 10, age: 50, endReason: '禪位', wars: 0 }];
+  const m = migrateState(s);
+  assert.equal(m.endReason, 'resigned');
+  assert.equal(m.chronicle[0].endReason, 'resigned');
+  assert.equal(s.endReason, '禪位', '原物件不被修改');
+});

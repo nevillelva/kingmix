@@ -109,6 +109,13 @@ export function migrateState(state) {
     // 預設值工廠失敗（例如種子無效）時保留已補的欄位，交由 validateState 回報。
   }
   if (!Number.isInteger(out.schemaVersion)) out.schemaVersion = STATE_SCHEMA_VERSION;
+  // B6：舊存檔的結束原因為中文「禪位」，遷移為英文代碼 resigned（顯示層仍保留相容對映）。
+  if (out.endReason === '禪位') out.endReason = 'resigned';
+  if (Array.isArray(out.chronicle)) {
+    for (const c of out.chronicle) {
+      if (isPlainObject(c) && c.endReason === '禪位') c.endReason = 'resigned';
+    }
+  }
   return out;
 }
 
