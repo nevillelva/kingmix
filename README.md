@@ -74,9 +74,9 @@ npm run sim -- demo 10   # 以種子 demo 模擬 10 年，輸出 JSON 摘要
 ## 可玩介面（web/）
 
 - `web/index.html`：單頁、手機優先，僅含版面與樣式，腳本以 `<script type="module" src="ui/main.js">` 載入。主畫面為宮城平面圖，點選殿宇進入朝堂（太和殿）、朝臣與任免（校場）、後宮與慈寧宮、東廠、帝王（御書房）
-- `web/ui/`：介面模組共 23 個（原為 index.html 內嵌腳本，依畫面與職責拆分）：`main.js`（啟動與事件綁定，唯一入口）、`store.js`（共用可變狀態 `U`）、`util.js`、`labels.js`（顯示名稱表）、`audio.js`、`fx.js`、`overlays.js`、`state-io.js`（存檔、雲端、多存檔欄位）、`game-flow.js`（月份推進、親征、快進）、`render-nav.js`（分派與導覽）；畫面渲染：`render-start.js`、`render-palace.js`、`render-court.js`、`render-officials.js`、`render-campaign.js`、`render-map.js` 與 `map-svg.js`（輿圖與其水墨素材）、`render-legacy.js`、`render-cards.js`、`render-facility.js`、`render-gallery.js`、`render-relations.js`、`render-ruler.js`
+- `web/ui/`：介面模組共 29 個（原為 index.html 內嵌腳本，依畫面與職責拆分）：`main.js`（啟動與事件綁定，唯一入口）、`store.js`（共用可變狀態 `U`）、`util.js`、`labels.js`（顯示名稱表）、`audio.js`、`fx.js`、`overlays.js`、`state-io.js`（存檔、雲端、多存檔欄位）、`game-flow.js`（月份推進、親征、快進）、`render-nav.js`（分派與導覽）；畫面渲染：`render-start.js`、`render-palace.js`、`render-court.js`、`render-officials.js`、`render-campaign.js`、`render-map.js` 與 `map-svg.js`（輿圖與其水墨素材）、`render-legacy.js`、`render-cards.js`、`render-facility.js`、`render-gallery.js`、`render-relations.js`、`render-ruler.js`、`render-memorial.js`（奏摺）、`render-actions.js`（朝政行動與校場）、`render-quarter.js`（季度紀錄）、`render-bus.js`（渲染排程）；共用：`dialog.js`（頁內對話框）、`newyear-keys.js`（新年鍵清理）
 - 模組以 `../../src/`、`../../data/` 引用根目錄資源，這在 repo 內有效（`web/ui/` 上溯兩層即根目錄）。發布為 Artifact 時 `ui/` 與 `src/`、`data/` 不再同層，因此不能原樣上傳：`scripts/build-artifact.js` 只在複本的 `ui/` 內把它們改寫為 `../src/`、`../data/`，repo 內的 `web/ui/` 原始檔不會被修改
-- 發布為 Artifact：執行 `npm run build:artifact`，會產生 `index.html`、`ui/*.js`（23 個）、`src/`、`data/` 並完成路徑改寫與檢查，步驟見 [docs/release.md](docs/release.md)。本機預覽可在 `web/` 內建立指向 `../src`、`../data` 的符號連結（即 `web/src`、`web/data`）後以靜態伺服器開啟
+- 發布為 Artifact：執行 `npm run build:artifact`，會產生 `index.html`、`ui/*.js`（29 個）、`src/`、`data/` 並完成路徑改寫與檢查，步驟見 [docs/release.md](docs/release.md)。本機預覽可在 `web/` 內建立指向 `../src`、`../data` 的符號連結（即 `web/src`、`web/data`）後以靜態伺服器開啟
 - 進度存於 localStorage（僅限本瀏覽器），同一種子與同一月份會得到相同奏摺
 
 ### 時段介面對照（gap-ui-slots，僅介面）
