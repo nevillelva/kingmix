@@ -127,9 +127,9 @@ export function tickEconomy(state) {
 }
 
 // 州府產出結算（與 tickEconomy 分開，tickEconomy 本身不改動數值）。
-// 叛亂州府產出減半：REBEL_YIELD_MULT。【可回退的設計預設】取自診斷報告 4 節「中優先 6」之建議值，
-// 非經校準的定值；若要還原，將此常數改為 1 即可（叛亂府仍按一般產出結算）。
-export const REBEL_YIELD_MULT = 0.5;
+// 叛亂州府產出乘數：REBEL_YIELD_MULT。依使用者決定，叛亂不減產，回到基準（1.0）。
+// 常數保留以便日後調整（例如改回 0.5 即為診斷報告建議的減半預設）。
+export const REBEL_YIELD_MULT = 1.0;
 
 export function applyPrefectureYield(state) {
   ensureEconomy(state);

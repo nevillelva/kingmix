@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createInitialState } from '../src/state.js';
 import { applyPrefectureYield, REBEL_YIELD_MULT, YIELD_TREASURY, YIELD_PEOPLE } from '../src/economy.js';
 
-// 叛亂州府產出減半為【可回退的設計預設】（報告建議值，見 economy.js REBEL_YIELD_MULT）。
+// 依使用者決定：叛亂州府不減產（REBEL_YIELD_MULT = 1.0），叛亂府與非叛亂府產出相同。
 function stateWith(seed, { rebelId = null, yieldOf = 2 } = {}) {
   const s = createInitialState(seed);
   s.stats.treasury = 500;
@@ -22,8 +22,8 @@ function deltas(s) {
   return { treasury: s.stats.treasury - t0, people: s.stats.people - p0 };
 }
 
-test('REBEL_YIELD_MULT 為報告建議的 0.5 預設', () => {
-  assert.equal(REBEL_YIELD_MULT, 0.5);
+test('REBEL_YIELD_MULT 為 1.0（叛亂不減產，回到基準）', () => {
+  assert.equal(REBEL_YIELD_MULT, 1.0);
 });
 
 test('無叛亂時各府產出照常結算（六府 × 產出 × 每單位入庫）', () => {
@@ -31,25 +31,22 @@ test('無叛亂時各府產出照常結算（六府 × 產出 × 每單位入庫
   assert.ok(Math.abs(d.treasury - 6 * 2 * YIELD_TREASURY) <= 0.06, `treasury delta ${d.treasury}`);
 });
 
-test('叛亂府的入庫貢獻減半：比無叛亂時少約一半該府貢獻', () => {
+test('叛亂府的入庫貢獻與非叛亂相同：總差額為零（乘數 1）', () => {
   const base = deltas(stateWith('rebel-y-cmp', { yieldOf: 2 }));
   const one = deltas(stateWith('rebel-y-cmp', { rebelId: 'jingzhao', yieldOf: 2 }));
-  const contribution = 2 * YIELD_TREASURY; // 該府未減半前的入庫貢獻
-  const lost = base.treasury - one.treasury;
-  assert.ok(Math.abs(lost - contribution * 0.5) <= 0.02, `lost ${lost} expected ~${contribution * 0.5}`);
+  assert.ok(Math.abs(base.treasury - one.treasury) <= 0.02, `treasury differs: ${base.treasury} vs ${one.treasury}`);
 });
 
-test('叛亂府的民心貢獻同樣減半（以高於 1 的產出計）', () => {
+test('叛亂府的民心貢獻與非叛亂相同（以高於 1 的產出計）', () => {
   const base = deltas(stateWith('rebel-y-ppl', { yieldOf: 3 }));
   const one = deltas(stateWith('rebel-y-ppl', { rebelId: 'hedong', yieldOf: 3 }));
   const contribution = (3 - 1) * YIELD_PEOPLE;
-  const lost = base.people - one.people;
-  assert.ok(Math.abs(lost - contribution * 0.5) <= 0.02, `people lost ${lost} expected ~${contribution * 0.5}`);
+  assert.ok(Math.abs(base.people - one.people) <= 0.02, `people differs by ${base.people - one.people}`);
+  assert.ok(Math.abs(one.people - contribution * 6) <= 0.07, `people delta ${one.people}`);
 });
 
-test('非叛亂府不受影響：僅叛亂府的差額，其餘府的產出不變', () => {
+test('叛亂府與非叛亂府一視同仁：單府叛亂時，全體六府產出之合計不變', () => {
   const base = deltas(stateWith('rebel-y-other', { yieldOf: 2 }));
   const one = deltas(stateWith('rebel-y-other', { rebelId: 'yangzhou', yieldOf: 2 }));
-  // 差額只來自一府；若波及他府，差額會達一整府（0.1）以上的兩倍
-  assert.ok(base.treasury - one.treasury < 2 * YIELD_TREASURY * 2 * 0.5 + 0.02);
+  assert.ok(Math.abs(base.treasury - one.treasury) <= 0.02);
 });
