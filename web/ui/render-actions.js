@@ -12,7 +12,8 @@ import { ALLIANCE_MIN_ATTITUDE, DECLARE_WAR_LOSS, DECLARE_WAR_REWARD, INVEST_ATT
 import { assignOffice, dismissOffice, suggestCandidate } from '../../src/offices.js';
 import { startCampaign } from '../../src/campaign.js';
 import { remonstrate } from '../../src/bonds.js';
-import { SLOTS, canTakeSlot, slotCost, ensureAgency, periodLeft, spendSlot } from '../../src/slots.js';
+import { SLOTS, canTakeSlot, slotCost, ensureAgency, periodLeft } from '../../src/slots.js';
+import { takeSlot } from '../../src/slot-effects.js';
 import { U } from './store.js';
 import { esc, rng } from './util.js';
 import { FAC, FACTION, REASON, heirPersonLabel, officeName } from './labels.js';
@@ -350,7 +351,7 @@ export function onSlot(e){
   const s = SLOTS[b.dataset.slot];
   const o = s && s.opts.find(x => x[0] === b.dataset.arg);
   if (!o) return;
-  if (!spendSlot(U.state, b.dataset.slot, o[0]).ok) return;
+  if (!takeSlot(U.state, b.dataset.slot, o[0]).ok) return;
   save();
   const t = o[3];
   U.panel = null; U.pick1 = null; U.feedback = t.feedback || '';

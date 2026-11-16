@@ -6,7 +6,7 @@ import { SCHEMA_VERSION, SCHEMA } from '../src/schema.js';
 import { migrateState, restoreSave, validateState, STATE_SCHEMA_VERSION } from '../src/save.js';
 import { isEligible } from '../src/events.js';
 import { ruleMod } from '../src/rule-mods.js';
-import { defaultSimPolicy, applySimPolicy } from '../src/sim-policy.js';
+import { defaultSimPolicy, nonePolicy, applySimPolicy } from '../src/sim-policy.js';
 import { queueView, enqueue, openItems, resolve, cap } from '../src/demand-queue.js';
 import { makeRng } from '../src/rng.js';
 
@@ -68,15 +68,14 @@ test('ruleMod：有祖訓時套用 (base + add) * mul，缺漏欄位視為 0 與
   assert.equal(ruleMod(st, 'grain', 10), 20);
 });
 
-test('sim-policy：預設策略不參與新系統，applySimPolicy 原樣回傳且不改動', () => {
-  const p = defaultSimPolicy();
-  assert.equal(p.participates, false);
+test('sim-policy：預設策略為 slots 且參與；none 不參與，原樣回傳且不呼叫 rng', () => {
+  assert.equal(defaultSimPolicy().participates, true);
+  assert.equal(nonePolicy().participates, false);
   const s = createInitialState('foundation-sim-1');
   const snap = structuredClone(s);
   let rngCalls = 0;
-  const ctx = { rng: () => { rngCalls += 1; return 0.5; } };
-  assert.equal(applySimPolicy(s, p, ctx), s);
-  assert.equal(applySimPolicy(s, undefined, ctx), s);
+  const ctx = { seed: 'x', year: 1, month: 1, rng: () => { rngCalls += 1; return 0.5; } };
+  assert.equal(applySimPolicy(s, nonePolicy(), ctx), s);
   assert.equal(rngCalls, 0);
   assert.deepEqual(s, snap);
 });
