@@ -3,7 +3,7 @@
 
 // 丹藥種類：每服一次上升的丹毒與方士影響力。目前僅一種，以表鍵擴充。
 export const PILLS = Object.freeze({
-  zhenyao: Object.freeze({ id: 'zhenyao', name: '金丹', toxicityGain: 5, fangshiGain: 6 }),
+  zhenyao: Object.freeze({ id: 'zhenyao', name: '金丹', toxicityGain: 5, fangshiGain: 3 }),
 });
 export const DEFAULT_PILL = 'zhenyao';
 
@@ -23,7 +23,7 @@ export const PARANOID_FLAG = 'alchemy:paranoid';
 // 方士干政
 export const FANGSHI_EVENT_CHANCE = 0.25; // 丙段以上，每月擲中機率
 export const FANGSHI_COUP_THRESHOLD = 85; // 方士影響力達此值，每月可能觸發政變（經 assassination.js）
-export const FANGSHI_COUP_CHANCE = 0.05;
+export const FANGSHI_COUP_CHANCE = 0.02;
 
 export const FANGSHI_EVENT = Object.freeze({
   id: 'fangshi_intrigue',
