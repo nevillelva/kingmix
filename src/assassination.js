@@ -137,3 +137,27 @@ export function tickAssassination(state) {
   if (target.kind === 'official' && outcome === 'killed') result.official = target.official;
   return result;
 }
+
+// 方士政變（煉丹側線，見 alchemy.js）：目標固定為皇帝，結果依既有皇帝刺殺機率。
+// 使用呼叫端給定的 rng（煉丹以 [seed, year, month, 'alchemy'] 擲骰），不消耗刺殺既有亂數流。
+// 不排奏摺、不計入刺殺上限；皇帝死亡走 endReason='assassinated'，寫入史冊 kind 'assassination'（source 'fangshi'）。
+export function attemptFangshiCoup(state, rng) {
+  const outcome = pickOutcome('emperor', rng);
+  if (outcome === 'injured') {
+    setStat(state, 'health', Math.max(1, state.stats.health - ASSASSIN_INJURY), { silent: true });
+  } else if (outcome === 'killed') {
+    state.alive = false;
+    state.endReason = 'assassinated';
+  }
+  state.chronicle.push({
+    kind: 'assassination',
+    generation: state.dynasty.generation,
+    year: state.year,
+    month: state.month,
+    source: 'fangshi',
+    target: 'emperor',
+    targetName: state.emperor?.name ?? '皇帝',
+    outcome,
+  });
+  return { source: 'fangshi', target: 'emperor', outcome };
+}

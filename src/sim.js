@@ -24,6 +24,7 @@ import { endOfMonth } from './month.js';
 import { pickEvent, pickSecondMemorial, autoAppoint } from './selection.js';
 import { applyEdictsUnchecked } from './edicts.js';
 import { autoRespondPartisan, partisanStatus } from './partisan.js';
+import { attemptAlchemy } from './alchemy.js';
 
 // 核心選擇規則已搬至 selection.js；此處 re-export 以維持既有 import 路徑。
 export {
@@ -63,7 +64,8 @@ function strategyOption(choose, state, event, seed, year, month) {
 
 // scenario 為選用：省略時行為與原本相同（標準開局、回傳不含 scenario 欄位）。
 // partisan：黨爭模擬策略（'balance' | 'rally' | 'purge' | 'ignore'，見 partisan.js）。省略時黨爭不參與（預設，稽核數字不變）。
-export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE, choose, origin, edicts, partisan, simPolicy = defaultSimPolicy() }) {
+// monthlyAlchemy 為選用（預設 false）：每月月結前嘗試煉丹一次（煉丹側線壓力測試用，見 alchemy.js）；預設不煉丹，結果與原版相同。
+export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE, choose, origin, edicts, partisan, simPolicy = defaultSimPolicy(), monthlyAlchemy = false }) {
   const state = scenario
     ? createScenarioState(seed, resolveScenarioId(scenario), { policy, mode })
     : createInitialState(seed, { policy, mode });
@@ -138,6 +140,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
     }
     if (partisan !== undefined) autoRespondPartisan(state, partisan); // 黨爭：依策略裁決未了訴求（未參與時不呼叫）
     applySimPolicy(state, simPolicy, { seed, year, month }); // 玩家時段行動（午後、夜間各一項，見 sim-policy.js）
+    if (monthlyAlchemy && state.alive) attemptAlchemy(state);
     endOfMonth(state); // 月結：與 web 的 finishMonth 共用（見 month.js）
   }
 

@@ -34,6 +34,7 @@ import { stepRelations } from './relations.js';
 import { tickRebellion } from './city-capture.js';
 import { trimCapped, WARNINGS_CAP, DIPLOMACY_LOG_CAP } from './caps.js';
 import { ruleMod } from './rule-mods.js';
+import { tickAlchemy, tickFangshiCoup } from './alchemy.js';
 
 // 官員名單上限：朝臣 12 人（開局 4 人加進士招募）＋ 六府知府 6 人。
 export const MAX_OFFICIALS = 18;
@@ -267,6 +268,9 @@ export function monthlyTick(state, rng) {
   // 太傅到任後，皇子教育事件才會出現
   if (officeHolder(state, 'tutor')) state.flags.tutor_appointed = true;
 
+  // 丹毒（煉丹側線）：未煉丹時為 no-op。須於死亡判定之前，使丹毒流失歸零者寫入史冊死因。
+  tickAlchemy(state);
+
   if (g('health') <= 0) {
     state.alive = false;
     state.endReason = 'death';
@@ -277,6 +281,8 @@ export function monthlyTick(state, rng) {
     const attempt = tickAssassination(state);
     if (attempt?.official) removeOfficial(state, attempt.official, 'slain');
   }
+  // 方士政變（丙段極端）：同樣於死亡判定之後，皇帝仍在位時才擲。
+  if (state.alive) tickFangshiCoup(state);
 
   // 忠誠取整（B8）：本月其他步驟（特質、東廠、太子等）亦可能改動忠誠，故於月末統一取整至小數二位。
   for (const o of state.officials) o.loyalty = Math.round(o.loyalty * 100) / 100;

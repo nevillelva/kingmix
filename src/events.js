@@ -107,6 +107,8 @@ export function optionOpen(state, option) {
     if (key === 'official_trait') return hasOfficialTrait(state, val);
     // 外交路線前置條件：{ action, neighbor }，與 diplomacy.js 的 canDiplomacy 相同。
     if (key === 'diplomacy') return canDiplomacy(state, val.action, val.neighbor);
+    // 旗標為假（或未設定）時成立；與事件層的 flag_not 條件語意相同（煉丹丹毒高時鎖定選項，見 alchemy.js）。
+    if (key === 'flag_not') return !state.flags?.[val];
     return false;
   });
 }

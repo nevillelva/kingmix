@@ -10,12 +10,12 @@
 //   state.sideEvents.enabled         是否啟用，未設定時視為啟用
 //   state.sideEvents.encounterMonth  上次擲奇遇的月索引，未設定時為 -1
 //   state.sideEvents.alchemyMonth    上次煉丹的月索引，未設定時為 -1
+//   state.sideEvents.alchemy         丹毒與方士狀態 { toxicity, doses, fangshi }，見 alchemy.js（首次煉丹時懶建立）
 //   state.sideEvents.pending         待決的二選一奇遇 { encounterId, prefectureId, year, month }，未決時不存在或為 null
 
 import { makeRng } from './rng.js';
 import { setStat } from './state.js';
 import { ensureTour, tourTo, currentLocation, MORALE_MAX } from './tour.js';
-import { ensureCity } from './city.js';
 import { ensureCapture } from './city-capture.js';
 import { governorOf } from './economy.js';
 import {
@@ -24,15 +24,15 @@ import {
 } from './encounter-data.js';
 
 export const ENCOUNTER_CHANCE = 0.5; // 每次巡幸抵達後觸發奇遇的機率
-export const ALCHEMY_COST = 20; // 煉丹：國庫耗費（無論成敗）
-export const ALCHEMY_SUCCESS_CHANCE = 0.5;
 
 // 奇遇資料（二選一奇遇與舊版奇遇表）見 encounter-data.js。舊名仍由此匯出，供既有引用。
 export { ENCOUNTERS };
 
-// 煉丹結果。成功得效果；失敗僅有健康的代價（國庫耗費已先行扣除）。
-export const ALCHEMY_REWARD = Object.freeze({ health: 6, charm: 3 });
-export const ALCHEMY_BACKFIRE = Object.freeze({ health: -4 });
+// 煉丹（含丹毒、方士）已移至 alchemy.js；此處 re-export 以維持既有 import 路徑。
+export {
+  ALCHEMY_COST, ALCHEMY_SUCCESS_CHANCE, ALCHEMY_REWARD, ALCHEMY_BACKFIRE,
+  alchemyStatus, attemptAlchemy, tickAlchemy, tickFangshiCoup, alchemyState, ensureAlchemy,
+} from './alchemy.js';
 
 const monthIndex = (state) => (state.year - 1) * 12 + (state.month - 1);
 
@@ -50,19 +50,6 @@ export function sideEventsEnabled(state) {
 export function setSideEventsEnabled(state, on) {
   ensureSideEvents(state).enabled = !!on;
   return state;
-}
-
-// 套用一組小幅效果。morale 作用於所在府並夾在 [0, MORALE_MAX]；其餘鍵經 setStat 寫入（自然越界靜默截斷）。
-function applyEffects(state, effects) {
-  for (const [key, delta] of Object.entries(effects)) {
-    if (key === 'morale') {
-      ensureTour(state);
-      const pref = ensureCity(state).find((p) => p.id === currentLocation(state));
-      pref.morale = Math.max(0, Math.min(MORALE_MAX, pref.morale + delta));
-    } else {
-      setStat(state, key, state.stats[key] + delta, { silent: true });
-    }
-  }
 }
 
 // 本月若尚未擲過奇遇，依種子擲一次；命中則於所至府設為待決（二選一，見 resolveEncounter），回傳該奇遇，否則回傳 null。
@@ -122,30 +109,4 @@ export function tourWithEncounter(state, prefectureId) {
   const r = tourTo(state, prefectureId);
   if (!r.ok) return { ...r, encounter: null };
   return { ...r, encounter: rollEncounter(state) };
-}
-
-// 煉丹可用性（唯讀，不建立欄位）：{ ok, reason }；reason 為 disabled / cooldown / treasury 之一，可用時為 null。
-// attemptAlchemy 與介面皆以此為準，確保按鈕狀態與實際裁決一致。
-export function alchemyStatus(state) {
-  const se = state.sideEvents;
-  if (se?.enabled === false) return { ok: false, reason: 'disabled' };
-  if (se?.alchemyMonth === monthIndex(state)) return { ok: false, reason: 'cooldown' };
-  if (state.stats.treasury < ALCHEMY_COST) return { ok: false, reason: 'treasury' };
-  return { ok: true, reason: null };
-}
-
-// 煉丹：每月至多一次。回傳 { ok, reason, outcome, effects }；reason 為 disabled / cooldown / treasury 時 ok 為 false 且狀態不變。
-export function attemptAlchemy(state) {
-  const se = ensureSideEvents(state);
-  const st = alchemyStatus(state);
-  if (!st.ok) return { ok: false, reason: st.reason, outcome: null, effects: null };
-  const m = monthIndex(state);
-
-  se.alchemyMonth = m;
-  setStat(state, 'treasury', state.stats.treasury - ALCHEMY_COST);
-  const rng = makeRng([state.seed, 'alchemy', m]);
-  const success = rng() < ALCHEMY_SUCCESS_CHANCE;
-  const effects = success ? ALCHEMY_REWARD : ALCHEMY_BACKFIRE;
-  applyEffects(state, effects);
-  return { ok: true, reason: null, outcome: success ? 'success' : 'failure', effects };
 }
