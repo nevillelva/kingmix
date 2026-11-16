@@ -19,6 +19,7 @@ import { newGame } from './game-flow.js';
 import { render } from './render-bus.js';
 import { SCEN_STATUS } from './labels.js';
 import { sfx } from './audio.js';
+import { currentEventPool } from './event-pool.js';
 
 // 即位出身的目前選擇（模組層級，重繪起始畫面時保留）。
 let originChoice = ORIGINS[0].id;
@@ -221,9 +222,9 @@ export function renderStart(){
     if (U.state && !U.state.origin) { applyOrigin(U.state, originChoice); save(); render(); }
   };
   const c = document.getElementById('cont');
-  if (c) c.onclick = () => { U.seed = saved.seed; U.state = saved.state; migrateEraLog(U.state); prepareMonth(U.state, U.events); U.reviewedCount = (U.state.annals||[]).length; render(); };
+  if (c) c.onclick = () => { U.seed = saved.seed; U.state = saved.state; migrateEraLog(U.state); prepareMonth(U.state, currentEventPool()); U.reviewedCount = (U.state.annals||[]).length; render(); };
   const cc = document.getElementById('ccont');
-  if (cc) cc.onclick = () => { U.seed = cs.seed; U.state = cs.state; migrateEraLog(U.state); prepareMonth(U.state, U.events); U.reviewedCount = (U.state.annals||[]).length; save(); render(); };
+  if (cc) cc.onclick = () => { U.seed = cs.seed; U.state = cs.state; migrateEraLog(U.state); prepareMonth(U.state, currentEventPool()); U.reviewedCount = (U.state.annals||[]).length; save(); render(); };
   if (corrupt) {
     document.getElementById('corrupt-export').onclick = () => saveTextFile(`kingmix-save-corrupt-${new Date().toISOString().slice(0, 10)}.json`, corrupt.raw);
     document.getElementById('corrupt-new').onclick = () => { if (discardCorruptSave(corrupt.raw)) render(); };

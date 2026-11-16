@@ -24,6 +24,7 @@ import { esc, rng } from './util.js';
 import { recordQuarterSnapshot } from './render-quarter.js';
 import { sfx } from './audio.js';
 import { STAT } from './labels.js';
+import { currentEventPool, findPoolEvent } from './event-pool.js';
 
 // deckIds（選用）：開局策卡 3–5 張，作為本局策卡卡池；空陣列或未給即沿用全部卡池。
 export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds, edicts){
@@ -48,7 +49,7 @@ export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds, edicts){
   if (Array.isArray(deckIds) && deckIds.length) {
     try { setOpeningDeck(U.state, deckIds); } catch (e) { U.feedback = '開局策卡不合規，已改用全部策卡。'; }
   }
-  prepareMonth(U.state, U.events); // 月初準備：本月奏摺與政策卡（A5）
+  prepareMonth(U.state, currentEventPool()); // 月初準備：本月奏摺與政策卡（A5）
   U.reviewedCount = 0;
   U.guideArmed = true;
   save(); U.tab = 'palace'; U.panel = null; U.pick1 = null; render();
@@ -59,7 +60,7 @@ export function pendingCase(){ return (U.state.dongchang?.cases || []).find(c =>
 export function campaignActive(){ return !!(U.state.campaign && U.state.campaign.status === 'active'); }
 
 // 連鎖事件與 sim.js 相同：每月開始時取出一則（takeChain），同月重繪沿用同一結果，故記在 state.monthChain。
-export function chainEvent(id){ return chainEventEngine(U.state, U.events, id); }
+export function chainEvent(id){ return chainEventEngine(U.state, currentEventPool(), id); }
 
 // 早朝兩則奏摺：本月奏摺已於月初由 prepareMonth（src/month-start.js）決定並存於 state.monthChain。
 // 此函式為純讀取，不抽選、不寫入狀態（A5）；若當月尚未準備，回傳空結果。
@@ -67,7 +68,7 @@ export function morningPair(){
   const key = `${U.state.year}-${U.state.month}`;
   const mc = U.state.monthChain;
   if (!mc || mc.key !== key || !('second' in mc) || !U.state.alive || pendingCase()) return { first: null, second: null, secondDone: false };
-  const byId = id => (id ? U.events.find(x => x.id === id) : null) || null;
+  const byId = id => (id ? findPoolEvent(id) : null) || null;
   return { first: byId(mc.first), second: byId(mc.second), secondDone: !!mc.secondDone };
 }
 
@@ -80,7 +81,7 @@ export function finishMonth(keepFeedback){
     tickRng: rng('tick', U.state.year, U.state.month),
     onBeforeAdvance: () => recordQuarterSnapshot(),
   });
-  prepareMonth(U.state, U.events); // 新月開始：抽本月奏摺（A5）
+  prepareMonth(U.state, currentEventPool()); // 新月開始：抽本月奏摺（A5）
   save(); render();
 }
 
@@ -189,7 +190,7 @@ export function ffToast(msg){
 
 // 代為批閱本月奏摺（早朝第一則與次奏），以 autoDecideMemorial 挑選。
 export function ffDecideMonth(){
-  prepareMonth(U.state, U.events);
+  prepareMonth(U.state, currentEventPool());
   const pair = morningPair();
   if (pair.first) {
     const d = autoDecideMemorial(U.state, pair.first, U.seed, U.state.year, U.state.month);
@@ -215,7 +216,7 @@ export function ffDecideMonth(){
 // 快進不寫季度快照（與 finishMonth 的差異僅此一點，沿用原行為）。
 export function ffAdvanceMonth(){
   endOfMonth(U.state, { tickRng: rng('tick', U.state.year, U.state.month) });
-  prepareMonth(U.state, U.events);
+  prepareMonth(U.state, currentEventPool());
 }
 
 // 快進停下時的說明：指出原因與玩家可採取的下一步，避免只剩短暫的浮動訊息。
