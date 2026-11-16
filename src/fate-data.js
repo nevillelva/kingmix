@@ -204,6 +204,7 @@ export const FATE_ARCS = Object.freeze({
       ],
       endings: {
         child_mortality: '{name}年幼夭折，宮中哀悼。',
+        married: '{name}遠嫁異邦，以和親換得數年太平，史冊記其功。',
         survived: '{name}一生安順，終老於府邸，史冊記其賢德。',
       },
     },
@@ -218,6 +219,7 @@ export const FATE_END_TAG = Object.freeze({
   child_mortality: '夭折',
   rivalry: '失勢',
   ascended: '即位',
+  married: '和親',
   survived: '善終',
 });
 

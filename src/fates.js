@@ -105,6 +105,27 @@ export function endFate(state, role, id, cause) {
   return true;
 }
 
+// 皇女出嫁和親（diplomacy.js marryPrincess）：寫入出嫁段落，並以 married 結局收束。
+// 若命運線尚未進入（無紀錄），先建立紀錄再寫入，確保出嫁必留史冊。
+export function marryOffFate(state, id, neighborName) {
+  const fates = ensureFates(state);
+  const key = `heir:${id}`;
+  const heir = (state.heirs ?? []).find((h) => h.id === id);
+  const rec = fates[key] ?? { arc: 'female', name: heir?.name ?? id, stage: 0, last: monthIndex(state), ended: false };
+  if (rec.ended) return false;
+  const name = rec.name;
+  ensureChronicle(state).push({
+    kind: 'fate',
+    name,
+    text: fill(`{name}出嫁${neighborName}，以和親安邊，宮中送嫁。`, name),
+    tag: FATE_ROLE_TAG.heir_female,
+    year: state.year,
+    month: state.month,
+  });
+  fates[key] = { ...rec, stage: (rec.stage ?? 0) + 1, last: monthIndex(state) };
+  return endFate(state, 'heir', id, 'married');
+}
+
 // 終局：仍在世且未結局者，一律以 survived 收束（國祚終結時呼叫）。
 export function closeFatesAtEnd(state) {
   const fates = ensureFates(state);

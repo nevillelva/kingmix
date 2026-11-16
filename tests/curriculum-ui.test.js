@@ -20,7 +20,7 @@ const { createHeir } = await import('../src/succession.js');
 const { makeRng } = await import('../src/rng.js');
 const { curriculumEntry, COURSES } = await import('../src/curriculum.js');
 const { U } = await import('../web/ui/store.js');
-const { canSchedule, curriculumControlHtml, curriculumSummary, isPrince, setCourseAct } = await import('../web/ui/render-curriculum.js');
+const { canSchedule, curriculumControlHtml, curriculumSummary, setCourseAct } = await import('../web/ui/render-curriculum.js');
 
 function stateWithHeir({ gender = 'male', age = 8 } = {}) {
   const s = applySchemaDefaults(createInitialState(4242));
@@ -29,13 +29,12 @@ function stateWithHeir({ gender = 'male', age = 8 } = {}) {
   return { s, h };
 }
 
-test('isPrince 與 canSchedule：僅男性皇子、六歲方可排課', () => {
-  assert.equal(isPrince({ gender: 'male' }), true);
-  assert.equal(isPrince({ gender: 'm' }), true);
-  assert.equal(isPrince({ gender: 'female' }), false);
+test('canSchedule：皇子與皇女皆可排課，年滿六歲方可', () => {
   assert.equal(canSchedule({ gender: 'male', age: 5 }), false);
   assert.equal(canSchedule({ gender: 'male', age: 6 }), true);
-  assert.equal(canSchedule({ gender: 'female', age: 10 }), false);
+  assert.equal(canSchedule({ gender: 'female', age: 5 }), false);
+  assert.equal(canSchedule({ gender: 'female', age: 10 }), true);
+  assert.equal(canSchedule(null), false);
 });
 
 test('curriculumSummary：未排課、已排課的文字摘要', () => {
@@ -43,10 +42,13 @@ test('curriculumSummary：未排課、已排課的文字摘要', () => {
   assert.equal(curriculumSummary({ course: 'martial', merit: 7, terms: [{}, {}] }), '主修騎射　功績 7　季考 2 次');
 });
 
-test('curriculumControlHtml：皇女與年幼皇子不出現排課鈕；皇子列出五門課並標示主修', () => {
+test('curriculumControlHtml：年幼皇子與皇女皆不出現排課鈕以外之課表（年幼顯示說明）；皇女年滿六歲列出五門課', () => {
   const { s, h } = stateWithHeir({ age: 3 });
-  assert.equal(curriculumControlHtml({ gender: 'female', age: 9 }, s), '');
+  assert.equal(curriculumControlHtml(null, s), '');
   assert.match(curriculumControlHtml(h, s), /年幼/);
+  const girl = stateWithHeir({ gender: 'female', age: 9 });
+  const gh = curriculumControlHtml(girl.h, girl.s);
+  for (const key of Object.keys(COURSES)) assert.match(gh, new RegExp(`data-arg="${girl.h.id}\\|${key}"`));
   h.age = 8;
   const html = curriculumControlHtml(h, s);
   for (const key of Object.keys(COURSES)) assert.match(html, new RegExp(`data-arg="${h.id}\\|${key}"`));

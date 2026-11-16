@@ -4,6 +4,7 @@
 
 import { makeRng } from './rng.js';
 import { officeHolder } from './offices.js';
+import { tickCompanionBond } from './companions.js';
 import { ruleMod } from './rule-mods.js';
 
 export const CURRICULUM_MIN_AGE = 6; // 最低入學年齡
@@ -69,6 +70,8 @@ export function tickCurriculum(state) {
   for (const h of [...state.heirs].sort((a, b) => a.id.localeCompare(b.id))) {
     const entry = heirs[h.id];
     if (!entry || h.age < CURRICULUM_MIN_AGE) continue;
+    tickCompanionBond(state, h.id); // 伴讀 bond 每季增加（見 companions.js）
+    if (!entry.course) continue; // 僅有伴讀、尚未排課者不計季考
     const { ability } = COURSES[entry.course];
     const rng = makeRng([state.seed, 'curriculum', state.year, state.month, h.id]);
     const gain = Math.round(CURRICULUM_GAIN * (1 + q) * (0.5 + rng()) * (0.5 + h.abilities[ability] / 100) * ruleMod(state, 'learning_gain', 1));

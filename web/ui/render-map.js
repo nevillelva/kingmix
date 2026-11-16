@@ -183,7 +183,7 @@ export function renderMap(){
     save();
     render();
     // 奇遇（微服私訪）於巡幸抵達後擲出；以覆蓋層告知，側線關閉時 encounter 恆為 null。
-    if (r?.ok && r.encounter) showEncounter(r.encounter, name);
+    if (r?.ok && r.encounter && !document.querySelector('.dlg-ov')) showEncounter(r.encounter, name); // 已由 render 重新顯示待決者則不重複
   };
   // 攻城由玩家主動觸發；結果寫入側欄（U.mapNote）。失敗時狀態僅依引擎變動，不影響其他府。
   const attackBtn = app.querySelector('[data-attack]');

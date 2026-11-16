@@ -17,7 +17,7 @@ import { renderGallery } from './render-gallery.js';
 import { renderFacility } from './render-facility.js';
 import { renderEnding, renderStart } from './render-start.js';
 import { guideMount, showNewYear } from './overlays.js';
-import { paintSideToggle } from './render-side.js';
+import { paintPendingEncounter, paintSideToggle } from './render-side.js';
 
 export function calendar(){
   document.getElementById('when').textContent = `第${U.state.dynasty.generation}世 · ${eraYearText(U.state)}${U.state.month}月 · ${U.state.age}歲`;
@@ -75,6 +75,7 @@ export const VIEWS = { palace: renderPalace, court: renderCourt, officials: rend
 
 export function render(){
   paintSideToggle();
+  paintPendingEncounter();
   if (U.tab === 'legacy') {
     topGauges(); applySeason();
     document.getElementById('nav').style.display = '';

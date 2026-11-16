@@ -5,6 +5,7 @@ import { makeRng } from './rng.js';
 import { BALANCE } from './balance.js';
 import { pushCapped, DIPLOMACY_LOG_CAP } from './caps.js';
 import { defaultOf } from './schema.js';
+import { endFate, marryOffFate } from './fates.js';
 
 // 四個鄰國：strength 為基礎兵力（與 ourStrength 同尺度，初始己方約 196）。
 export const NEIGHBORS = Object.freeze([
@@ -74,6 +75,34 @@ export function arrangeMarriage(state, id) {
   d.kin = MARRIAGE_TRUCE_MONTHS;
   changeAttitude(state, id, 15);
   return { ok: true };
+}
+
+// 皇女和親（以實際皇女出嫁，效果優於 arrangeMarriage）：停戰期加長、好感上升更多；皇女離宮，命運線寫入出嫁段落與結局。
+export const PRINCESS_MARRIAGE_MIN_AGE = 15; // 及笄
+export const PRINCESS_TRUCE_MONTHS = 48;
+export const PRINCESS_ATTITUDE_GAIN = 25;
+
+// 可出嫁的皇女（非男性、已及笄）。
+export function eligiblePrincesses(state) {
+  return (state.heirs ?? []).filter((h) => h.gender !== 'male' && h.age >= PRINCESS_MARRIAGE_MIN_AGE);
+}
+
+// 和親：指定皇女出嫁至鄰國，花費 MARRIAGE_COST。回傳 { ok, reason }；失敗時不改動狀態。
+export function marryPrincess(state, id, heirId) {
+  const n = neighborById(id);
+  if (!n) return { ok: false, reason: 'unknown' };
+  const heir = (state.heirs ?? []).find((h) => h.id === heirId);
+  if (!heir || heir.gender === 'male') return { ok: false, reason: 'no_princess' };
+  if (heir.age < PRINCESS_MARRIAGE_MIN_AGE) return { ok: false, reason: 'too_young' };
+  if (state.stats.treasury < MARRIAGE_COST) return { ok: false, reason: 'treasury' };
+  state.stats.treasury -= MARRIAGE_COST;
+  const d = diplomacyOf(state)[id];
+  d.kin = PRINCESS_TRUCE_MONTHS;
+  changeAttitude(state, id, PRINCESS_ATTITUDE_GAIN);
+  state.heirs = state.heirs.filter((h) => h !== heir);
+  if (state.curriculum?.heirs) delete state.curriculum.heirs[heir.id];
+  marryOffFate(state, heir.id, n.name);
+  return { ok: true, name: heir.name, neighbor: n.name };
 }
 
 // 朝貢：好感足夠時鄰國進貢，國庫 +TRIBUTE_GAIN、聲望 +1、好感 +8。

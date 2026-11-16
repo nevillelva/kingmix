@@ -10,6 +10,8 @@
 //   autonomy     知府離心割據（late-pressure.js tickAutonomy）：州府名、知府名
 //   minister     權臣坐大（late-pressure.js tickMinister）：權臣名、派系
 //   disaster     天災（late-pressure.js tickDisasters）：州府名
+//   companion_bond   伴讀與皇子相得（companions.js tickCompanionBond）：皇子、舉薦人
+//   companion_ascend 伴讀舉薦人隨皇子登基（companions.js applyCompanionAscension）：皇子、舉薦人、派系
 //   （無 kind）  駕崩或禪位後的世代紀錄（succession.js 的 tryAccession）
 
 // 結束原因代碼：resigned＝禪位（B6 由中文改為英文代碼）；'禪位' 保留為舊存檔相容。
@@ -72,6 +74,12 @@ export function chronicleLine(c) {
       text: `皇子${orDash(c.name)}季考${course} · ${orDash(c.year)}年${orDash(c.month)}月`,
       tag: orDash(c.grade),
     };
+  }
+  if (c.kind === 'companion_bond') {
+    return { text: `皇子${orDash(c.name)}與伴讀${orDash(c.sponsorName)}相得 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '伴讀' };
+  }
+  if (c.kind === 'companion_ascend') {
+    return { text: `${orDash(c.sponsorName)}隨皇子${orDash(c.name)}登基，相得之臣受重用 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '伴讀' };
   }
   if (c.kind === 'heir_illness') {
     return { text: `皇子${orDash(c.name)}染疾 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '患病' };

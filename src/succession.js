@@ -7,6 +7,7 @@ import { PERSONALITIES } from './people.js';
 import { endFate, closeFatesAtEnd } from './fates.js';
 import { BALANCE } from './balance.js';
 import { CURRICULUM_PROSPECT_WEIGHT, curriculumMerit, tutelageOf } from './curriculum.js';
+import { applyCompanionAscension, companionRivalBonus } from './companions.js';
 
 export const ADULT_AGE = 15;
 const LEGACY_KEYS = ['literature', 'military', 'power', 'benevolence', 'prestige'];
@@ -27,9 +28,9 @@ export function heirStrength(heir) {
   return Object.values(heir.abilities).reduce((a, b) => a + b, 0);
 }
 
-// 繼位評價：能力總和加上課表功績（未排課者功績為 0，評價即能力總和）。
+// 繼位評價：能力總和加上課表功績，再加伴讀舉薦人派系勢力（無伴讀者為 0，評價即能力總和加功績）。
 export function successionScore(state, heir) {
-  return heirStrength(heir) + CURRICULUM_PROSPECT_WEIGHT * curriculumMerit(state, heir.id);
+  return heirStrength(heir) + CURRICULUM_PROSPECT_WEIGHT * curriculumMerit(state, heir.id) + companionRivalBonus(state, heir.id);
 }
 
 // 皇子個性：以獨立的 rng 路徑抽取（不消耗 createHeir 呼叫端的 rng），既有出生序列不受影響。
@@ -76,6 +77,7 @@ export function tryAccession(state) {
   // 已立太子者優先繼位，否則取評價最高者
   const heir = candidates.find((h) => h.id === state.dynasty.crownPrince) ?? candidates[0];
   const tutelage = tutelageOf(state, heir.id);
+  applyCompanionAscension(state, heir.id); // 伴讀舉薦人相得者：派系增勢並解鎖相得（見 companions.js）
 
   state.heirs = state.heirs.filter((h) => h !== heir);
   endFate(state, 'heir', heir.id, 'ascended');

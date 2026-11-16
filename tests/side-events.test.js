@@ -5,6 +5,7 @@ import { createInitialState } from '../src/state.js';
 import { serializeSave, parseSave } from '../src/save.js';
 import { tourTo, PREFECTURES, MORALE_MAX } from '../src/tour.js';
 import { ensureCity } from '../src/city.js';
+import { CHOICE_ENCOUNTERS } from '../src/encounter-data.js';
 import {
   ENCOUNTERS, ALCHEMY_COST, ALCHEMY_REWARD, ALCHEMY_BACKFIRE,
   tourWithEncounter, rollEncounter, attemptAlchemy,
@@ -23,12 +24,13 @@ function findEncounterSeed() {
   throw new Error('no encounter seed found');
 }
 
-test('tourWithEncounter 在側線啟用時，於巡幸抵達後最多擲一次奇遇，且奇遇來自奇遇表', () => {
+test('tourWithEncounter 在側線啟用時，於巡幸抵達後最多擲一次奇遇，且奇遇來自二選一奇遇表（待決）', () => {
   const seed = findEncounterSeed();
   const s = createInitialState(seed);
   const r = tourWithEncounter(s, 'hedong');
   assert.equal(r.ok, true);
-  assert.ok(ENCOUNTERS.some((e) => e.id === r.encounter.id));
+  assert.ok(CHOICE_ENCOUNTERS.some((e) => e.id === r.encounter.id));
+  assert.equal(s.sideEvents.pending.encounterId, r.encounter.id);
   assert.equal(s.location, 'hedong');
 });
 
