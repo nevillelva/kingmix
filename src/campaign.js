@@ -6,6 +6,7 @@ import { makeRng } from './rng.js';
 import { ourStrength, nominalStrength, resolveRound, recordWar, TACTICS, SPREAD_SCOUTED, SPREAD_UNSCOUTED } from './war.js';
 import { declareWar, enemyStrengthOf, alliedReinforcement, neighborById, diplomacyOf, scoutedFresh } from './diplomacy.js';
 import { defenseHoldMultiplier } from './city.js';
+import { ruleMod } from './rule-mods.js';
 
 export const MAX_ROUNDS = 3;
 export const WINS_NEEDED = 2;
@@ -158,7 +159,11 @@ export function finishCampaign(state, outcome, applyEffects = defaultApply) {
   c.outcome = outcome;
 
   let effects;
-  if (won) effects = outcome === 'peace' ? scaleEffects(c.reward, 0.5) : c.reward;
+  if (won) {
+    // 祖訓：戰事獎勵修正（無祖訓時係數為 1，沿用原值；議和為 0.5 倍）。
+    const k = (outcome === 'peace' ? 0.5 : 1) * ruleMod(state, 'war_reward', 1);
+    effects = k === 1 ? c.reward : scaleEffects(c.reward, k);
+  }
   else effects = c.loss;
   applyEffects(state, effects);
   if (!won && outcome !== 'peace') applyEffects(state, { prestige: -3 });

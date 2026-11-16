@@ -7,6 +7,7 @@ import { DEFAULT_MODE, MODES } from '../../src/mode.js';
 import { ORIGINS, UNLOCKABLE_ORIGINS, applyOrigin } from '../../src/origin.js';
 import { CARD_TAGS, OPENING_DECK_MAX, OPENING_DECK_MIN, POLICY_CARDS, openingPoolIds } from '../../src/cards.js';
 import { isUnlocked, unlockRequirementText } from '../../src/unlocks.js';
+import { EDICT_DEFS, validateEdictChoice } from '../../src/edicts.js';
 import { loadUnlocks, syncUnlocks, UNLOCK_FAIL_MSG } from './unlock-store.js';
 import { buildScroll } from '../../src/posthumous.js';
 import { evaluateDynasty } from '../../src/ending.js';
@@ -21,6 +22,9 @@ import { sfx } from './audio.js';
 
 // 即位出身的目前選擇（模組層級，重繪起始畫面時保留）。
 let originChoice = ORIGINS[0].id;
+
+// 開局祖訓的目前勾選（0–2 條，模組層級，重繪時保留）。
+let edictChoice = [];
 
 const statModText = (mods) => Object.entries(mods).map(([k, v]) => `${k} ${v > 0 ? '+' : ''}${v}`).join('、');
 
@@ -44,6 +48,21 @@ export function paintOrigins(){
 }
 
 // 開局策卡：可選卡池中點選 3–5 張作為本局卡池；不選則沿用全部策卡。
+// 開局祖訓：未解鎖者停用並註明條件；已勾選者以 aria-pressed 標示。
+export function paintEdicts(){
+  const box = document.getElementById('edict-cards');
+  if (!box) return;
+  const record = loadUnlocks();
+  box.innerHTML = EDICT_DEFS.map(d => {
+    const locked = !isUnlocked(record, 'edict', d.id);
+    if (locked) return `<button type="button" class="btn ghost" disabled aria-disabled="true" data-edict="${esc(d.id)}" style="text-align:left;white-space:normal;display:block">
+      <b>${esc(d.name)}（未解鎖）</b><br><span class="sub">${esc(unlockRequirementText('edict', d.id))}</span></button>`;
+    const on = edictChoice.includes(d.id);
+    return `<button type="button" class="btn ${on ? 'zhu' : 'ghost'}" data-edict="${esc(d.id)}" aria-pressed="${on}" style="text-align:left;white-space:normal;display:block">
+      <b>${esc(d.name)}</b><br><span class="sub">${esc(d.desc)}</span></button>`;
+  }).join('');
+}
+
 export function paintOpeningDeck(){
   const box = document.getElementById('opening-deck');
   if (!box) return;
@@ -118,6 +137,9 @@ export function renderStart(){
       <select class="seed" id="mode">${Object.values(MODES).map(m => `<option value="${esc(m.key)}"${m.key === DEFAULT_MODE ? ' selected' : ''}>${esc(m.label)}（${m.months / 12} 年）</option>`).join('')}</select>
       <label class="lbl">即位出身（選 1 種，各有開局數值與利弊）</label>
       <div class="opts" id="origin-cards" style="grid-template-columns:1fr 1fr;margin:0"></div>
+      <label class="lbl">開局祖訓（選 0–2 條，須已解鎖；本局只看此時的選擇）</label>
+      <div class="opts" id="edict-cards" style="grid-template-columns:1fr 1fr;margin:0"></div>
+      <p class="sub" id="edict-hint" style="margin:8px 0 0"></p>
       <label class="lbl">即位國策（選 1–2 條）</label>
       <div class="opts" id="acc-policy" style="grid-template-columns:1fr 1fr;margin:0"></div>
       <p class="sub" id="acc-policy-hint" style="margin:8px 0 0"></p>
@@ -131,6 +153,7 @@ export function renderStart(){
     </section>`;
   paintAccPolicies();
   paintOrigins();
+  paintEdicts();
   paintOpeningDeck();
   document.getElementById('opening-deck').onclick = e => {
     const b = e.target.closest('[data-card]');
@@ -148,6 +171,16 @@ export function renderStart(){
     if (!b) return;
     originChoice = b.dataset.origin;
     paintOrigins();
+  };
+  document.getElementById('edict-cards').onclick = e => {
+    const b = e.target.closest('[data-edict]');
+    if (!b) return;
+    const k = b.dataset.edict, hint = document.getElementById('edict-hint');
+    if (edictChoice.includes(k)) edictChoice = edictChoice.filter(x => x !== k);
+    else if (edictChoice.length < 2) edictChoice = [...edictChoice, k];
+    else { paintEdicts(); hint.textContent = '祖訓最多選 2 條，請先取消一條。'; return; }
+    hint.textContent = '';
+    paintEdicts();
   };
   document.getElementById('acc-policy').onclick = e => {
     const b = e.target.closest('[data-pol]');
@@ -181,7 +214,9 @@ export function renderStart(){
     }
     if (scenSel.value && !isUnlocked(loadUnlocks(), 'scenario', scenSel.value)) { eraErr.textContent = '此劇本尚未解鎖。'; eraErr.hidden = false; return; }
     if (originLocked(originChoice)) { eraErr.textContent = '此出身尚未解鎖，請改選其他出身。'; eraErr.hidden = false; return; }
-    newGame(document.getElementById('seed').value.trim(), scenSel.value, raw, U.accPolicies.slice(), document.getElementById('mode').value, U.openingDeck.slice());
+    const ev = validateEdictChoice(edictChoice, loadUnlocks());
+    if (!ev.ok) { eraErr.textContent = '祖訓選擇不合規（最多 2 條，且須已解鎖），請重新勾選。'; eraErr.hidden = false; return; }
+    newGame(document.getElementById('seed').value.trim(), scenSel.value, raw, U.accPolicies.slice(), document.getElementById('mode').value, U.openingDeck.slice(), ev.ids);
     // 即位出身於開局後套用（newGame 不接收出身參數），再存檔並重繪。
     if (U.state && !U.state.origin) { applyOrigin(U.state, originChoice); save(); render(); }
   };
