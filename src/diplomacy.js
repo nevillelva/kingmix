@@ -157,6 +157,8 @@ export function canDiplomacy(state, action, id) {
     case 'tribute': return d.attitude >= TRIBUTE_MIN_ATTITUDE;
     case 'ally': return !d.allied && d.attitude >= ALLIANCE_MIN_ATTITUDE && alliedCount(state) < MAX_ALLIANCES;
     case 'scout': return !scoutedFresh(state, id) && state.stats.treasury >= SCOUT_COST;
+    case 'invest': return !d.invested && !warActive(state, id) && d.attitude >= TRIBUTE_MIN_ATTITUDE && state.stats.treasury >= INVEST_COST;
+    case 'trade': return !d.trade && !warActive(state, id) && d.attitude >= TRIBUTE_MIN_ATTITUDE && state.stats.treasury >= TRADE_OPEN_COST;
     case 'war': return !d.allied && !(state.campaign && state.campaign.status === 'active');
     default: return false;
   }
@@ -169,6 +171,8 @@ export function diplomacyAction(state, action, id) {
     case 'tribute': return acceptTribute(state, id);
     case 'ally': return formAlliance(state, id);
     case 'scout': return scoutNeighbor(state, id);
+    case 'invest': return investNeighbor(state, id);
+    case 'trade': return openTrade(state, id);
     default: return { ok: false, reason: 'unknown' };
   }
 }
@@ -190,4 +194,76 @@ export function monthlyDrift(state, year, month) {
     if (d.kin > 0) d.kin -= 1;
   }
   return diplomacyOf(state);
+}
+
+// ---- 玩法深度擴充（C）：冊封、互市、歲幣求和（和親不在本分支）。皆為玩家主動行為，預設模擬不參與。 ----
+
+export const INVEST_COST = 50; // 冊封的國庫花費（一次性）
+export const INVEST_ATTITUDE = 10; // 冊封後好感 +10
+export const TRADE_OPEN_COST = 20; // 開通互市的國庫花費
+export const TRADE_MONTHLY_GAIN = 1; // 互市每月國庫增益
+export const TRADE_HORSE_MONTHS = 12; // 互市每滿此月數，若好感達門檻，產出一匹良馬
+export const TRADE_HORSE_ATTITUDE = 60;
+export const TRADE_ITEM = 'liangma'; // 良馬（物品欄 id，見 items.js）
+
+// 該鄰國是否正與我交戰（進行中的戰役以之為敵）。純讀取。
+export function warActive(state, id) {
+  return !!(state.campaign && state.campaign.status === 'active' && state.campaign.neighborId === id);
+}
+
+// 冊封：一次性儀式，耗國庫，好感 +INVEST_ATTITUDE。之後每年自動朝貢（見 tickVassalTribute）。
+export function investNeighbor(state, id) {
+  if (!neighborById(id)) return { ok: false, reason: 'unknown' };
+  const d = diplomacyOf(state)[id];
+  if (d.invested) return { ok: false, reason: 'already' };
+  if (warActive(state, id)) return { ok: false, reason: 'war' };
+  if (d.attitude < TRIBUTE_MIN_ATTITUDE) return { ok: false, reason: 'attitude' };
+  if (state.stats.treasury < INVEST_COST) return { ok: false, reason: 'treasury' };
+  state.stats.treasury -= INVEST_COST;
+  d.invested = true;
+  changeAttitude(state, id, INVEST_ATTITUDE);
+  return { ok: true };
+}
+
+// 每年一次（以旗標 vassal_tribute_year 記年）：已冊封且非交戰之國，沿用 acceptTribute 結算朝貢。
+// 無冊封國時不寫旗標、不改動 state（預設模擬不受影響）。不消耗亂數。回傳各國結果。
+export function tickVassalTribute(state) {
+  if (!state.diplomacy) return [];
+  const invested = NEIGHBORS.filter((n) => state.diplomacy[n.id]?.invested);
+  if (invested.length === 0) return [];
+  state.flags = state.flags || {};
+  if (state.flags.vassal_tribute_year === state.year) return [];
+  state.flags.vassal_tribute_year = state.year;
+  return invested
+    .filter((n) => !warActive(state, n.id))
+    .map((n) => ({ id: n.id, ...acceptTribute(state, n.id) }));
+}
+
+// 開通互市：耗少量國庫，需好感達朝貢門檻，且不在交戰中。
+export function openTrade(state, id) {
+  if (!neighborById(id)) return { ok: false, reason: 'unknown' };
+  const d = diplomacyOf(state)[id];
+  if (d.trade) return { ok: false, reason: 'already' };
+  if (warActive(state, id)) return { ok: false, reason: 'war' };
+  if (d.attitude < TRIBUTE_MIN_ATTITUDE) return { ok: false, reason: 'attitude' };
+  if (state.stats.treasury < TRADE_OPEN_COST) return { ok: false, reason: 'treasury' };
+  state.stats.treasury -= TRADE_OPEN_COST;
+  d.trade = true;
+  d.tradeMonths = 0;
+  return { ok: true };
+}
+
+// 每月互市：未交戰之互市國給予國庫小幅增益；每 TRADE_HORSE_MONTHS 個月，好感達門檻者產出良馬（回傳物品 id，由呼叫端 addItem）。
+// 確定性（不擲骰）；無互市時不改動 state。
+export function tickTrade(state) {
+  const produced = [];
+  if (!state.diplomacy) return produced;
+  for (const n of NEIGHBORS) {
+    const d = state.diplomacy[n.id];
+    if (!d?.trade || warActive(state, n.id)) continue;
+    state.stats.treasury += TRADE_MONTHLY_GAIN;
+    d.tradeMonths = (d.tradeMonths || 0) + 1;
+    if (d.tradeMonths % TRADE_HORSE_MONTHS === 0 && d.attitude >= TRADE_HORSE_ATTITUDE) produced.push(TRADE_ITEM);
+  }
+  return produced;
 }

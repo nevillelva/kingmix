@@ -13,7 +13,7 @@ import { prepareMonth, chainEvent as chainEventEngine } from '../../src/month-st
 import { endOfMonth } from '../../src/month.js';
 import { afterOption, applyOption } from '../../src/turn.js';
 import { applyDongchangAction } from '../../src/dongchang.js';
-import { offerPeace, pickTactic, reconnoiter, startCampaign } from '../../src/campaign.js';
+import { offerPeace, payPeaceTribute, pickTactic, reconnoiter, startCampaign } from '../../src/campaign.js';
 import { TACTICS, formatBattleLog } from '../../src/war.js';
 import { autoDecideMemorial } from '../../src/autodecide.js';
 import { runFastForward } from '../../src/fastforward.js';
@@ -159,6 +159,11 @@ export function campAct(a, v){
     const r = offerPeace(U.state, applyFx);
     if (!r.ok) { U.feedback = '此時無法議和。'; return render(); }
     return finishCampaignUI(r.finished, '');
+  }
+  if (a === 'camp-tribute') {
+    const r = payPeaceTribute(U.state, applyFx);
+    if (!r.ok) { U.feedback = r.reason === 'treasury' ? '國庫不足，無力歲幣求和。' : '此時無法求和。'; return render(); }
+    return finishCampaignUI(r.finished, '歲幣既奉，');
   }
 }
 
