@@ -13,7 +13,8 @@ import { NEIGHBORS } from './diplomacy.js';
 import { CAPITAL_PREFECTURE } from './events.js';
 
 // 狀態結構版本（save.js 的 STATE_SCHEMA_VERSION 與此相同，由此匯出）。
-export const SCHEMA_VERSION = 1;
+// v2：新增 agency（本月時段行動配額，見 slots.js）；舊存檔由 save.js 的 migrateState 遷移。
+export const SCHEMA_VERSION = 2;
 
 const typeOf = (v) => (v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v);
 
@@ -35,6 +36,8 @@ export const SCHEMA = Object.freeze({
   relations: { type: ['array'], default: () => [] },
   // 共歷羈絆（bonds.js ensureBonds）
   bonds: { type: ['object'], default: () => ({ shared: {}, unlocked: {} }) },
+  // 人物命運線進度（fates.js，鍵為 "角色:id"）
+  fates: { type: ['object'], default: () => ({}) },
   // 後宮（harem.js ensureHarem）。fill: false：harem.js 的 tickHarem 以「無妃嬪且無 harem 欄位」
   // 作為整段略過的條件，故載入時不自動補上，僅於 ensureHarem 懶建立時使用此預設值。
   harem: {
@@ -56,6 +59,8 @@ export const SCHEMA = Object.freeze({
   annals: { type: ['array'], default: () => [] },
   // 月初奏摺鏈（month-start.js prepareMonth）
   monthChain: { type: ['object', 'null'], default: () => null },
+  // 本月行動配額（slots.js ensureAgency；依年月分桶，null 表示尚未開始）
+  agency: { type: ['object', 'null'], default: () => null },
   // 親征進行中的戰役（campaign.js，結束後設為 null）
   campaign: { type: ['object', 'null'], default: () => null },
   // 設施等級（facilities.js levelOf，缺漏視為 0 級）
@@ -67,6 +72,8 @@ export const SCHEMA = Object.freeze({
   // 巡幸（tour.js ensureTour）
   tour: { type: ['object'], default: () => ({ busyUntil: -1 }) },
   location: { type: ['string'], default: () => CAPITAL_PREFECTURE },
+  // 皇子課表（curriculum.js setCourse / tickCurriculum）：heirs 以皇子 id 為鍵
+  curriculum: { type: ['object'], default: () => ({ heirs: {} }) },
   // 旗標（month-start.js、selection.js 以 state.flags || {} 讀寫）
   flags: { type: ['object'], default: () => ({}) },
 });

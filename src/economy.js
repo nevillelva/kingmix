@@ -132,11 +132,15 @@ export function tickEconomy(state) {
 // 常數保留以便日後調整（例如改回 0.5 即為診斷報告建議的減半預設）。
 export const REBEL_YIELD_MULT = 1.0;
 
+// 割據州府（late-pressure.js tickAutonomy）：稅入只解送此比例入庫；民生貢獻不變。
+export const AUTONOMY_REMIT = 0.5;
+
 export function applyPrefectureYield(state) {
   ensureEconomy(state);
   for (const pref of state.prefectures) {
     const mult = pref.rebel === true ? REBEL_YIELD_MULT : 1;
-    setStat(state, 'treasury', state.stats.treasury + pref.yield * mult * YIELD_TREASURY, { silent: true });
+    const remit = pref.autonomous === true ? AUTONOMY_REMIT : 1;
+    setStat(state, 'treasury', state.stats.treasury + pref.yield * mult * remit * YIELD_TREASURY, { silent: true });
     setStat(state, 'people', state.stats.people + (pref.yield - 1) * mult * YIELD_PEOPLE, { silent: true });
   }
   return state;

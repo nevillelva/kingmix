@@ -8,6 +8,8 @@ import { takeChain } from './chains.js';
 import { pickEvent, pickSecondMemorial } from './selection.js';
 import { isAvailable, optionOpen, EVENT_MAX_PER_RUN } from './events.js';
 import { drawPolicyCards } from './cards.js';
+import { ensureAgency } from './slots.js';
+import { orderMorningPair } from './ministry-order.js';
 
 // 連鎖事件：不看 when 與冷卻，但仍需可用、未達每局上限。
 export function chainEvent(state, events, id) {
@@ -27,6 +29,9 @@ export function prepareMonth(state, events) {
   const { year, month, seed } = state;
   const key = `${year}-${month}`;
 
+  // 本月的時段行動配額（依年月分桶，冪等）。
+  ensureAgency(state);
+
   // 早朝兩則奏摺：同月只決定一次，結果存於 state.monthChain。
   if (!state.monthChain || state.monthChain.key !== key) {
     state.monthChain = { key, id: takeChain(state) };
@@ -42,8 +47,10 @@ export function prepareMonth(state, events) {
       const chained = chainEvent(state, events, mc.id);
       const first = chained ?? pickEvent(state, events, makeRng([seed, year, month, 'events']));
       const second = pickSecondMemorial(state, events, makeRng([seed, year, month, 'morning2']), first ? first.id : null);
-      mc.first = first ? first.id : null;
-      mc.second = second ? second.id : null;
+      // 依六部順序呈現（只調換次序，不改變抽到的內容）。
+      const [a, b] = orderMorningPair(first, second);
+      mc.first = a ? a.id : null;
+      mc.second = b ? b.id : null;
       mc.secondDone = false;
     }
   }

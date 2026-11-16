@@ -7,6 +7,9 @@
 //   city_capture 攻城佔點（city-capture.js）：州府名、年月
 //   rebellion    府民心連續低落而叛亂（city-capture.js tickRebellion）：含 text
 //   occupation   戰敗失守、遭敵方佔領（city.js markOccupied）：含 text
+//   autonomy     知府離心割據（late-pressure.js tickAutonomy）：州府名、知府名
+//   minister     權臣坐大（late-pressure.js tickMinister）：權臣名、派系
+//   disaster     天災（late-pressure.js tickDisasters）：州府名
 //   （無 kind）  駕崩或禪位後的世代紀錄（succession.js 的 tryAccession）
 
 // 結束原因代碼：resigned＝禪位（B6 由中文改為英文代碼）；'禪位' 保留為舊存檔相容。
@@ -14,6 +17,9 @@ const END_WORD = { death: '駕崩', abdicated: '高年致仕', resigned: '禪位
 const HEIR_DEATH_CAUSE = { child_mortality: '幼年夭折', rivalry: '奪嫡失勢' };
 const ASSASSIN_SOURCE = { tyranny: '暴政', remnant: '前朝遺臣', court: '朝堂江湖' };
 const ASSASSIN_OUTCOME = { blocked: '擋下', injured: '受傷', killed: '死亡' };
+const COURSE_LABEL = { classics: '經史', statecraft: '政論', martial: '騎射', administration: '理政', ethics: '德行' };
+
+import { FATE_END_TAG } from './fate-data.js';
 
 const orDash = (v) => (v === undefined || v === null || v === '' ? '—' : String(v));
 
@@ -35,6 +41,15 @@ export function chronicleLine(c) {
   if (c.kind === 'rebellion') {
     return { text: orDash(c.text ?? `${orDash(c.prefectureName)}叛亂 · ${orDash(c.year)}年${orDash(c.month)}月`), tag: '叛亂' };
   }
+  if (c.kind === 'autonomy') {
+    return { text: orDash(c.text ?? `${orDash(c.prefectureName)}知府${orDash(c.governor)}離心割據 · ${orDash(c.year)}年${orDash(c.month)}月`), tag: '割據' };
+  }
+  if (c.kind === 'minister') {
+    return { text: `${orDash(c.name)}權傾朝野 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '權臣' };
+  }
+  if (c.kind === 'disaster') {
+    return { text: `${orDash(c.prefectureName)}遭逢天災 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '天災' };
+  }
   if (c.kind === 'occupation') {
     return { text: orDash(c.text ?? `${orDash(c.prefectureName)}失守 · ${orDash(c.year)}年${orDash(c.month)}月`), tag: '失守' };
   }
@@ -43,6 +58,19 @@ export function chronicleLine(c) {
     return {
       text: `${orDash(c.name)}${died ? '於殿前死諫' : '進諫，陛下納之'} · ${orDash(c.year)}年${orDash(c.month)}月`,
       tag: died ? '死諫' : '納諫',
+    };
+  }
+  if (c.kind === 'fate') {
+    return { text: orDash(c.text), tag: c.tag || '人物' };
+  }
+  if (c.kind === 'fate_end') {
+    return { text: orDash(c.text), tag: FATE_END_TAG[c.cause] ?? '善終' };
+  }
+  if (c.kind === 'curriculum_term') {
+    const course = COURSE_LABEL[c.course] ?? '—';
+    return {
+      text: `皇子${orDash(c.name)}季考${course} · ${orDash(c.year)}年${orDash(c.month)}月`,
+      tag: orDash(c.grade),
     };
   }
   if (c.kind === 'heir_illness') {
