@@ -21,6 +21,8 @@ import { render } from './render-bus.js';
 import { campAct } from './game-flow.js';
 import { markNewYearShown, openNianhao } from './overlays.js';
 import { handleCardAct } from './render-cards.js';
+import { alchemyAvailability, alchemyResultText } from './render-side.js';
+import { attemptAlchemy } from '../../src/side-events.js';
 import { setCourseAct } from './render-curriculum.js';
 
 // ── 主動決策（Phase 6）：每月兩次行動，不推進時間 ──
@@ -53,9 +55,14 @@ export function actionsCard(){
       ['suppress','打壓派系','壓抑一派影響力，其他兩派會上升（每月限一派）'],
       ['tax','調整稅制','三級稅制：低稅養民，高稅裕庫'],
       ['city','修繕城池','工匠修繕州府城防，耗國庫，增民心'],
+      ['alchemy','煉丹','耗國庫，每月至多一次，或得健康與聲色，或受健康之損'],
       ['diplo','外交','聯姻、朝貢、結盟，或宣戰'],
     ].map(([k,l,h]) => {
       if (k === 'appoint') return `<button class="opt" data-act="open" data-arg="appoint"><span class="mark">校</span><span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span></span></button>`;
+      if (k === 'alchemy') {
+        const av = alchemyAvailability(U.state);
+        return `<button class="opt" data-act="alchemy" ${dis || (av.ok ? '' : 'disabled')}><span class="mark">丹</span><span class="otxt"><span class="label">${l}</span><span class="hint">${esc(av.text)}</span></span></button>`;
+      }
       if (k === 'exam') {
         const r = examRemaining(U.state);
         const hint = r > 0 ? `每 ${EXAM_INTERVAL_TURNS} 個月一次，尚餘 ${r} 月` : `每 ${EXAM_INTERVAL_TURNS} 個月一次，招募 1–2 名進士`;
@@ -249,6 +256,12 @@ export function onAgency(e){
   if (a === 'tax') {
     setTaxTier(U.state, v);
     return useAction(`稅制改為${v}稅。`);
+  }
+  // 煉丹（側線）：經 side-events 引擎裁決；耗一次行動，成敗皆於朝政行動卡回報。
+  if (a === 'alchemy') {
+    const r = attemptAlchemy(U.state);
+    if (!r.ok) { U.feedback = alchemyResultText(r); return render(); }
+    return useAction(alchemyResultText(r));
   }
   if (a === 'repair') {
     const nm = cityOf(U.state, v)?.name || '';

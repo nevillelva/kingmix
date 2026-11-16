@@ -3,6 +3,7 @@ import { U, app } from './store.js';
 import { SOUND_KEY, paintSnd, sfx, stopBgm, unlockAudio } from './audio.js';
 import { onAgency, onSlot } from './render-court.js';
 import { render } from './render-nav.js';
+import { onSideToggle } from './render-side.js';
 import { exportGame, importGame, initCloud, paintSlots, saveMsg, slotLoad, slotRaw, slotWrite } from './state-io.js';
 
 try { U.soundOn = localStorage.getItem(SOUND_KEY) !== 'off'; } catch(e) {}
@@ -33,6 +34,8 @@ document.getElementById('snd').onclick = () => {
 app.addEventListener('click', onAgency);
 
 app.addEventListener('click', onSlot);
+
+document.getElementById('side-toggle').onclick = onSideToggle;
 
 document.getElementById('legacy-btn').onclick = () => { U.tab = 'legacy'; U.panel = null; U.pick1 = null; render(); };
 

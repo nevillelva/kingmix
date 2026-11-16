@@ -87,13 +87,22 @@ export function tourWithEncounter(state, prefectureId) {
   return { ...r, encounter: rollEncounter(state) };
 }
 
+// 煉丹可用性（唯讀，不建立欄位）：{ ok, reason }；reason 為 disabled / cooldown / treasury 之一，可用時為 null。
+// attemptAlchemy 與介面皆以此為準，確保按鈕狀態與實際裁決一致。
+export function alchemyStatus(state) {
+  const se = state.sideEvents;
+  if (se?.enabled === false) return { ok: false, reason: 'disabled' };
+  if (se?.alchemyMonth === monthIndex(state)) return { ok: false, reason: 'cooldown' };
+  if (state.stats.treasury < ALCHEMY_COST) return { ok: false, reason: 'treasury' };
+  return { ok: true, reason: null };
+}
+
 // 煉丹：每月至多一次。回傳 { ok, reason, outcome, effects }；reason 為 disabled / cooldown / treasury 時 ok 為 false 且狀態不變。
 export function attemptAlchemy(state) {
   const se = ensureSideEvents(state);
-  if (!se.enabled) return { ok: false, reason: 'disabled', outcome: null, effects: null };
+  const st = alchemyStatus(state);
+  if (!st.ok) return { ok: false, reason: st.reason, outcome: null, effects: null };
   const m = monthIndex(state);
-  if (se.alchemyMonth === m) return { ok: false, reason: 'cooldown', outcome: null, effects: null };
-  if (state.stats.treasury < ALCHEMY_COST) return { ok: false, reason: 'treasury', outcome: null, effects: null };
 
   se.alchemyMonth = m;
   setStat(state, 'treasury', state.stats.treasury - ALCHEMY_COST);
