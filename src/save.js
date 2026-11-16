@@ -4,7 +4,7 @@
 // v1 舊格式（web/index.html 目前寫入的 {seed, state}，或裸 state 物件）
 //   讀取時遷移為 v2 包裝，並記錄 version: 1。
 //
-// state.schemaVersion 為遊戲狀態結構版本（目前為 1）。migrateState 只補缺漏欄位（基準為
+// state.schemaVersion 為遊戲狀態結構版本（目前為 2，見 schema.js）。migrateState 只補缺漏欄位（基準為
 // createInitialState 的結構，不覆寫既有值）；validateState 回傳錯誤代碼清單，空陣列即有效。
 
 import { BOUNDS, createInitialState } from './state.js';
@@ -108,7 +108,17 @@ export function migrateState(state) {
   } catch (e) {
     // 預設值工廠失敗（例如種子無效）時保留已補的欄位，交由 validateState 回報。
   }
-  if (!Number.isInteger(out.schemaVersion)) out.schemaVersion = STATE_SCHEMA_VERSION;
+  // schemaVersion 1 → 2：行動桶加入時段用量（periods）。舊版未記錄各時段用量，無從拆分，
+  // 本月已耗行動保留於 used，各時段以 0 起算（僅影響升級當月的時段配額，不影響總額）。
+  const fromVersion = Number.isInteger(out.schemaVersion) ? out.schemaVersion : 1;
+  if (fromVersion < 2 && isPlainObject(out.agency)) {
+    const a = out.agency;
+    if (typeof a.used !== 'number' || !Number.isFinite(a.used)) a.used = 0;
+    if (!isPlainObject(a.periods)) a.periods = { afternoon: 0, night: 0 };
+  }
+  if (!Number.isInteger(out.schemaVersion) || out.schemaVersion < STATE_SCHEMA_VERSION) {
+    out.schemaVersion = STATE_SCHEMA_VERSION;
+  }
   // B6：舊存檔的結束原因為中文「禪位」，遷移為英文代碼 resigned（顯示層仍保留相容對映）。
   if (out.endReason === '禪位') out.endReason = 'resigned';
   if (Array.isArray(out.chronicle)) {

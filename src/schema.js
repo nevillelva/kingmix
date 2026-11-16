@@ -13,7 +13,8 @@ import { NEIGHBORS } from './diplomacy.js';
 import { CAPITAL_PREFECTURE } from './events.js';
 
 // 狀態結構版本（save.js 的 STATE_SCHEMA_VERSION 與此相同，由此匯出）。
-export const SCHEMA_VERSION = 1;
+// v2：新增 agency（本月時段行動配額，見 slots.js）；舊存檔由 save.js 的 migrateState 遷移。
+export const SCHEMA_VERSION = 2;
 
 const typeOf = (v) => (v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v);
 
@@ -58,6 +59,8 @@ export const SCHEMA = Object.freeze({
   annals: { type: ['array'], default: () => [] },
   // 月初奏摺鏈（month-start.js prepareMonth）
   monthChain: { type: ['object', 'null'], default: () => null },
+  // 本月行動配額（slots.js ensureAgency；依年月分桶，null 表示尚未開始）
+  agency: { type: ['object', 'null'], default: () => null },
   // 親征進行中的戰役（campaign.js，結束後設為 null）
   campaign: { type: ['object', 'null'], default: () => null },
   // 設施等級（facilities.js levelOf，缺漏視為 0 級）
