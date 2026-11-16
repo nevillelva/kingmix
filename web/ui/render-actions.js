@@ -23,6 +23,7 @@ import { markNewYearShown, openNianhao } from './overlays.js';
 import { handleCardAct } from './render-cards.js';
 import { alchemyAvailability, alchemyResultText } from './render-side.js';
 import { attemptAlchemy } from '../../src/side-events.js';
+import { setCourseAct } from './render-curriculum.js';
 
 // ── 主動決策（Phase 6）：每月兩次行動，不推進時間 ──
 export const ACTION_LIMIT = 2;
@@ -167,6 +168,7 @@ export function onAgency(e){
   if (!b || b.disabled || !U.state) return;
   const a = b.dataset.act, v = b.dataset.arg;
   if (handleCardAct(a, v)) return;
+  if (a === 'course') return setCourseAct(v);
   if (a.startsWith('camp-')) return campAct(a, v);
   if (a === 'close') { U.panel = null; U.pick1 = null; return render(); }
   if (a === 'open') {
