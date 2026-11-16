@@ -145,6 +145,57 @@ export function tickDisasters(state) {
   return state;
 }
 
+// --- 純讀取（供網頁顯示）：不呼叫 ensure*，不修改 state；欄位缺漏時以預設值回報。 ---
+
+// 單府的割據與天災狀況。府不存在時回傳 null。
+export function prefectureLatePressure(state, prefId) {
+  const pref = (state.prefectures || []).find((p) => p.id === prefId);
+  if (!pref) return null;
+  const disasters = Array.isArray(state.latePressure?.disasters) ? state.latePressure.disasters : [];
+  const own = disasters.filter((d) => d.prefecture === prefId);
+  const last = own.length ? own[own.length - 1] : null;
+  const autonomous = pref.autonomous === true;
+  const autonomyMonths = autonomous ? pref.autonomyMonths || 0 : 0;
+  return {
+    autonomous,
+    autonomyMonths,
+    autonomyLeft: autonomous ? Math.max(0, AUTONOMY_MONTHS - autonomyMonths) : 0,
+    defiantMonths: pref.defiantMonths || 0,
+    defiantLimit: DEFIANT_MONTHS,
+    governorless: !governorOf(state, pref),
+    disasterCount: own.length,
+    lastDisaster: last ? { year: last.year, month: last.month } : null,
+  };
+}
+
+// 朝堂權臣狀況。在朝時回報其人與所屬派系勢力；不在朝時回報最強派系勢力與累積月數。
+export function courtMinisterStatus(state) {
+  const lp = state.latePressure || {};
+  const factions = state.factions || {};
+  const top = maxEntry(factions);
+  const strongest = top ? { faction: top[0], power: Math.round(top[1]) } : null;
+  const m = lp.minister || null;
+  if (m) {
+    return {
+      present: true,
+      id: m.id,
+      name: m.name,
+      faction: m.faction,
+      since: { year: m.year, month: m.month },
+      factionPower: Math.round(factions[m.faction] ?? 0),
+      endBelow: MINISTER_END,
+      strongest,
+    };
+  }
+  return {
+    present: false,
+    strongest,
+    watchMonths: lp.ministerMonths || 0,
+    watchLimit: MINISTER_MONTHS,
+    watchThreshold: MINISTER_FACTION,
+  };
+}
+
 // 月結入口（turn.js monthlyTick 呼叫）：割據 → 權臣 → 天災。
 export function tickLatePressure(state) {
   tickAutonomy(state);
