@@ -21,6 +21,16 @@ export function tutorQuality(tutor) {
   return (tutor.abilities.intellect + tutor.abilities.virtue) / 200;
 }
 
+// 太傅所屬派系對「習得正面特質」的類別權重偏移（只改類別抽選，不改是否習得的總機率）。
+// 清流重德行、勳貴尚武逸，寒門中立。
+export const TUTOR_FACTION_BIAS = Object.freeze({ qingliu: 0.1, xunggui: -0.1, hanmen: 0 });
+
+// 習得特質時選中正面類別的機率：太傅才學加成後，再依派系偏移，限於 [0, 1]。
+export function tutorGoodChance(tutor) {
+  const bias = TUTOR_FACTION_BIAS[tutor?.faction] ?? 0;
+  return Math.min(1, Math.max(0, tutorQuality(tutor) + bias));
+}
+
 // 每月結算：太傅在任時，未成年皇子依才學機率習得一項特質。無太傅則不變。
 export function tickTutorTraits(state) {
   const tutor = officeHolder(state, 'tutor');
@@ -32,7 +42,7 @@ export function tickTutorTraits(state) {
     if (h.traits.length >= MAX_HEIR_TRAITS) continue;
     const rng = makeRng([state.seed, 'tutor', state.year, state.month, h.id]);
     if (rng() >= EDUCATION_BASE + EDUCATION_SKILL * q) continue;
-    const pool = (rng() < q ? GOOD_TRAITS : BAD_TRAITS).filter((id) => !h.traits.includes(id));
+    const pool = (rng() < tutorGoodChance(tutor) ? GOOD_TRAITS : BAD_TRAITS).filter((id) => !h.traits.includes(id));
     if (pool.length === 0) continue;
     h.traits.push(pool[Math.floor(rng() * pool.length)]);
   }
