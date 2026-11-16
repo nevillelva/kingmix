@@ -68,7 +68,7 @@ test('對峙：一派 ≥50 且另一派 ≥40 持續 STANDOFF_MONTHS 月才進�
 test('對峙條件中斷時計數歸零，不累積', () => {
   const s = standoffState('pt-reset');
   tick(s, STANDOFF_MONTHS - 1);
-  s.factions = { qingliu: 45, xunggui: 42, hanmen: 13 };
+  s.factions = { qingliu: 45, xunggui: 30, hanmen: 25 }; // 對手派系低於 STANDOFF_RIVAL（35），條件中斷
   tick(s);
   assert.equal(s.partisan.standoffMonths, 0);
   assert.equal(s.partisan.stage, 'calm');
