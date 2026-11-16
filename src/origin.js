@@ -1,6 +1,7 @@
 // 即位出身：四種即位出身，各自提供開局數值修正、優劣說明與專屬事件。
 // 出身以 state.flags["origin:<id>"] 標記，專屬事件（data/events-origin.json）以 flag 條件觸發，事件引擎不需認得出身。
 import { setStat } from './state.js';
+import { HANMEN_EVENTS } from './origin-events-data.js';
 
 export const ORIGIN_FLAG_PREFIX = 'origin:';
 
@@ -51,12 +52,19 @@ export const UNLOCKABLE_ORIGINS = Object.freeze([
   }),
 ]);
 
-// 各出身的專屬事件 id（與 data/events-origin.json 一致）。傳承解鎖出身尚無專屬事件，回傳空陣列。
+// 各出身的專屬事件 id。E501–E516 存於 data/events.json（以 origin: 旗標觸發）；
+// 寒門崛起（傳承解鎖）的事件資料獨立於 src/origin-events-data.js，不計入主事件庫與覆蓋率。
 const ORIGIN_EVENT_IDS = Object.freeze({
   dichangzi: Object.freeze(['E501', 'E502', 'E503', 'E504']),
   shuchu: Object.freeze(['E505', 'E506', 'E507', 'E508']),
   waifan: Object.freeze(['E509', 'E510', 'E511', 'E512']),
   jungong: Object.freeze(['E513', 'E514', 'E515', 'E516']),
+  hanmen: Object.freeze(HANMEN_EVENTS.map((e) => e.id)),
+});
+
+// 獨立資料檔中的專屬事件（事件物件本體）。目前僅寒門崛起。
+const ORIGIN_EVENT_DEFS = Object.freeze({
+  hanmen: HANMEN_EVENTS,
 });
 
 const findOrigin = (originId) => {
@@ -80,4 +88,16 @@ export function applyOrigin(state, originId) {
 export function originEvents(originId) {
   findOrigin(originId);
   return [...(ORIGIN_EVENT_IDS[originId] ?? [])];
+}
+
+// 該出身於獨立資料檔中的事件物件（格式同 data/events.json）；不在獨立檔者回傳空陣列。
+export function originEventDefs(originId) {
+  findOrigin(originId);
+  return [...(ORIGIN_EVENT_DEFS[originId] ?? [])];
+}
+
+// 併入出身專屬事件：事件庫 events 不變；若出身於獨立檔有事件且庫中無同 id，則附加於尾端。無則原樣回傳。
+export function withOriginEvents(events, originId) {
+  const extra = originEventDefs(originId).filter((e) => !events.some((x) => x.id === e.id));
+  return extra.length ? [...events, ...extra] : events;
 }
