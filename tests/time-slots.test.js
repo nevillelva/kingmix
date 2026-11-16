@@ -154,9 +154,9 @@ test('prepareMonth 仍冪等：同月重複呼叫不改變 monthChain 與行動�
 
 // ── schema v2 與存檔遷移 ──
 
-test('schemaVersion 升為 2，新局帶有 agency 欄位', () => {
-  assert.equal(SCHEMA_VERSION, 2);
-  assert.equal(STATE_SCHEMA_VERSION, 2);
+test('schemaVersion 已升為 3（至少 2），新局帶有 agency 欄位', () => {
+  assert.equal(SCHEMA_VERSION, 3);
+  assert.equal(STATE_SCHEMA_VERSION, 3);
   const s = createInitialState('ts-schema-1');
   assert.equal(validateState(migrateState(s)).length, 0);
 });
@@ -168,7 +168,7 @@ test('舊存檔（schemaVersion 1，agency 缺 periods）遷移後可載入，�
   const text = JSON.stringify({ version: 2, savedAt: '2026-01-01T00:00:00Z', seed: s.seed, state: s });
   const r = restoreSave(text);
   assert.equal(r.ok, true, r.error);
-  assert.equal(r.state.schemaVersion, 2);
+  assert.equal(r.state.schemaVersion, STATE_SCHEMA_VERSION);
   assert.equal(r.state.agency.used, 1);
   assert.deepEqual(r.state.agency.periods, { afternoon: 0, night: 0 });
 });
@@ -179,7 +179,7 @@ test('舊版 v1 裸存檔（無 version、無 schemaVersion、無 agency）仍�
   delete s.agency;
   const r = restoreSave(JSON.stringify({ seed: s.seed, state: s }));
   assert.equal(r.ok, true, r.error);
-  assert.equal(r.state.schemaVersion, 2);
+  assert.equal(r.state.schemaVersion, STATE_SCHEMA_VERSION);
   assert.equal(r.state.agency, null);
 });
 

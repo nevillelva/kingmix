@@ -4,7 +4,7 @@
 // v1 舊格式（web/index.html 目前寫入的 {seed, state}，或裸 state 物件）
 //   讀取時遷移為 v2 包裝，並記錄 version: 1。
 //
-// state.schemaVersion 為遊戲狀態結構版本（目前為 2，見 schema.js）。migrateState 只補缺漏欄位（基準為
+// state.schemaVersion 為遊戲狀態結構版本（目前為 3，見 schema.js）。migrateState 只補缺漏欄位（基準為
 // createInitialState 的結構，不覆寫既有值）；validateState 回傳錯誤代碼清單，空陣列即有效。
 
 import { BOUNDS, createInitialState } from './state.js';
@@ -116,6 +116,7 @@ export function migrateState(state) {
     if (typeof a.used !== 'number' || !Number.isFinite(a.used)) a.used = 0;
     if (!isPlainObject(a.periods)) a.periods = { afternoon: 0, night: 0 };
   }
+  // schemaVersion 2 → 3：新增 partisan／intel／edicts／canalLog，已由上方 applySchemaDefaults 補上空預設，無需額外改寫。
   if (!Number.isInteger(out.schemaVersion) || out.schemaVersion < STATE_SCHEMA_VERSION) {
     out.schemaVersion = STATE_SCHEMA_VERSION;
   }
