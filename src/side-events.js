@@ -10,23 +10,25 @@
 //   state.sideEvents.enabled         是否啟用，未設定時視為啟用
 //   state.sideEvents.encounterMonth  上次擲奇遇的月索引，未設定時為 -1
 //   state.sideEvents.alchemyMonth    上次煉丹的月索引，未設定時為 -1
+//   state.sideEvents.pending         待決的二選一奇遇 { encounterId, prefectureId, year, month }，未決時不存在或為 null
 
 import { makeRng } from './rng.js';
 import { setStat } from './state.js';
 import { ensureTour, tourTo, currentLocation, MORALE_MAX } from './tour.js';
 import { ensureCity } from './city.js';
+import { ensureCapture } from './city-capture.js';
+import { governorOf } from './economy.js';
+import {
+  ENCOUNTERS, CHOICE_ENCOUNTERS,
+  PUNISH_MORALE, PUNISH_LOYALTY, DEFIANT_PUSH, SOOTHE_MORALE, SOOTHE_COST,
+} from './encounter-data.js';
 
 export const ENCOUNTER_CHANCE = 0.5; // 每次巡幸抵達後觸發奇遇的機率
 export const ALCHEMY_COST = 20; // 煉丹：國庫耗費（無論成敗）
 export const ALCHEMY_SUCCESS_CHANCE = 0.5;
 
-// 奇遇表。effects 的鍵為 stats 欄位或 morale（所至府民心）。
-export const ENCOUNTERS = Object.freeze([
-  Object.freeze({ id: 'farmer', title: '田間問農', narrative: '微服至鄉野，老農據實相告，陛下聞之動容。', effects: Object.freeze({ benevolence: 3, morale: 4 }) }),
-  Object.freeze({ id: 'scholar', title: '茶肆論經', narrative: '於茶肆偶遇落第士子，議論時政頗有見地。', effects: Object.freeze({ literature: 3, prestige: 1 }) }),
-  Object.freeze({ id: 'bandit', title: '驛道遇匪', narrative: '途中耳聞匪患，地方胥吏推諉，百姓怨聲載道。', effects: Object.freeze({ military: 2, morale: -4 }) }),
-  Object.freeze({ id: 'merchant', title: '商旅獻禮', narrative: '一商賈感念天恩，獻上薄禮以充國用。', effects: Object.freeze({ treasury: 8 }) }),
-]);
+// 奇遇資料（二選一奇遇與舊版奇遇表）見 encounter-data.js。舊名仍由此匯出，供既有引用。
+export { ENCOUNTERS };
 
 // 煉丹結果。成功得效果；失敗僅有健康的代價（國庫耗費已先行扣除）。
 export const ALCHEMY_REWARD = Object.freeze({ health: 6, charm: 3 });
@@ -63,20 +65,55 @@ function applyEffects(state, effects) {
   }
 }
 
-// 本月若尚未擲過奇遇，依種子擲一次；命中則套用效果並回傳該奇遇，否則回傳 null。
-// 同一個月只會擲一次（即使未命中亦不重擲），避免以重複巡幸刷奇遇。
+// 本月若尚未擲過奇遇，依種子擲一次；命中則於所至府設為待決（二選一，見 resolveEncounter），回傳該奇遇，否則回傳 null。
+// 同一個月只會擲一次（即使未命中亦不重擲），避免以重複巡幸刷奇遇；已有待決奇遇時不再擲。
 export function rollEncounter(state) {
   const se = ensureSideEvents(state);
   if (!se.enabled) return null;
+  if (se.pending) return null;
   const m = monthIndex(state);
   if (se.encounterMonth === m) return null;
   se.encounterMonth = m;
   const loc = currentLocation(state);
   const rng = makeRng([state.seed, 'encounter', m, loc]);
   if (!(rng() < ENCOUNTER_CHANCE)) return null;
-  const pick = ENCOUNTERS[Math.floor(rng() * ENCOUNTERS.length)];
-  applyEffects(state, pick.effects);
-  return pick;
+  const pick = CHOICE_ENCOUNTERS[Math.floor(rng() * CHOICE_ENCOUNTERS.length)];
+  se.pending = { encounterId: pick.id, prefectureId: loc, year: state.year, month: state.month };
+  return { ...pick, prefectureId: loc };
+}
+
+// 目前待決的二選一奇遇（唯讀）：回傳同 rollEncounter 的形狀，無則 null。
+export function pendingEncounter(state) {
+  const p = state.sideEvents?.pending;
+  if (!p) return null;
+  const enc = CHOICE_ENCOUNTERS.find((e) => e.id === p.encounterId);
+  return enc ? { ...enc, prefectureId: p.prefectureId } : null;
+}
+
+// 裁決待決奇遇。choice 為 'punish'（嚴懲）或 'soothe'（安撫）。
+// 嚴懲：所至府民心上升，知府忠誠下降，並推進其離心月數（可能割據）。
+// 安撫：耗國庫，民心小升，知府忠誠不變。失敗（無待決、無此選項、國庫不足）時狀態不變。
+export function resolveEncounter(state, choice) {
+  const se = state.sideEvents;
+  const enc = pendingEncounter(state);
+  if (!enc) return { ok: false, reason: 'none' };
+  const c = enc.choices[choice];
+  if (!c) return { ok: false, reason: 'no_choice' };
+  if (choice === 'soothe' && state.stats.treasury < SOOTHE_COST) return { ok: false, reason: 'treasury' };
+  ensureTour(state);
+  const pref = ensureCapture(state).find((p) => p.id === enc.prefectureId);
+  if (!pref) return { ok: false, reason: 'no_prefecture' };
+  if (choice === 'soothe') {
+    setStat(state, 'treasury', state.stats.treasury - SOOTHE_COST, { silent: true });
+    pref.morale = Math.max(0, Math.min(MORALE_MAX, pref.morale + SOOTHE_MORALE));
+  } else {
+    pref.morale = Math.max(0, Math.min(MORALE_MAX, pref.morale + PUNISH_MORALE));
+    const gov = governorOf(state, pref);
+    if (gov) gov.loyalty = Math.max(0, gov.loyalty + PUNISH_LOYALTY);
+    pref.defiantMonths = (pref.defiantMonths ?? 0) + DEFIANT_PUSH;
+  }
+  se.pending = null;
+  return { ok: true, choice, title: enc.title, text: c.text };
 }
 
 // 巡幸並於抵達後擲奇遇。巡幸失敗時狀態不變，encounter 為 null。
