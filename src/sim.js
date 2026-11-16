@@ -21,6 +21,7 @@ import { autoRepairCities, ensureCity } from './city.js';
 import { DEFAULT_MODE } from './mode.js';
 import { endOfMonth } from './month.js';
 import { pickEvent, pickSecondMemorial, autoAppoint } from './selection.js';
+import { applyEdictsUnchecked } from './edicts.js';
 
 // 核心選擇規則已搬至 selection.js；此處 re-export 以維持既有 import 路徑。
 export {
@@ -59,11 +60,12 @@ function strategyOption(choose, state, event, seed, year, month) {
 }
 
 // scenario 為選用：省略時行為與原本相同（標準開局、回傳不含 scenario 欄位）。
-export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE, choose, origin }) {
+export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE, choose, origin, edicts }) {
   const state = scenario
     ? createScenarioState(seed, resolveScenarioId(scenario), { policy, mode })
     : createInitialState(seed, { policy, mode });
   applyOrigin(state, origin ?? ORIGINS[Math.floor(makeRng([seed, 'origin'])() * ORIGINS.length)].id); // 出身（預設依 seed 輪替，使四種出身事件皆可達）
+  if (Array.isArray(edicts) && edicts.length) applyEdictsUnchecked(state, edicts); // 祖訓（未指定時 state.edicts 為空，與原版相同）
   events = withOriginEvents(events, state.origin); // 出身專屬事件（獨立檔，如寒門崛起）併入事件池
   seedRelations(state); // 開局臣子關係網
   seedBondedCourtOfficial(state); // 開局即有一位相得之臣，死諫條件自第一月起可成立

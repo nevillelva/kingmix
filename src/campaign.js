@@ -6,6 +6,7 @@ import { makeRng } from './rng.js';
 import { ourStrength, nominalStrength, resolveRound, recordWar, TACTICS, SPREAD_SCOUTED, SPREAD_UNSCOUTED } from './war.js';
 import { declareWar, enemyStrengthOf, alliedReinforcement, neighborById, diplomacyOf, scoutedFresh } from './diplomacy.js';
 import { defenseHoldMultiplier } from './city.js';
+import { ruleMod } from './rule-mods.js';
 
 export const MAX_ROUNDS = 3;
 export const WINS_NEEDED = 2;
@@ -140,6 +141,16 @@ export function offerPeace(state, applyEffects = defaultApply) {
   return { ok: true, accepted, finished: finishCampaign(state, accepted ? 'peace' : 'talks_failed', applyEffects) };
 }
 
+// 歲幣求和（避戰）：敵國來犯、戰役進行中，耗國庫即可直接議和，沿用 finishCampaign 的 'peace' 結算（不擲骰、不受議和時機限制）。
+export const PEACE_TRIBUTE_COST = 50;
+export function payPeaceTribute(state, applyEffects = defaultApply) {
+  const c = state.campaign;
+  if (!c || c.status !== 'active' || !c.neighborId) return { ok: false, reason: 'inactive' };
+  if (state.stats.treasury < PEACE_TRIBUTE_COST) return { ok: false, reason: 'treasury' };
+  state.stats.treasury -= PEACE_TRIBUTE_COST;
+  return { ok: true, finished: finishCampaign(state, 'peace', applyEffects) };
+}
+
 // 結算：寫入 state.wars、套用獎懲、更新好感，並清除 state.campaign。
 export function finishCampaign(state, outcome, applyEffects = defaultApply) {
   const c = state.campaign;
@@ -148,7 +159,11 @@ export function finishCampaign(state, outcome, applyEffects = defaultApply) {
   c.outcome = outcome;
 
   let effects;
-  if (won) effects = outcome === 'peace' ? scaleEffects(c.reward, 0.5) : c.reward;
+  if (won) {
+    // 祖訓：戰事獎勵修正（無祖訓時係數為 1，沿用原值；議和為 0.5 倍）。
+    const k = (outcome === 'peace' ? 0.5 : 1) * ruleMod(state, 'war_reward', 1);
+    effects = k === 1 ? c.reward : scaleEffects(c.reward, k);
+  }
   else effects = c.loss;
   applyEffects(state, effects);
   if (!won && outcome !== 'peace') applyEffects(state, { prestige: -3 });

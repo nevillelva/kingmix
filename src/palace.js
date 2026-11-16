@@ -1,5 +1,5 @@
 // 宮城圖資料：紅點（待辦）與季節（宮城圖配樂/美術用）。純讀取，不改動狀態。
-import { FACILITY_IDS, FACILITIES, FACILITY_MAX_LEVEL, facilityLevels, constructionOf } from './facilities.js';
+import { FACILITY_IDS, FACILITIES, FACILITY_MAX_LEVEL, facilityLevels, constructionOf, facilityCost } from './facilities.js';
 
 // 紅點：回傳有待辦的宮殿建築 [{ buildingId, reason }]。
 // reason: 'completed'（工期已完成，待確認）、'affordable'（國庫足夠且可升下一級）。
@@ -15,7 +15,7 @@ export function pendingMarks(state) {
     if (building[id]) continue;
     const level = levels[id];
     if (level >= FACILITY_MAX_LEVEL) continue;
-    if (state.stats.treasury >= FACILITIES[id].levels[level].cost) {
+    if (state.stats.treasury >= facilityCost(state, FACILITIES[id], level)) {
       marks.push({ buildingId: id, reason: 'affordable' });
     }
   }

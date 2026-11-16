@@ -1,4 +1,5 @@
 import { pruneNewYearKeys } from './newyear-keys.js';
+import { applyEdictsUnchecked } from '../../src/edicts.js';
 // web/ui/game-flow.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
 import { DEFAULT_MODE, MODES } from '../../src/mode.js';
 import { createScenarioState } from '../../src/scenarios.js';
@@ -12,7 +13,7 @@ import { prepareMonth, chainEvent as chainEventEngine } from '../../src/month-st
 import { endOfMonth } from '../../src/month.js';
 import { afterOption, applyOption } from '../../src/turn.js';
 import { applyDongchangAction } from '../../src/dongchang.js';
-import { offerPeace, pickTactic, reconnoiter, startCampaign } from '../../src/campaign.js';
+import { offerPeace, payPeaceTribute, pickTactic, reconnoiter, startCampaign } from '../../src/campaign.js';
 import { TACTICS, formatBattleLog } from '../../src/war.js';
 import { autoDecideMemorial } from '../../src/autodecide.js';
 import { runFastForward } from '../../src/fastforward.js';
@@ -23,9 +24,10 @@ import { esc, rng } from './util.js';
 import { recordQuarterSnapshot } from './render-quarter.js';
 import { sfx } from './audio.js';
 import { STAT } from './labels.js';
+import { currentEventPool, findPoolEvent } from './event-pool.js';
 
 // deckIds（選用）：開局策卡 3–5 張，作為本局策卡卡池；空陣列或未給即沿用全部卡池。
-export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds){
+export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds, edicts){
   U.seed = s || String(Math.floor(Math.random()*1e9));
   pruneNewYearKeys(U.seed); // M1：開新局時清除其他種子的新年鍵
   const list = pols && pols.length ? pols : ['agrarian'];
@@ -37,13 +39,17 @@ export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds){
     U.feedback = '本紀劇本載入失敗，已改為一般開局。';
   }
   setAccessionPolicies(U.state, list);
+  // 祖訓：開局即寫入本局 state.edicts（已於開始畫面依解鎖紀錄驗證；此處不再讀跨局紀錄）。
+  if (Array.isArray(edicts) && edicts.length) {
+    try { applyEdictsUnchecked(U.state, edicts); } catch (e) { U.feedback = '祖訓不合規，本局未套用祖訓。'; }
+  }
   seedRelations(U.state); // 開局臣子關係網
   seedBondedCourtOfficial(U.state); // 開局即有一位相得之臣（與 sim.js 一致）
   // 開局策卡須於月初準備（會抽本年政策卡）之前寫入，否則首年抽卡不受本局卡池限制。
   if (Array.isArray(deckIds) && deckIds.length) {
     try { setOpeningDeck(U.state, deckIds); } catch (e) { U.feedback = '開局策卡不合規，已改用全部策卡。'; }
   }
-  prepareMonth(U.state, U.events); // 月初準備：本月奏摺與政策卡（A5）
+  prepareMonth(U.state, currentEventPool()); // 月初準備：本月奏摺與政策卡（A5）
   U.reviewedCount = 0;
   U.guideArmed = true;
   save(); U.tab = 'palace'; U.panel = null; U.pick1 = null; render();
@@ -54,7 +60,7 @@ export function pendingCase(){ return (U.state.dongchang?.cases || []).find(c =>
 export function campaignActive(){ return !!(U.state.campaign && U.state.campaign.status === 'active'); }
 
 // 連鎖事件與 sim.js 相同：每月開始時取出一則（takeChain），同月重繪沿用同一結果，故記在 state.monthChain。
-export function chainEvent(id){ return chainEventEngine(U.state, U.events, id); }
+export function chainEvent(id){ return chainEventEngine(U.state, currentEventPool(), id); }
 
 // 早朝兩則奏摺：本月奏摺已於月初由 prepareMonth（src/month-start.js）決定並存於 state.monthChain。
 // 此函式為純讀取，不抽選、不寫入狀態（A5）；若當月尚未準備，回傳空結果。
@@ -62,7 +68,7 @@ export function morningPair(){
   const key = `${U.state.year}-${U.state.month}`;
   const mc = U.state.monthChain;
   if (!mc || mc.key !== key || !('second' in mc) || !U.state.alive || pendingCase()) return { first: null, second: null, secondDone: false };
-  const byId = id => (id ? U.events.find(x => x.id === id) : null) || null;
+  const byId = id => (id ? findPoolEvent(id) : null) || null;
   return { first: byId(mc.first), second: byId(mc.second), secondDone: !!mc.secondDone };
 }
 
@@ -75,7 +81,7 @@ export function finishMonth(keepFeedback){
     tickRng: rng('tick', U.state.year, U.state.month),
     onBeforeAdvance: () => recordQuarterSnapshot(),
   });
-  prepareMonth(U.state, U.events); // 新月開始：抽本月奏摺（A5）
+  prepareMonth(U.state, currentEventPool()); // 新月開始：抽本月奏摺（A5）
   save(); render();
 }
 
@@ -155,6 +161,11 @@ export function campAct(a, v){
     if (!r.ok) { U.feedback = '此時無法議和。'; return render(); }
     return finishCampaignUI(r.finished, '');
   }
+  if (a === 'camp-tribute') {
+    const r = payPeaceTribute(U.state, applyFx);
+    if (!r.ok) { U.feedback = r.reason === 'treasury' ? '國庫不足，無力歲幣求和。' : '此時無法求和。'; return render(); }
+    return finishCampaignUI(r.finished, '歲幣既奉，');
+  }
 }
 
 // ── 快進（太和殿按鈕）：連續推進至多 12 個月；奏摺由系統代為批閱，遇停止條件即停並短訊告知 ──
@@ -179,7 +190,7 @@ export function ffToast(msg){
 
 // 代為批閱本月奏摺（早朝第一則與次奏），以 autoDecideMemorial 挑選。
 export function ffDecideMonth(){
-  prepareMonth(U.state, U.events);
+  prepareMonth(U.state, currentEventPool());
   const pair = morningPair();
   if (pair.first) {
     const d = autoDecideMemorial(U.state, pair.first, U.seed, U.state.year, U.state.month);
@@ -205,7 +216,7 @@ export function ffDecideMonth(){
 // 快進不寫季度快照（與 finishMonth 的差異僅此一點，沿用原行為）。
 export function ffAdvanceMonth(){
   endOfMonth(U.state, { tickRng: rng('tick', U.state.year, U.state.month) });
-  prepareMonth(U.state, U.events);
+  prepareMonth(U.state, currentEventPool());
 }
 
 // 快進停下時的說明：指出原因與玩家可採取的下一步，避免只剩短暫的浮動訊息。
