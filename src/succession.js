@@ -4,6 +4,7 @@
 import { setStat } from './state.js';
 import { makeRng } from './rng.js';
 import { PERSONALITIES } from './people.js';
+import { endFate, closeFatesAtEnd } from './fates.js';
 import { BALANCE } from './balance.js';
 import { CURRICULUM_PROSPECT_WEIGHT, curriculumMerit, tutelageOf } from './curriculum.js';
 
@@ -68,6 +69,7 @@ export function tryAccession(state) {
   const candidates = state.heirs.filter((h) => h.gender === 'male' && h.age >= ADULT_AGE);
   if (candidates.length === 0) {
     state.dynasty.ended = true;
+    closeFatesAtEnd(state);
     return false;
   }
   candidates.sort((a, b) => successionScore(state, b) - successionScore(state, a) || a.id.localeCompare(b.id));
@@ -76,6 +78,7 @@ export function tryAccession(state) {
   const tutelage = tutelageOf(state, heir.id);
 
   state.heirs = state.heirs.filter((h) => h !== heir);
+  endFate(state, 'heir', heir.id, 'ascended');
   if (state.curriculum?.heirs) delete state.curriculum.heirs[heir.id];
   state.dynasty.generation += 1;
   state.alive = true;
@@ -100,6 +103,7 @@ export function childMortalityRate(age) {
 
 function removeHeir(state, heir, cause) {
   state.heirs = state.heirs.filter((h) => h !== heir);
+  endFate(state, 'heir', heir.id, cause);
   if (state.curriculum?.heirs) delete state.curriculum.heirs[heir.id];
   if (state.dynasty.crownPrince === heir.id) state.dynasty.crownPrince = null;
   state.chronicle.push({
