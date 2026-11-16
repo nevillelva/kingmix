@@ -84,3 +84,21 @@ test('applyOption path still works with bonds present', () => {
   applyOption(s, { effects: { benevolence: 5 } });
   assert.equal(s.stats.benevolence, 155);
 });
+
+test('fatal remonstrance records the remonstrance ending in state.fates (once only)', async () => {
+  const { tickFates } = await import('../src/fates.js');
+  const s = createInitialState('b');
+  for (let i = 0; i < 5; i++) recordSharedEvent(s, 'o1', `E${i}`);
+  tickFates(s); // 讓 o1 進入命運線，產生紀錄
+  assert.ok(s.fates['official:o1'], 'fate record exists before removal');
+  assert.deepEqual(remonstrate(s, 'o1', () => 0), { died: true });
+  const ends = s.chronicle.filter((e) => e.kind === 'fate_end');
+  assert.equal(ends.length, 1);
+  assert.equal(ends[0].cause, 'remonstrance');
+  assert.equal(s.fates['official:o1'].ended, true);
+  // 重複除名：官員已不在朝，不得再寫入結局，也不得誤刪他人
+  const before = s.officials.length;
+  assert.equal(remonstrate(s, 'o1', () => 0), null);
+  assert.equal(s.officials.length, before);
+  assert.equal(s.chronicle.filter((e) => e.kind === 'fate_end').length, 1);
+});

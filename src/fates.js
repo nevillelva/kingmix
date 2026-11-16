@@ -3,7 +3,6 @@
 // 純紀錄：不消耗 rng、不改動任何數值，因此不影響平衡與既有種子的結果。
 // state.fates 以 "角色:id" 為鍵，記錄 { arc, name, stage, last, ended }。
 
-import { isBonded } from './bonds.js';
 import { isCourtOfficial } from './officials.js';
 import { defaultOf } from './schema.js';
 import {
@@ -34,7 +33,7 @@ function livingPeople(state) {
     if (!isCourtOfficial(o)) continue;
     out.push({
       role: 'official', id: o.id, arcKey: o.faction, name: o.personName ?? o.name, age: null, tag: FATE_ROLE_TAG.official,
-      variant: () => OFFICIAL_VARIANT(isBonded(state, o.id), o.loyalty),
+      variant: () => OFFICIAL_VARIANT(state.bonds?.unlocked?.[o.id] === true, o.loyalty),
     });
   }
   for (const c of state.consorts ?? []) {
