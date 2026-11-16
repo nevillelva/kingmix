@@ -4,7 +4,7 @@ import { ACCESSION_POLICY_MAX, POLICIES, POLICY_KEYS } from '../../src/policy.js
 import { SCENARIO_DEFS, UNLOCKABLE_SCENARIOS, scenarioDef } from '../../src/scenarios.js';
 import { ERA_REASON_TEXT, PRESET_ERAS, migrateEraLog, validateEra } from '../../src/era.js';
 import { DEFAULT_MODE, MODES } from '../../src/mode.js';
-import { ORIGINS, UNLOCKABLE_ORIGINS, applyOrigin } from '../../src/origin.js';
+import { ORIGINS, UNLOCKABLE_ORIGINS } from '../../src/origin.js';
 import { CARD_TAGS, OPENING_DECK_MAX, OPENING_DECK_MIN, POLICY_CARDS, openingPoolIds } from '../../src/cards.js';
 import { isUnlocked, unlockRequirementText } from '../../src/unlocks.js';
 import { EDICT_DEFS, validateEdictChoice } from '../../src/edicts.js';
@@ -217,9 +217,8 @@ export function renderStart(){
     if (originLocked(originChoice)) { eraErr.textContent = '此出身尚未解鎖，請改選其他出身。'; eraErr.hidden = false; return; }
     const ev = validateEdictChoice(edictChoice, loadUnlocks());
     if (!ev.ok) { eraErr.textContent = '祖訓選擇不合規（最多 2 條，且須已解鎖），請重新勾選。'; eraErr.hidden = false; return; }
-    newGame(document.getElementById('seed').value.trim(), scenSel.value, raw, U.accPolicies.slice(), document.getElementById('mode').value, U.openingDeck.slice(), ev.ids);
-    // 即位出身於開局後套用（newGame 不接收出身參數），再存檔並重繪。
-    if (U.state && !U.state.origin) { applyOrigin(U.state, originChoice); save(); render(); }
+    // 出身於開局時套用，早於月初準備（首月奏摺即含出身專屬事件）。
+    newGame(document.getElementById('seed').value.trim(), scenSel.value, raw, U.accPolicies.slice(), document.getElementById('mode').value, U.openingDeck.slice(), ev.ids, originChoice);
   };
   const c = document.getElementById('cont');
   if (c) c.onclick = () => { U.seed = saved.seed; U.state = saved.state; migrateEraLog(U.state); prepareMonth(U.state, currentEventPool()); U.reviewedCount = (U.state.annals||[]).length; render(); };
