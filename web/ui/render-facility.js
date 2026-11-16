@@ -1,5 +1,5 @@
 // web/ui/render-facility.js：營造面板。顯示御花園、太醫院、翰林院之等級、下一級費用與效果，並可升級。
-import { FACILITIES, FACILITY_IDS, FACILITY_MAX_LEVEL, buildFacility, constructionOf, facilityLevels } from '../../src/facilities.js';
+import { FACILITIES, FACILITY_IDS, FACILITY_MAX_LEVEL, buildFacility, constructionOf, facilityCost, facilityLevels } from '../../src/facilities.js';
 import { STAT } from './labels.js';
 import { U, app } from './store.js';
 import { save } from './state-io.js';
@@ -30,7 +30,7 @@ export function renderFacility(){
     const { cur, next } = effectText(def, level);
     const maxed = level >= FACILITY_MAX_LEVEL;
     const job = constructionOf(U.state)[id];
-    const cost = maxed ? null : def.levels[level].cost;
+    const cost = maxed ? null : facilityCost(U.state, def, level);
     const can = !maxed && !job && treasury >= cost;
     const btn = maxed
       ? '<button class="btn ghost" disabled>已至最高級</button>'

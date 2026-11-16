@@ -9,6 +9,10 @@ export const UNLOCK_RULES = Object.freeze({
   origin: Object.freeze({ hanmen: '博士' }),
   scenario: Object.freeze({ wenzhi: '鴻儒' }),
   card: Object.freeze({ wu_drill: '名將' }),
+  edict: Object.freeze({
+    zhongnong: '博士', chongwen: '鴻儒', changwei: '知兵', kuanren: '文宗',
+    jinzhu: '名將', kaijiang: '戰神', jieyong: '博士',
+  }),
 });
 
 // 全部可能的稱號名（由 titles.js 推導，供讀取時過濾未知值）。

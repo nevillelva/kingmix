@@ -4,6 +4,7 @@
 import { setStat } from './state.js';
 import { isCourtOfficial } from './officials.js';
 import { endFate } from './fates.js';
+import { ruleMod } from './rule-mods.js';
 
 export const DC_ACTIONS = ['warn', 'punish', 'prison'];
 export const MAX_ACTIVE_CASES = 2; // 東廠同時最多進行的案件數（未結案者皆計入）
@@ -86,7 +87,7 @@ export function applyDongchangAction(state, caseId, action) {
 
   // 每局處置行動上限：執行前檢查，達上限則改為告誡；計數照常 +1。
   const dc = state.dongchang;
-  const capped = (dc.runActions || 0) >= DC_ACTION_CAP;
+  const capped = (dc.runActions || 0) >= ruleMod(state, 'dc_action_cap', DC_ACTION_CAP);
   dc.runActions = (dc.runActions || 0) + 1;
   if (capped && action !== 'warn') {
     c.cappedFrom = action;
@@ -111,7 +112,7 @@ export function applyDongchangAction(state, caseId, action) {
       setStat(state, 'treasury', state.stats.treasury + c.level * 25 + Math.round((100 - official.abilities.virtue) / 4));
     }
     setStat(state, 'prestige', state.stats.prestige + 5);
-    addTyranny(state, TYRANNY_GAIN.punish);
+    addTyranny(state, ruleMod(state, 'tyranny_gain', TYRANNY_GAIN.punish));
     c.status = 'closed';
     c.outcome = 'punished';
   } else if (action === 'prison') {
@@ -119,7 +120,7 @@ export function applyDongchangAction(state, caseId, action) {
     c.status = 'imprisoned';
     c.imprisonedTurn = state.turn;
     c.outcome = 'imprisoned';
-    addTyranny(state, TYRANNY_GAIN.prison);
+    addTyranny(state, ruleMod(state, 'tyranny_gain', TYRANNY_GAIN.prison));
   }
   return c;
 }

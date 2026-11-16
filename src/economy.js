@@ -8,6 +8,7 @@ import { factionsBalanced, BALANCED_EFFICIENCY } from './factions.js';
 import { FACTIONS } from './officials.js';
 import { attachPerson } from './people.js';
 import { defaultOf } from './schema.js';
+import { ruleMod } from './rule-mods.js';
 
 export const TAX_TIERS = ['低', '中', '高'];
 export const TAX_EFFECTS = {
@@ -124,6 +125,12 @@ export function tickEconomy(state) {
       : null;
     pref.yield = gov ? Math.round((gov.abilities.politics / 40) * 100) / 100 : VACANT_YIELD;
   }
+  // 祖訓：國庫自然增益（無祖訓時 base 0 → 0，不改動數值）與無戰事之月的民心消耗。
+  const natural = ruleMod(state, 'treasury_natural', 0);
+  if (natural) setStat(state, 'treasury', state.stats.treasury + natural, { silent: true });
+  const atWar = state.campaign && state.campaign.status === 'active';
+  const peaceDrain = atWar ? 0 : ruleMod(state, 'peace_people', 0);
+  if (peaceDrain) setStat(state, 'people', state.stats.people + peaceDrain, { silent: true });
   return state;
 }
 
@@ -140,8 +147,12 @@ export function applyPrefectureYield(state) {
   for (const pref of state.prefectures) {
     const mult = pref.rebel === true ? REBEL_YIELD_MULT : 1;
     const remit = pref.autonomous === true ? AUTONOMY_REMIT : 1;
-    setStat(state, 'treasury', state.stats.treasury + pref.yield * mult * remit * YIELD_TREASURY, { silent: true });
-    setStat(state, 'people', state.stats.people + (pref.yield - 1) * mult * YIELD_PEOPLE, { silent: true });
+    // 祖訓修正（重農抑商、寬仁為本）：無祖訓時皆為 base（1），結果與原式完全相同。
+    const yieldMod = ruleMod(state, pref.output === 'agriculture' ? 'yield_agriculture' : 'yield_commerce', 1);
+    const treasuryMod = ruleMod(state, 'treasury_gain', 1);
+    const peopleMod = ruleMod(state, 'people_gain', 1);
+    setStat(state, 'treasury', state.stats.treasury + pref.yield * mult * remit * yieldMod * treasuryMod * YIELD_TREASURY, { silent: true });
+    setStat(state, 'people', state.stats.people + (pref.yield - 1) * mult * yieldMod * peopleMod * YIELD_PEOPLE, { silent: true });
   }
   return state;
 }

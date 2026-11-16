@@ -1,4 +1,5 @@
 import { pruneNewYearKeys } from './newyear-keys.js';
+import { applyEdictsUnchecked } from '../../src/edicts.js';
 // web/ui/game-flow.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
 import { DEFAULT_MODE, MODES } from '../../src/mode.js';
 import { createScenarioState } from '../../src/scenarios.js';
@@ -25,7 +26,7 @@ import { sfx } from './audio.js';
 import { STAT } from './labels.js';
 
 // deckIds（選用）：開局策卡 3–5 張，作為本局策卡卡池；空陣列或未給即沿用全部卡池。
-export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds){
+export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds, edicts){
   U.seed = s || String(Math.floor(Math.random()*1e9));
   pruneNewYearKeys(U.seed); // M1：開新局時清除其他種子的新年鍵
   const list = pols && pols.length ? pols : ['agrarian'];
@@ -37,6 +38,10 @@ export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds){
     U.feedback = '本紀劇本載入失敗，已改為一般開局。';
   }
   setAccessionPolicies(U.state, list);
+  // 祖訓：開局即寫入本局 state.edicts（已於開始畫面依解鎖紀錄驗證；此處不再讀跨局紀錄）。
+  if (Array.isArray(edicts) && edicts.length) {
+    try { applyEdictsUnchecked(U.state, edicts); } catch (e) { U.feedback = '祖訓不合規，本局未套用祖訓。'; }
+  }
   seedRelations(U.state); // 開局臣子關係網
   seedBondedCourtOfficial(U.state); // 開局即有一位相得之臣（與 sim.js 一致）
   // 開局策卡須於月初準備（會抽本年政策卡）之前寫入，否則首年抽卡不受本局卡池限制。
