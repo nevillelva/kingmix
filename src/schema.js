@@ -36,6 +36,8 @@ export const SCHEMA = Object.freeze({
   relations: { type: ['array'], default: () => [] },
   // 共歷羈絆（bonds.js ensureBonds）
   bonds: { type: ['object'], default: () => ({ shared: {}, unlocked: {} }) },
+  // 人物命運線進度（fates.js，鍵為 "角色:id"）
+  fates: { type: ['object'], default: () => ({}) },
   // 後宮（harem.js ensureHarem）。fill: false：harem.js 的 tickHarem 以「無妃嬪且無 harem 欄位」
   // 作為整段略過的條件，故載入時不自動補上，僅於 ensureHarem 懶建立時使用此預設值。
   harem: {
@@ -70,6 +72,8 @@ export const SCHEMA = Object.freeze({
   // 巡幸（tour.js ensureTour）
   tour: { type: ['object'], default: () => ({ busyUntil: -1 }) },
   location: { type: ['string'], default: () => CAPITAL_PREFECTURE },
+  // 皇子課表（curriculum.js setCourse / tickCurriculum）：heirs 以皇子 id 為鍵
+  curriculum: { type: ['object'], default: () => ({ heirs: {} }) },
   // 旗標（month-start.js、selection.js 以 state.flags || {} 讀寫）
   flags: { type: ['object'], default: () => ({}) },
 });

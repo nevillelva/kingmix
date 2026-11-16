@@ -21,5 +21,7 @@ export function evaluateDynasty(state) {
     benevolence: '仁德愛民之主',
     legacy: '承續基業之主',
   };
-  return { axes, title: TITLES[top], generations: state.dynasty.generation };
+  // 課表主修結局（多結局）：登基時記於 state.emperor.tutelage；無主修則為 null，不影響四軸評價。
+  const tutelage = state.emperor?.tutelage ?? null;
+  return { axes, title: TITLES[top], generations: state.dynasty.generation, tutelage };
 }
