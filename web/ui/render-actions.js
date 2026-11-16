@@ -1,6 +1,7 @@
 // web/ui/render-actions.js：朝政行動卡、冊立東宮與時段卡（由 render-court.js 拆出，純搬移，行為不變）。
 import { MAX_ACTIVE_CASES, activeCaseCount, openInvestigation } from '../../src/dongchang.js';
 import { rallyFaction, suppressFaction } from '../../src/factions.js';
+import { respondPartisanDemand } from '../../src/partisan.js';
 import { POLICIES, POLICY_CHANGE_PRESTIGE_COST, POLICY_KEYS, changePolicy, policyLockRemaining } from '../../src/policy.js';
 import { EXAM_INTERVAL_TURNS, examRemaining, holdExam } from '../../src/exam.js';
 import { ERA_CHANGE_COOLDOWN_MONTHS, ERA_CHANGE_PRESTIGE_COST, ERA_REASON_TEXT, PRESET_ERAS, changeEra, eraCooldownRemaining, eraName, eraYearText } from '../../src/era.js';
@@ -305,6 +306,24 @@ export function onAgency(e){
     if (!r) return render();
     const nm = off ? (off.personName || off.name) : '某臣';
     return useAction(r.died ? `${nm}進諫忤旨，被貶除名。` : `${nm}進諫，陛下納諫，君臣更見相得。`);
+  }
+  // 黨爭裁決（見 partisan.js）：v 為「訴求 id:回應」。
+  if (a === 'partisan') {
+    if (actionsLeft() <= 0) return;
+    const [id, response] = String(v).split(':');
+    const r = respondPartisanDemand(U.state, Number(id), response);
+    if (!r.ok) {
+      U.feedback = r.reason === 'dc_busy' ? '東廠案件已滿，清洗暫緩，訴求仍待裁決。' : '此訴求已了。';
+      return render();
+    }
+    const msg = {
+      balanced: '駁回聯名彈劾，平衡各方，耗皇權。',
+      rallied: '扶植進逼之派，其餘兩派下降。',
+      purged: '血腥清洗敵對派系，暴政上升，朝臣忠誠下滑。',
+      warned: '東廠案件已滿，清洗改為告誡。',
+      lapsed: '被彈劾者已不在朝，訴求作廢。',
+    }[r.outcome];
+    return useAction(msg);
   }
 }
 

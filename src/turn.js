@@ -23,6 +23,7 @@ import { tickCity } from './city.js';
 import { tickHarem, applyWaijiaCoupling, taihouPenalty } from './harem.js';
 import { applyFactionPressure } from './factions.js';
 import { tickLatePressure } from './late-pressure.js';
+import { tickPartisan } from './partisan.js';
 import { scheduleChain } from './chains.js';
 import { tickFates, endFate } from './fates.js';
 import { recordSharedEvent } from './bonds.js';
@@ -236,6 +237,7 @@ export function monthlyTick(state, rng) {
   if (tp) drift(state, 'power', g('power') + tp);
   applyFactionPressure(state);
   tickLatePressure(state); // 後期壓力：知府割據、權臣坐大、天災連鎖（見 late-pressure.js）
+  tickPartisan(state, { dismiss: (o) => removeOfficial(state, o, 'partisan_ban') }); // 黨爭：對峙、聯名彈劾、黨錮（見 partisan.js；預設模擬不參與）
   // 玩法深度擴充（C）：冊封之國每年朝貢、互市增益與良馬產出；皆為玩家主動開通後才生效，預設模擬不觸發。不消耗 rng。
   tickVassalTribute(state);
   for (const itemId of tickTrade(state)) addItem(state, itemId);

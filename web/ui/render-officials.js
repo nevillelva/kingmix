@@ -26,6 +26,7 @@ import { openResignDialog } from './overlays.js';
 import { deferButton, flushButton, giveItemMenu } from './render-cards.js';
 import { renderRelationsCard } from './render-relations.js';
 import { prefecturePressureText, courtMinisterText } from './render-pressure.js';
+import { partisanStatus } from '../../src/partisan.js';
 
 // 忠誠安全線：本派勢力達 33 + 野心/2 時，忠誠不再每月下滑；未達則流失（見 turn.js 忠誠漂移）。
 // 忠誠安全線：本派勢力達安全線忠誠才不流失；君臣相得者忠誠凍結，另註明。
@@ -121,7 +122,7 @@ export function renderOfficials(){
   app.innerHTML = `
     ${fbLine()}
     <section class="card"><h2>朝局</h2>
-      <div class="factions">${bar}</div><div class="legend">${legend}</div>${pressureLine()}<div class="sub" style="margin:10px 0 0">${esc(courtMinisterText(U.state))}</div></section>
+      <div class="factions">${bar}</div><div class="legend">${legend}</div>${pressureLine()}<div class="sub" style="margin:10px 0 0">${esc(courtMinisterText(U.state))}</div>${partisanBlock()}</section>
     ${renderRelationsCard()}
     ${officeCard()}
     ${groups}${localHtml}
@@ -159,6 +160,24 @@ export function officialCard(o){
       <span class="floy"><span class="track"><span class="fill${loy < ASSASSIN_LOW_LOYALTY ? ' warn' : ''}" style="width:${loy}%"></span></span><b>${Math.round(o.loyalty)}</b></span>
       <span class="fstance">${stance}${pol ? `　主「${esc(pol.name)}」` : ''}</span></summary>
     ${personCard(o)}</details>`;
+}
+
+// 黨爭區塊：對峙狀況、均衡期、黨錮次數，以及未了的聯名彈劾（三種回應）。系統未參與時不顯示。
+function partisanBlock(){
+  const s = partisanStatus(U.state);
+  if (!s.enabled) return '';
+  const dis = actionsLeft() <= 0 ? 'disabled' : '';
+  const head = s.stage === 'standoff'
+    ? `對峙：${FAC(s.petitioner).l}與${FAC(s.rival).l}相持`
+    : '朝中尚無對峙';
+  const hold = s.balanceMonths > 0 ? `　均衡期尚餘 ${s.balanceMonths} 月` : '';
+  const rows = s.openDemands.slice(-3).map(d => `<li><span>${esc(FAC(d.petitioner).l)}聯名彈劾${esc(d.officialName || '某臣')}（${esc(FAC(d.rival).l)}）</span>
+      <span class="chip-row"><button class="btn ghost mini" data-act="partisan" data-arg="${d.id}:balance" ${dis}>平衡各方</button>
+      <button class="btn mini" data-act="partisan" data-arg="${d.id}:rally" ${dis}>扶植${esc(FAC(d.petitioner).l)}</button>
+      <button class="btn ghost mini" data-act="partisan" data-arg="${d.id}:purge" ${dis}>血腥清洗</button></span></li>`).join('');
+  return `<div class="kicker" style="margin-top:12px">黨爭</div>
+    <div class="sub" style="margin:0 0 6px">${esc(head)}${hold}　黨錮 ${s.bans} 次　未了 ${s.openDemands.length} / ${s.openLimit}</div>
+    ${rows ? `<ul class="list">${rows}</ul>` : ''}`;
 }
 
 export function renderHarem(){
