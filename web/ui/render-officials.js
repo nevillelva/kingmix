@@ -9,7 +9,7 @@ import { POLICIES } from '../../src/policy.js';
 import { FACTION_POLICY } from '../../src/factions.js';
 import { TAIHOU_OPPOSE, WAIJIA_THRESHOLD, taihouOpposes } from '../../src/harem.js';
 import { illnessLabel } from '../../src/heir-status.js';
-import { SCENARIOS, evaluateScenario } from '../../src/scenarios.js';
+import { scenarioDef, evaluateScenario } from '../../src/scenarios.js';
 import { TAX_TIERS, administrativeEfficiency, ensureEconomy } from '../../src/economy.js';
 import { COLLECTIONS, collectionProgress } from '../../src/collections.js';
 import { chronicleLine } from '../../src/chronicle.js';
@@ -210,7 +210,7 @@ export function renderDC(){
 
 export function scenarioCard(){
   const s = U.state.scenario;
-  const def = s && SCENARIOS[s.id];
+  const def = s && scenarioDef(s.id);
   if (!def) return '';
   let p = null;
   try { p = evaluateScenario(U.state); } catch(e) { p = null; }

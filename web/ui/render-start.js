@@ -1,15 +1,17 @@
 // web/ui/render-start.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
 import { prepareMonth } from '../../src/month-start.js';
 import { ACCESSION_POLICY_MAX, POLICIES, POLICY_KEYS } from '../../src/policy.js';
-import { SCENARIOS } from '../../src/scenarios.js';
+import { SCENARIO_DEFS, UNLOCKABLE_SCENARIOS, scenarioDef } from '../../src/scenarios.js';
 import { ERA_REASON_TEXT, PRESET_ERAS, migrateEraLog, validateEra } from '../../src/era.js';
 import { DEFAULT_MODE, MODES } from '../../src/mode.js';
-import { ORIGINS, applyOrigin } from '../../src/origin.js';
+import { ORIGINS, UNLOCKABLE_ORIGINS, applyOrigin } from '../../src/origin.js';
+import { isUnlocked, unlockRequirementText } from '../../src/unlocks.js';
+import { loadUnlocks, syncUnlocks, UNLOCK_FAIL_MSG } from './unlock-store.js';
 import { buildScroll } from '../../src/posthumous.js';
 import { evaluateDynasty } from '../../src/ending.js';
 import { chronicleLine } from '../../src/chronicle.js';
 import { U, app } from './store.js';
-import { clearSave, cloudSave, discardCorruptSave, load, reasonText, save, saveTextFile } from './state-io.js';
+import { clearSave, cloudSave, discardCorruptSave, load, reasonText, save, saveMsg, saveTextFile } from './state-io.js';
 import { esc } from './util.js';
 import { newGame } from './game-flow.js';
 import { render } from './render-bus.js';
@@ -21,11 +23,17 @@ let originChoice = ORIGINS[0].id;
 
 const statModText = (mods) => Object.entries(mods).map(([k, v]) => `${k} ${v > 0 ? '+' : ''}${v}`).join('、');
 
+// 未解鎖的傳承出身：按鈕停用並註明解鎖條件。
+const originLocked = (id) => !isUnlocked(loadUnlocks(), 'origin', id);
+
 export function paintOrigins(){
   const box = document.getElementById('origin-cards');
   if (!box) return;
-  box.innerHTML = ORIGINS.map(o => {
+  box.innerHTML = [...ORIGINS, ...UNLOCKABLE_ORIGINS].map(o => {
     const on = o.id === originChoice;
+    const locked = originLocked(o.id);
+    if (locked) return `<button type="button" class="btn ghost" disabled aria-disabled="true" data-origin="${esc(o.id)}" style="text-align:left;white-space:normal;display:block">
+      <b>${esc(o.name)}（未解鎖）</b><br><span class="sub">${esc(unlockRequirementText('origin', o.id))}</span></button>`;
     return `<button type="button" class="btn ${on ? 'zhu' : 'ghost'}" data-origin="${esc(o.id)}" aria-pressed="${on}" style="text-align:left;white-space:normal;display:block">
       <b>${esc(o.name)}</b><br><span class="sub">${esc(o.desc)}</span><br>
       <span class="sub">開局：${esc(statModText(o.statMods))}</span><br>
@@ -59,7 +67,18 @@ export function renderStart(){
   const saved = load();
   const corrupt = saved && saved.corrupt ? saved : null;
   const cs = cloudSave();
-  const scenOpts = Object.values(SCENARIOS).map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+  // 傳承解鎖：併入已存檔的稱號（舊存檔亦可補記），並注入已解鎖策卡。
+  const unlockSync = syncUnlocks(saved && saved.state && !saved.corrupt ? saved.state : null);
+  const unlockRec = unlockSync.record;
+  if (unlockSync.writeFailed) saveMsg(UNLOCK_FAIL_MSG);
+  const scenOpts = Object.values(SCENARIO_DEFS).map(s => {
+    const locked = !isUnlocked(unlockRec, 'scenario', s.id);
+    return `<option value="${esc(s.id)}"${locked ? ' disabled' : ''}>${esc(s.name)}${locked ? '（未解鎖）' : ''}</option>`;
+  }).join('');
+  const lockedHints = [
+    ...UNLOCKABLE_ORIGINS.filter(o => !isUnlocked(unlockRec, 'origin', o.id)).map(o => `出身「${o.name}」：${unlockRequirementText('origin', o.id)}`),
+    ...Object.values(UNLOCKABLE_SCENARIOS).filter(s => !isUnlocked(unlockRec, 'scenario', s.id)).map(s => `劇本「${s.name}」：${unlockRequirementText('scenario', s.id)}`),
+  ];
   app.innerHTML = `
     ${corrupt ? corruptCard(corrupt) : ''}
     <section class="hero">
@@ -85,6 +104,7 @@ export function renderStart(){
       <label class="lbl">即位國策（選 1–2 條）</label>
       <div class="opts" id="acc-policy" style="grid-template-columns:1fr 1fr;margin:0"></div>
       <p class="sub" id="acc-policy-hint" style="margin:8px 0 0"></p>
+      ${lockedHints.length ? `<p class="sub" id="unlock-hint" style="margin:8px 0 0">尚未解鎖：${lockedHints.map(esc).join('；')}。於各局達成對應稱號即可解鎖。</p>` : ''}
       <div style="margin-top:14px"><button class="btn zhu" id="start">開始新局</button>
       ${cs && cs.state ? `<button class="btn ghost" id="ccont">繼續雲端進度（${new Date(cs.savedAt).toLocaleString('zh-TW')}）</button>` : ''}
       ${saved && saved.state ? '<button class="btn ghost" id="cont">繼續本機進度</button>' : ''}</div>
@@ -111,7 +131,7 @@ export function renderStart(){
   };
   const scenSel = document.getElementById('scen');
   scenSel.onchange = () => {
-    const d = SCENARIOS[scenSel.value];
+    const d = scenarioDef(scenSel.value);
     document.getElementById('scen-desc').textContent = d ? `${d.summary}　${d.goalText}` : '不選劇本，即為自由治國的一般開局。';
   };
   const eraIn = document.getElementById('era'), eraErr = document.getElementById('era-err');
@@ -122,6 +142,8 @@ export function renderStart(){
       const v = validateEra(raw);
       if (!v.ok) { eraErr.textContent = ERA_REASON_TEXT[v.reason]; eraErr.hidden = false; return; }
     }
+    if (scenSel.value && !isUnlocked(loadUnlocks(), 'scenario', scenSel.value)) { eraErr.textContent = '此劇本尚未解鎖。'; eraErr.hidden = false; return; }
+    if (originLocked(originChoice)) { eraErr.textContent = '此出身尚未解鎖，請改選其他出身。'; eraErr.hidden = false; return; }
     newGame(document.getElementById('seed').value.trim(), scenSel.value, raw, U.accPolicies.slice(), document.getElementById('mode').value);
     // 即位出身於開局後套用（newGame 不接收出身參數），再存檔並重繪。
     if (U.state && !U.state.origin) { applyOrigin(U.state, originChoice); save(); render(); }
@@ -145,8 +167,8 @@ export function renderEnding(){
   const axes = sc.axes.map(a => { const v = Math.round(a.score); return `<div class="meter"><div class="row1"><span>${esc(a.label)}</span><b>${v}</b></div>
     <div class="track"><div class="fill ${a.key==='military'?'warn':''}" style="width:${v}%"></div></div></div>`; }).join('');
   const chron = (U.state.chronicle || []).map(c => { const l = chronicleLine(c); return `<li><span>${esc(l.text)}</span><span class="loy">${esc(l.tag)}</span></li>`; }).join('');
-  const scen = U.state.scenario && SCENARIOS[U.state.scenario.id]
-    ? `<p class="sub">本紀「${esc(SCENARIOS[U.state.scenario.id].name)}」：${SCEN_STATUS[U.state.scenario.status] || '未完'}</p>` : '';
+  const scen = U.state.scenario && scenarioDef(U.state.scenario.id)
+    ? `<p class="sub">本紀「${esc(scenarioDef(U.state.scenario.id).name)}」：${SCEN_STATUS[U.state.scenario.status] || '未完'}</p>` : '';
   app.innerHTML = `
     <section class="review ending" aria-label="諡號實錄">
       <div class="kicker" style="text-align:center">王朝落幕 · ${esc(title)}</div>

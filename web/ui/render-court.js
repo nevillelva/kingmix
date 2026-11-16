@@ -1,6 +1,6 @@
 // web/ui/render-court.js：朝堂頁彙整（奏摺、行動、季度等分檔見各 render-*.js，本檔保留既有 export 名稱以 re-export）。
 import { pickSpeaker } from '../../src/speaker.js';
-import { SCENARIOS } from '../../src/scenarios.js';
+import { scenarioDef } from '../../src/scenarios.js';
 import { isAvailable, optionOpen } from '../../src/events.js';
 import { DC_ACTIONS } from '../../src/dongchang.js';
 import { buildGazette } from '../../src/gazette.js';
@@ -25,7 +25,7 @@ export { portrait, memorialCard, effChips, speakerCardHtml, affectedPortraits, n
 function scenarioBanner(){
   const s = U.state.scenario;
   if (!s || s.status === 'ongoing') return '';
-  const def = SCENARIOS[s.id];
+  const def = scenarioDef(s.id);
   if (!def) return '';
   return `<section class="card"><div class="kicker">本紀結果</div><h2>${esc(def.name)}・${s.status === 'won' ? '成功' : '失敗'}</h2>
     <div class="sub">${esc(def.goalText)}　國祚未盡，仍可續治。</div></section>`;

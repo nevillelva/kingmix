@@ -34,6 +34,20 @@ export const POLICY_CARDS = Object.freeze({
 
 export const POLICY_CARD_IDS = Object.freeze(Object.keys(POLICY_CARDS));
 
+// 傳承解鎖的策卡（見 src/unlocks.js）。預設不進入抽卡池；由介面層以 setUnlockedPolicyCards 注入已解鎖者。
+export const UNLOCKABLE_POLICY_CARDS = Object.freeze({
+  wu_drill: { name: '講武練兵', tags: ['military', 'culture'], monthly: { armament: 0.8, prestige: 0.2 } },
+});
+
+const ALL_POLICY_CARDS = { ...POLICY_CARDS, ...UNLOCKABLE_POLICY_CARDS };
+export const policyCardDef = (id) => ALL_POLICY_CARDS[id];
+
+let unlockedCardIds = [];
+// 設定已解鎖的傳承策卡（非本表內的 id 略過）。未呼叫或傳入空陣列時，抽卡池與舊版完全相同。
+export function setUnlockedPolicyCards(ids) {
+  unlockedCardIds = (Array.isArray(ids) ? ids : []).filter((id) => id in UNLOCKABLE_POLICY_CARDS);
+}
+
 // 協同：tags 為兩個標籤，須由兩張「不同」的卡各自提供（單張卡身兼兩個標籤不觸發）。
 export const SYNERGIES = Object.freeze([
   { id: 'nong_min', name: '農民同興', tags: ['agri', 'people'], monthly: { agriculture: 0.3, people: 0.2 } },
@@ -54,7 +68,7 @@ function ensureCardState(state) {
 // rng 須回傳 [0, 1)，確保同一 seed 可重現。回傳 id 陣列（副本）。
 export function drawPolicyCards(state, rng) {
   const pc = ensureCardState(state);
-  const pool = POLICY_CARD_IDS.filter((id) => !pc.active.includes(id));
+  const pool = [...POLICY_CARD_IDS, ...unlockedCardIds].filter((id) => !pc.active.includes(id));
   const ids = [];
   for (let i = 0; i < DRAW_SIZE && pool.length > 0; i++) {
     const idx = Math.floor(rng() * pool.length);
@@ -85,7 +99,7 @@ export function activeSynergies(state) {
   const cards = activeCards(state);
   const out = [];
   for (const syn of SYNERGIES) {
-    const tagOf = (tagKey) => cards.filter((id) => POLICY_CARDS[id].tags.includes(tagKey));
+    const tagOf = (tagKey) => cards.filter((id) => policyCardDef(id).tags.includes(tagKey));
     const [t1, t2] = syn.tags;
     const hit = tagOf(t1).some((x) => tagOf(t2).some((y) => y !== x));
     if (hit) out.push({ id: syn.id, name: syn.name, tags: [...syn.tags], monthly: { ...syn.monthly } });
@@ -99,7 +113,7 @@ export function cardMonthlyEffects(state) {
   const add = (monthly) => {
     for (const [k, v] of Object.entries(monthly)) out[k] = (out[k] || 0) + v;
   };
-  for (const id of activeCards(state)) add(POLICY_CARDS[id].monthly);
+  for (const id of activeCards(state)) add(policyCardDef(id).monthly);
   for (const syn of activeSynergies(state)) add(syn.monthly);
   return out;
 }
