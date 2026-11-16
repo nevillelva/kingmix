@@ -76,8 +76,9 @@ export function tickFates(state) {
     if (p.age !== null && p.age < (beat.minAge ?? 0)) continue;
     const name = rec?.name ?? p.name;
     const body = beat.text[p.variant()] ?? beat.text.any;
-    fates[key] = { arc: p.arcKey, name, stage: stage + 1, last: now, ended: false };
-    chronicle.push({ kind: 'fate', name, text: fill(body, name), tag: p.tag, year: state.year, month: state.month });
+    const line = fill(body, name);
+    fates[key] = { arc: p.arcKey, name, stage: stage + 1, last: now, ended: false, lines: [...(rec?.lines ?? []), line] };
+    chronicle.push({ kind: 'fate', name, text: line, tag: p.tag, year: state.year, month: state.month });
   }
   return state;
 }
@@ -91,6 +92,8 @@ export function endFate(state, role, id, cause) {
   rec.ended = true;
   const endings = arcOf(role, rec.arc)?.endings ?? {};
   const effective = endings[cause] ? cause : 'survived';
+  rec.endCause = effective; // 結局類別（供列傳篩選，見 biographies.js）
+  rec.endLine = fill(endings[effective] ?? '', rec.name);
   ensureChronicle(state).push({
     kind: 'fate_end',
     name: rec.name,
