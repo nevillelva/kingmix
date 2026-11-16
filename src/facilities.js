@@ -5,6 +5,12 @@
 // 設施等級存於 state.facilities（缺欄位視為全部 0 級）；興建中資料存於 state.construction。
 
 import { setStat } from './state.js';
+import { ruleMod } from './rule-mods.js';
+
+// 設施成本（祖訓「節用惜財」可調降）；無祖訓時回傳原價。
+export function facilityCost(state, def, level) {
+  return Math.round(ruleMod(state, 'facility_cost', def.levels[level].cost));
+}
 
 // 既有 id 維持不變：翰林院的 id 為 'academy'；'hanlin' 為別名，會正規化為 'academy'。
 export const FACILITY_IDS = Object.freeze(['garden', 'medical', 'armory', 'library', 'academy']);
@@ -80,7 +86,7 @@ export function upgradeFacility(state, id) {
   if (!def) return { error: 'unknown_facility', id };
   const level = levelOf(state, fid);
   if (level >= FACILITY_MAX_LEVEL) return { error: 'max_level', id: fid, level };
-  const cost = def.levels[level].cost;
+  const cost = facilityCost(state, def, level);
   const treasury = state.stats.treasury;
   if (treasury < cost) return { error: 'insufficient_treasury', id: fid, cost, treasury };
 
@@ -100,7 +106,8 @@ export function buildFacility(state, id) {
   if (constructionOf(state)[fid]) return fail('in_progress');
   const level = levelOf(state, fid);
   if (level >= FACILITY_MAX_LEVEL) return fail('max_level');
-  const { cost, months } = def.levels[level];
+  const { months } = def.levels[level];
+  const cost = facilityCost(state, def, level);
   const treasury = state.stats.treasury;
   if (treasury < cost) return fail('insufficient_treasury');
 

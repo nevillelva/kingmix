@@ -31,6 +31,7 @@ import { applyFacilityMonthly, advanceConstruction } from './facilities.js';
 import { stepRelations } from './relations.js';
 import { tickRebellion } from './city-capture.js';
 import { trimCapped, WARNINGS_CAP, DIPLOMACY_LOG_CAP } from './caps.js';
+import { ruleMod } from './rule-mods.js';
 
 // 官員名單上限：朝臣 12 人（開局 4 人加進士招募）＋ 六府知府 6 人。
 export const MAX_OFFICIALS = 18;
@@ -240,7 +241,8 @@ export function monthlyTick(state, rng) {
   for (const o of state.officials) {
     if (isLoyaltyFrozen(state, o)) continue; // 君臣相得：忠誠不再月月流失（見 bonds.js）
     const influence = state.factions[o.faction];
-    const drift = (influence - FACTION_BASE) / 100 - o.ambition / 200;
+    const rawDrift = (influence - FACTION_BASE) / 100 - o.ambition / 200;
+    const drift = rawDrift < 0 ? ruleMod(state, 'loyalty_loss', rawDrift) : rawDrift; // 祖訓：減緩流失（僅作用於負向）
     // 忠誠取整至小數二位，避免浮點誤差累積（B8）。
     o.loyalty = Math.round(Math.min(100, Math.max(0, o.loyalty + drift)) * 100) / 100;
   }
