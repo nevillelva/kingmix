@@ -9,6 +9,7 @@ import { POLICIES } from '../../src/policy.js';
 import { FACTION_POLICY } from '../../src/factions.js';
 import { TAIHOU_OPPOSE, WAIJIA_THRESHOLD, taihouOpposes } from '../../src/harem.js';
 import { illnessLabel } from '../../src/heir-status.js';
+import { curriculumControlHtml } from './render-curriculum.js';
 import { scenarioDef, evaluateScenario } from '../../src/scenarios.js';
 import { TAX_TIERS, administrativeEfficiency, ensureEconomy } from '../../src/economy.js';
 import { COLLECTIONS, collectionProgress } from '../../src/collections.js';
@@ -176,7 +177,7 @@ export function renderHarem(){
     const tr = describeTraits(x).join('、');
     const ill = illnessLabel(x);
     return `<li><span>${x.gender === 'm' || x.gender === 'male' ? '皇子' : '皇女'} · ${x.age} 歲${ill ? `<div class="loy" style="color:var(--vermilion)">${esc(ill)}</div>` : ''}${tr ? `<div class="loy">${esc(tr)}</div>` : ''}</span>
-      <span class="chip">能力 ${Object.values(x.abilities || {}).reduce((a,b)=>a+b,0)}</span></li>`;
+      <span class="chip">能力 ${Object.values(x.abilities || {}).reduce((a,b)=>a+b,0)}</span>${curriculumControlHtml(x)}</li>`;
   }).join('');
   app.innerHTML = `
     <section class="card"><h2>嬪妃　${consorts.length} / 8</h2>
@@ -189,7 +190,7 @@ export function renderHarem(){
       <div class="bar-row"><span>太后勢</span><div class="track"><div class="fill ${tp >= TAIHOU_OPPOSE ? 'warn' : ''}" style="width:${Math.min(100, tp).toFixed(1)}%"></div></div><b>${Math.round(tp)}</b></div>
       <div class="sub" style="margin:6px 0 0">${taihouOpposes(U.state, 'heir') ? `太后勢高（達 ${TAIHOU_OPPOSE}），反對皇嗣相關之議。` : `太后勢未達 ${TAIHOU_OPPOSE}，尚不干政。`}</div></section>
     <section class="card"><h2>子嗣</h2>
-      ${heirRows ? `<ul class="list">${heirRows}</ul>` : '<p class="empty">尚無子嗣。</p>'}</section>`;
+      ${heirRows ? `<ul class="list">${heirRows}</ul>` : '<p class="empty">尚無子嗣。</p>'}${fbLine()}</section>`;
 }
 
 export function renderDC(){
