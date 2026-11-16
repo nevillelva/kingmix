@@ -10,6 +10,7 @@ export const U = {
   reviewedCount: 0,
   reviewPage: 'score',
   accPolicies: ['agrarian'],
+  openingDeck: [], // 開局策卡（3–5 張）；空陣列表示沿用全部卡池
   cloud: { db: null, uid: null, snap: null, queue: Promise.resolve() },
   soundOn: true,
   audioCtx: null,

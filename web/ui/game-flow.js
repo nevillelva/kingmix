@@ -6,6 +6,7 @@ import { createInitialState, setStat } from '../../src/state.js';
 import { seedRelations } from '../../src/relations.js';
 import { seedBondedCourtOfficial } from '../../src/bonds.js';
 import { setAccessionPolicies } from '../../src/policy.js';
+import { setOpeningDeck } from '../../src/cards.js';
 import { recordEvent } from '../../src/events.js';
 import { prepareMonth, chainEvent as chainEventEngine } from '../../src/month-start.js';
 import { endOfMonth } from '../../src/month.js';
@@ -23,7 +24,8 @@ import { recordQuarterSnapshot } from './render-quarter.js';
 import { sfx } from './audio.js';
 import { STAT } from './labels.js';
 
-export function newGame(s, scenId, eraRaw, pols, modeKey){
+// deckIds（選用）：開局策卡 3–5 張，作為本局策卡卡池；空陣列或未給即沿用全部卡池。
+export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds){
   U.seed = s || String(Math.floor(Math.random()*1e9));
   pruneNewYearKeys(U.seed); // M1：開新局時清除其他種子的新年鍵
   const list = pols && pols.length ? pols : ['agrarian'];
@@ -37,6 +39,10 @@ export function newGame(s, scenId, eraRaw, pols, modeKey){
   setAccessionPolicies(U.state, list);
   seedRelations(U.state); // 開局臣子關係網
   seedBondedCourtOfficial(U.state); // 開局即有一位相得之臣（與 sim.js 一致）
+  // 開局策卡須於月初準備（會抽本年政策卡）之前寫入，否則首年抽卡不受本局卡池限制。
+  if (Array.isArray(deckIds) && deckIds.length) {
+    try { setOpeningDeck(U.state, deckIds); } catch (e) { U.feedback = '開局策卡不合規，已改用全部策卡。'; }
+  }
   prepareMonth(U.state, U.events); // 月初準備：本月奏摺與政策卡（A5）
   U.reviewedCount = 0;
   U.guideArmed = true;
