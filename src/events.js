@@ -57,6 +57,7 @@ export function isEligible(state, event, rng) {
         break;
       case 'chance': if (!(rng() < val)) return false; break;
       case 'flag': if (!state.flags[val]) return false; break;
+      case 'flag_not': if (state.flags?.[val]) return false; break; // 旗標為假（或未設定）時成立
       case 'consorts_gt': if (!(state.consorts.length > val)) return false; break;
       case 'heirs_gt': if (!(state.heirs.length > val)) return false; break;
       case 'policy': if (state.policy !== val) return false; break;
