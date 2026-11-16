@@ -5,6 +5,7 @@
 
 import { makeRng } from './rng.js';
 import { defaultOf } from './schema.js';
+import { queueView, enqueue, openItems, resolve, cap } from './demand-queue.js';
 
 export const DEMAND_KINDS = ['爵位', '田產', '科舉名額'];
 export const DEMAND_CHANCE = 1 / 24; // 每位妃嬪每月提出請求的機率
@@ -38,10 +39,8 @@ export function consortFavor(consort) {
 // 寫入一則請求的裁決（達成或拒絕），並調整該妃嬪寵愛值。僅對 open 狀態的請求生效。
 export function setDemandOutcome(state, demandId, grant) {
   const h = ensureHarem(state);
-  const d = h.demands.find((x) => x.id === demandId);
-  if (!d || d.status !== 'open') return null;
-  d.status = grant ? 'granted' : 'denied';
-  d.resolvedTurn = state.turn;
+  const d = resolve(queueView(h, 'demands', 'nextDemandId'), demandId, grant ? 'granted' : 'denied', { resolvedTurn: state.turn });
+  if (!d) return null;
   const c = state.consorts.find((x) => x.id === d.consortId);
   if (c) c.favor = Math.min(100, Math.max(0, consortFavor(c) + (grant ? FAVOR_STEP : -FAVOR_STEP)));
   return d;
@@ -49,8 +48,8 @@ export function setDemandOutcome(state, demandId, grant) {
 
 // 每月：逾期未了的請求由皇帝裁決（確定性隨機，機率受寵愛影響）。
 function resolveDueDemands(state, h) {
-  for (const d of h.demands) {
-    if (d.status !== 'open' || state.turn - d.turn < DEMAND_TERM) continue;
+  for (const d of openItems(queueView(h, 'demands', 'nextDemandId'))) {
+    if (state.turn - d.turn < DEMAND_TERM) continue;
     const c = state.consorts.find((x) => x.id === d.consortId);
     const p = 0.3 + (0.4 * consortFavor(c)) / 100;
     setDemandOutcome(state, d.id, makeRng([state.seed, 'demand', d.id])() < p);
@@ -71,22 +70,22 @@ export function familyHead(state, family) {
 
 // 每月：妃嬪家族提出請求（確定性隨機）
 function proposeDemands(state, h) {
+  const q = queueView(h, 'demands', 'nextDemandId');
   for (const c of state.consorts) {
     const rng = makeRng([state.seed, 'harem', state.year, state.month, c.id]);
     if (rng() < DEMAND_CHANCE) {
       const kind = DEMAND_KINDS[Math.floor(rng() * DEMAND_KINDS.length)];
-      h.demands.push({ id: h.nextDemandId, consortId: c.id, family: c.family, kind, turn: state.turn, status: 'open' });
-      h.nextDemandId += 1;
+      enqueue(q, { consortId: c.id, family: c.family, kind, turn: state.turn });
     }
   }
-  if (h.demands.length > MAX_DEMANDS) h.demands = h.demands.slice(-MAX_DEMANDS);
+  cap(q, MAX_DEMANDS);
 }
 
 // 家族勢力：每位妃嬪 +0.5 並隨未了請求累積，每月衰減。
 function updateWaijia(state, h) {
   const families = new Set(state.consorts.map((c) => c.family));
   for (const fam of families) {
-    const open = h.demands.filter((d) => d.family === fam && d.status === 'open').length;
+    const open = openItems(queueView(h, 'demands', 'nextDemandId')).filter((d) => d.family === fam).length;
     const count = state.consorts.filter((c) => c.family === fam).length;
     const prev = h.waijia[fam] ?? 0;
     const next = prev + count * 0.1 + open * WAIJIA_FAMILY_GROWTH - WAIJIA_DECAY;

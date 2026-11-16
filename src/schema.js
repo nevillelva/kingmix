@@ -14,7 +14,8 @@ import { CAPITAL_PREFECTURE } from './events.js';
 
 // 狀態結構版本（save.js 的 STATE_SCHEMA_VERSION 與此相同，由此匯出）。
 // v2：新增 agency（本月時段行動配額，見 slots.js）；舊存檔由 save.js 的 migrateState 遷移。
-export const SCHEMA_VERSION = 2;
+// v3：新增 partisan、intel、edicts、canalLog（玩法深度擴充的共用基礎，皆為空預設，尚無任何行為讀寫）。
+export const SCHEMA_VERSION = 3;
 
 const typeOf = (v) => (v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v);
 
@@ -76,6 +77,15 @@ export const SCHEMA = Object.freeze({
   curriculum: { type: ['object'], default: () => ({ heirs: {} }) },
   // 旗標（month-start.js、selection.js 以 state.flags || {} 讀寫）
   flags: { type: ['object'], default: () => ({}) },
+  // v3 新增（玩法深度擴充基礎，目前皆為空預設，無任何系統讀寫）
+  // 黨爭（partisan 系統預留，鍵為黨派 id）
+  partisan: { type: ['object'], default: () => ({}) },
+  // 情報（intel 系統預留）
+  intel: { type: ['object'], default: () => ({}) },
+  // 祖訓／詔令修正（rule-mods.js ruleMod 讀取，鍵為規則 key，值為 { add, mul }）
+  edicts: { type: ['object'], default: () => ({}) },
+  // 運河紀錄（canalLog 系統預留）
+  canalLog: { type: ['array'], default: () => [] },
 });
 
 export const SCHEMA_FIELDS = Object.freeze(Object.keys(SCHEMA));
