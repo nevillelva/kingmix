@@ -110,7 +110,7 @@ test('新出身：可套用、具正負數值修正，且不列入預設 ORIGINS
   assert.ok(Object.values(hanmen.statMods).some((v) => v < 0));
   const s = applyOrigin(createInitialState('h-1'), 'hanmen');
   assert.equal(s.origin, 'hanmen');
-  assert.deepEqual(originEvents('hanmen'), []);
+  assert.equal(originEvents('hanmen').length, 8); // 寒門崛起專屬事件（src/origin-events-data.js）
 });
 
 test('新劇本：不列入 SCENARIO_IDS；可建立、可評估，20 個種子不崩潰', () => {
