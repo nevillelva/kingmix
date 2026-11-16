@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createInitialState } from '../src/state.js';
-import { takeSlot, applySlotEffect, AUDIENCE_LOYALTY, REVIEW_MILITARY, GARDEN_CHARM, HAREM_CHARM, HAREM_HEALTH, DC_POWER } from '../src/slot-effects.js';
+import { takeSlot, applySlotEffect, AUDIENCE_LOYALTY, REVIEW_MILITARY, GARDEN_CHARM, HAREM_CHARM, DC_POWER } from '../src/slot-effects.js';
 import { applySimPolicy, defaultSimPolicy } from '../src/sim-policy.js';
 import { ensureAgency, periodSpent } from '../src/slots.js';
 
@@ -23,7 +23,7 @@ test('各選項效果：軍事、魅力、健康、皇權', () => {
   assert.equal(s.stats.charm, b.charm + GARDEN_CHARM);
   applySlotEffect(s, 'night', 'harem');
   assert.equal(s.stats.charm, b.charm + GARDEN_CHARM + HAREM_CHARM);
-  assert.equal(s.stats.health, b.health + HAREM_HEALTH);
+  assert.equal(s.stats.health, b.health, '後宮不改變健康');
   applySlotEffect(s, 'night', 'dc');
   assert.equal(s.stats.power, b.power + DC_POWER);
 });
