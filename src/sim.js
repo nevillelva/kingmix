@@ -22,6 +22,7 @@ import { DEFAULT_MODE } from './mode.js';
 import { endOfMonth } from './month.js';
 import { pickEvent, pickSecondMemorial, autoAppoint } from './selection.js';
 import { applyEdictsUnchecked } from './edicts.js';
+import { autoRespondPartisan, partisanStatus } from './partisan.js';
 
 // 核心選擇規則已搬至 selection.js；此處 re-export 以維持既有 import 路徑。
 export {
@@ -60,10 +61,12 @@ function strategyOption(choose, state, event, seed, year, month) {
 }
 
 // scenario 為選用：省略時行為與原本相同（標準開局、回傳不含 scenario 欄位）。
-export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE, choose, origin, edicts }) {
+// partisan：黨爭模擬策略（'balance' | 'rally' | 'purge' | 'ignore'，見 partisan.js）。省略時黨爭不參與（預設，稽核數字不變）。
+export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE, choose, origin, edicts, partisan }) {
   const state = scenario
     ? createScenarioState(seed, resolveScenarioId(scenario), { policy, mode })
     : createInitialState(seed, { policy, mode });
+  state.partisan = { enabled: partisan !== undefined };
   applyOrigin(state, origin ?? ORIGINS[Math.floor(makeRng([seed, 'origin'])() * ORIGINS.length)].id); // 出身（預設依 seed 輪替，使四種出身事件皆可達）
   if (Array.isArray(edicts) && edicts.length) applyEdictsUnchecked(state, edicts); // 祖訓（未指定時 state.edicts 為空，與原版相同）
   events = withOriginEvents(events, state.origin); // 出身專屬事件（獨立檔，如寒門崛起）併入事件池
@@ -132,11 +135,13 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
       if (offer.length) choosePolicyCard(state, offer[0]);
       tourTo(state, PREFECTURES[year % PREFECTURES.length].id);
     }
+    if (partisan !== undefined) autoRespondPartisan(state, partisan); // 黨爭：依策略裁決未了訴求（未參與時不呼叫）
     endOfMonth(state); // 月結：與 web 的 finishMonth 共用（見 month.js）
   }
 
   return {
     ...(scenario ? { scenario: evaluateScenario(state) } : {}),
+    ...(partisan !== undefined ? { partisan: partisanStatus(state) } : {}),
     seed,
     year: state.year,
     month: state.month,

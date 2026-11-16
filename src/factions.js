@@ -12,6 +12,24 @@ export const BALANCE = { min: 25, max: 45, spread: 8 }; // 均衡：三派皆在
 export const BALANCED_EFFICIENCY = 0.9;
 export const THREE_STRONG_LOYALTY_DRAIN = 0.1;
 
+// 黨爭對峙（見 partisan.js）：一派勢力達 STANDOFF_LEAD 且另一派達 STANDOFF_RIVAL，即為對峙條件。
+export const STANDOFF_LEAD = 50;
+export const STANDOFF_RIVAL = 40;
+
+// 回傳對峙的 { petitioner, rival }（進逼者為勢力最高且達 STANDOFF_LEAD 者；對手為其餘派系中勢力最高且達 STANDOFF_RIVAL 者）；不成立則 null。
+export function standoffPair(factions) {
+  let petitioner = null;
+  for (const [id, v] of Object.entries(factions)) {
+    if (v >= STANDOFF_LEAD && (!petitioner || v > factions[petitioner])) petitioner = id;
+  }
+  if (!petitioner) return null;
+  let rival = null;
+  for (const [id, v] of Object.entries(factions)) {
+    if (id !== petitioner && v >= STANDOFF_RIVAL && (!rival || v > factions[rival])) rival = id;
+  }
+  return rival ? { petitioner, rival } : null;
+}
+
 // 派系所偏好的國策（逼迫時採用）
 export const FACTION_POLICY = { qingliu: 'confucian', xunggui: 'commerce', hanmen: 'militarist' };
 

@@ -19,6 +19,7 @@ const END_WORD = { death: '駕崩', abdicated: '高年致仕', resigned: '禪位
 const HEIR_DEATH_CAUSE = { child_mortality: '幼年夭折', rivalry: '奪嫡失勢' };
 const ASSASSIN_SOURCE = { tyranny: '暴政', remnant: '前朝遺臣', court: '朝堂江湖' };
 const ASSASSIN_OUTCOME = { blocked: '擋下', injured: '受傷', killed: '死亡' };
+const FAC_NAME = { qingliu: '清流', xunggui: '勳貴', hanmen: '寒門' };
 const COURSE_LABEL = { classics: '經史', statecraft: '政論', martial: '騎射', administration: '理政', ethics: '德行' };
 
 import { FATE_END_TAG } from './fate-data.js';
@@ -48,6 +49,12 @@ export function chronicleLine(c) {
   }
   if (c.kind === 'minister') {
     return { text: `${orDash(c.name)}權傾朝野 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '權臣' };
+  }
+  if (c.kind === 'standoff') {
+    return { text: `${orDash(FAC_NAME[c.petitioner])}與${orDash(FAC_NAME[c.rival])}對峙 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '黨爭' };
+  }
+  if (c.kind === 'partisan_ban') {
+    return { text: `黨錮之禍，敵對派系官員去職 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '黨錮' };
   }
   if (c.kind === 'disaster') {
     return { text: `${orDash(c.prefectureName)}遭逢天災 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '天災' };
