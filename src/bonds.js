@@ -4,6 +4,7 @@
 
 import { BALANCE } from './balance.js';
 import { defaultOf } from './schema.js';
+import { endFate } from './fates.js';
 
 export const BOND_NAME = '君臣相得';
 export const BOND_THRESHOLD = BALANCE.BOND_THRESHOLD;
@@ -54,9 +55,11 @@ export function seedBondedCourtOfficial(state) {
 // 進諫：相得的官員有機率殞命（被貶除名）。未相得者回傳 null，不消耗 rng。
 export function remonstrate(state, officialId, rng) {
   if (!isBonded(state, officialId)) return null;
-  if (!(rng() < REMONSTRATE_DEATH_CHANCE)) return { died: false };
   const idx = state.officials.findIndex((o) => o.id === officialId);
+  if (idx === -1) return null; // 已除名者不再進諫（避免 splice(-1) 誤刪他人）
+  if (!(rng() < REMONSTRATE_DEATH_CHANCE)) return { died: false };
   const [official] = state.officials.splice(idx, 1);
+  endFate(state, 'official', officialId, 'remonstrance'); // 死諫除名：寫入命運線結局
   official.office = null;
   state.factions[official.faction] = Math.max(0, state.factions[official.faction] - 2);
   for (const c of state.dongchang.cases) {

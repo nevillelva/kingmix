@@ -9,6 +9,8 @@ import { save } from './state-io.js';
 import { INK_DEFS, INK_BACKDROP, MAP_CSS, governorBadge, defenseFill, peopleFill } from './map-svg.js';
 import { attackCity, captureStatus } from '../../src/city-capture.js';
 import { prefecturePressureText } from './render-pressure.js';
+import { tourWithEncounter } from '../../src/side-events.js';
+import { showEncounter } from './render-side.js';
 
 // 巡幸引擎（src/tour.js）與本檔平行開發：以動態匯入防禦式載入，尚未合入時退回待接線狀態。
 const tour = await import('../../src/tour.js').catch(() => null);
@@ -171,15 +173,17 @@ export function renderMap(){
   const tourBtn = app.querySelector('[data-tour]');
   if (tourBtn && hasTour) tourBtn.onclick = () => {
     let r;
-    try { r = tour.tourTo(U.state, tourBtn.dataset.tour); } catch (e) { r = { ok: false, reason: null, error: e }; }
+    try { r = tourWithEncounter(U.state, tourBtn.dataset.tour); } catch (e) { r = { ok: false, reason: null, error: e }; }
+    const name = PREFECTURE_DEFS.find(x => x.id === tourBtn.dataset.tour)?.name ?? '';
     if (r?.ok) {
-      const name = PREFECTURE_DEFS.find(x => x.id === tourBtn.dataset.tour)?.name ?? '';
       U.mapNote = `天子巡幸${name}，所至府民心、城防皆增。`;
     } else {
       U.mapNote = TOUR_REASON[r?.reason] ?? `巡幸未成：${r?.error?.message || '未知原因'}`;
     }
     save();
     render();
+    // 奇遇（微服私訪）於巡幸抵達後擲出；以覆蓋層告知，側線關閉時 encounter 恆為 null。
+    if (r?.ok && r.encounter) showEncounter(r.encounter, name);
   };
   // 攻城由玩家主動觸發；結果寫入側欄（U.mapNote）。失敗時狀態僅依引擎變動，不影響其他府。
   const attackBtn = app.querySelector('[data-attack]');
