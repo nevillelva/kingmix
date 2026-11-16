@@ -13,6 +13,7 @@ import { startCampaign } from './campaign.js';
 import { neighborById, diplomacyAction, recordDiplomacy, DECLARE_WAR_REWARD, DECLARE_WAR_LOSS } from './diplomacy.js';
 import { createHeir, advanceHeirs, tickHeirs, tickCrownPrince } from './succession.js';
 import { tickTutorTraits } from './education.js';
+import { tickCurriculum } from './curriculum.js';
 import { tickTitles } from './titles.js';
 import { isLoyaltyFrozen, isBonded } from './bonds.js';
 import { collectFromSet } from './collections.js';
@@ -250,6 +251,7 @@ export function monthlyTick(state, rng) {
   tickCrownPrince(state);
   tickFates(state); // 人物命運線段落（見 fates.js）：僅寫入史冊，不改數值
   tickTutorTraits(state);
+  tickCurriculum(state);
   tickTitles(state);
 
   // 太傅到任後，皇子教育事件才會出現

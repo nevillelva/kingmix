@@ -6,6 +6,7 @@ import { makeRng } from './rng.js';
 import { PERSONALITIES } from './people.js';
 import { endFate, closeFatesAtEnd } from './fates.js';
 import { BALANCE } from './balance.js';
+import { CURRICULUM_PROSPECT_WEIGHT, curriculumMerit, tutelageOf } from './curriculum.js';
 
 export const ADULT_AGE = 15;
 const LEGACY_KEYS = ['literature', 'military', 'power', 'benevolence', 'prestige'];
@@ -24,6 +25,11 @@ export const CROWN_PRINCE_ALARM = 2;
 
 export function heirStrength(heir) {
   return Object.values(heir.abilities).reduce((a, b) => a + b, 0);
+}
+
+// 繼位評價：能力總和加上課表功績（未排課者功績為 0，評價即能力總和）。
+export function successionScore(state, heir) {
+  return heirStrength(heir) + CURRICULUM_PROSPECT_WEIGHT * curriculumMerit(state, heir.id);
 }
 
 // 皇子個性：以獨立的 rng 路徑抽取（不消耗 createHeir 呼叫端的 rng），既有出生序列不受影響。
@@ -66,17 +72,19 @@ export function tryAccession(state) {
     closeFatesAtEnd(state);
     return false;
   }
-  candidates.sort((a, b) => heirStrength(b) - heirStrength(a) || a.id.localeCompare(b.id));
-  // 已立太子者優先繼位，否則取最強者
+  candidates.sort((a, b) => successionScore(state, b) - successionScore(state, a) || a.id.localeCompare(b.id));
+  // 已立太子者優先繼位，否則取評價最高者
   const heir = candidates.find((h) => h.id === state.dynasty.crownPrince) ?? candidates[0];
+  const tutelage = tutelageOf(state, heir.id);
 
   state.heirs = state.heirs.filter((h) => h !== heir);
   endFate(state, 'heir', heir.id, 'ascended');
+  if (state.curriculum?.heirs) delete state.curriculum.heirs[heir.id];
   state.dynasty.generation += 1;
   state.alive = true;
   state.endReason = null;
   state.age = heir.age;
-  state.emperor = { name: heir.name, abilities: heir.abilities, traits: [...(heir.traits ?? [])] }; // 特質承自皇子（抓周所得）
+  state.emperor = { name: heir.name, abilities: heir.abilities, traits: [...(heir.traits ?? [])], tutelage }; // 特質承自皇子（抓周所得）；tutelage 為課表主修（無則 null）
   state.dynasty.crownPrince = null;
   state.dynasty.rivalrySince = null;
   setStat(state, 'health', 70);
@@ -96,6 +104,7 @@ export function childMortalityRate(age) {
 function removeHeir(state, heir, cause) {
   state.heirs = state.heirs.filter((h) => h !== heir);
   endFate(state, 'heir', heir.id, cause);
+  if (state.curriculum?.heirs) delete state.curriculum.heirs[heir.id];
   if (state.dynasty.crownPrince === heir.id) state.dynasty.crownPrince = null;
   state.chronicle.push({
     kind: 'heir_death',

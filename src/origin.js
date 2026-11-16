@@ -39,7 +39,19 @@ export const ORIGINS = Object.freeze([
   }),
 ]);
 
-// 各出身的專屬事件 id（與 data/events-origin.json 一致）。
+// 傳承解鎖的出身（見 src/unlocks.js）。不列入 ORIGINS，故無解鎖時預設出身的抽取與既有行為完全不變。
+export const UNLOCKABLE_ORIGINS = Object.freeze([
+  Object.freeze({
+    id: 'hanmen',
+    name: '寒門崛起',
+    desc: '出身寒微，早知民間疾苦，以學問與民望入主中樞。',
+    pros: ['民望起步較高，國庫略有積蓄', '博學能文，施政多有條理'],
+    cons: ['朝中無根基，權柄難以立即服眾', '名分不足，諸王視為寒族之主'],
+    statMods: Object.freeze({ literature: 20, people: 10, treasury: 50, power: -10 }),
+  }),
+]);
+
+// 各出身的專屬事件 id（與 data/events-origin.json 一致）。傳承解鎖出身尚無專屬事件，回傳空陣列。
 const ORIGIN_EVENT_IDS = Object.freeze({
   dichangzi: Object.freeze(['E501', 'E502', 'E503', 'E504']),
   shuchu: Object.freeze(['E505', 'E506', 'E507', 'E508']),
@@ -48,7 +60,7 @@ const ORIGIN_EVENT_IDS = Object.freeze({
 });
 
 const findOrigin = (originId) => {
-  const o = ORIGINS.find((x) => x.id === originId);
+  const o = [...ORIGINS, ...UNLOCKABLE_ORIGINS].find((x) => x.id === originId);
   if (!o) throw new Error(`unknown origin: ${originId}`);
   return o;
 };
@@ -67,5 +79,5 @@ export function applyOrigin(state, originId) {
 // 該出身的專屬事件 id 清單。
 export function originEvents(originId) {
   findOrigin(originId);
-  return [...ORIGIN_EVENT_IDS[originId]];
+  return [...(ORIGIN_EVENT_IDS[originId] ?? [])];
 }

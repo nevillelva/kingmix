@@ -14,6 +14,7 @@ const END_WORD = { death: '駕崩', abdicated: '高年致仕', resigned: '禪位
 const HEIR_DEATH_CAUSE = { child_mortality: '幼年夭折', rivalry: '奪嫡失勢' };
 const ASSASSIN_SOURCE = { tyranny: '暴政', remnant: '前朝遺臣', court: '朝堂江湖' };
 const ASSASSIN_OUTCOME = { blocked: '擋下', injured: '受傷', killed: '死亡' };
+const COURSE_LABEL = { classics: '經史', statecraft: '政論', martial: '騎射', administration: '理政', ethics: '德行' };
 
 import { FATE_END_TAG } from './fate-data.js';
 
@@ -52,6 +53,13 @@ export function chronicleLine(c) {
   }
   if (c.kind === 'fate_end') {
     return { text: orDash(c.text), tag: FATE_END_TAG[c.cause] ?? '善終' };
+  }
+  if (c.kind === 'curriculum_term') {
+    const course = COURSE_LABEL[c.course] ?? '—';
+    return {
+      text: `皇子${orDash(c.name)}季考${course} · ${orDash(c.year)}年${orDash(c.month)}月`,
+      tag: orDash(c.grade),
+    };
   }
   if (c.kind === 'heir_illness') {
     return { text: `皇子${orDash(c.name)}染疾 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '患病' };

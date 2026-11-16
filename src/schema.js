@@ -69,6 +69,8 @@ export const SCHEMA = Object.freeze({
   // 巡幸（tour.js ensureTour）
   tour: { type: ['object'], default: () => ({ busyUntil: -1 }) },
   location: { type: ['string'], default: () => CAPITAL_PREFECTURE },
+  // 皇子課表（curriculum.js setCourse / tickCurriculum）：heirs 以皇子 id 為鍵
+  curriculum: { type: ['object'], default: () => ({ heirs: {} }) },
   // 旗標（month-start.js、selection.js 以 state.flags || {} 讀寫）
   flags: { type: ['object'], default: () => ({}) },
 });

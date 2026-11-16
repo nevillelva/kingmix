@@ -7,6 +7,7 @@ import { prepareMonth } from '../../src/month-start.js';
 import { U } from './store.js';
 import { esc, useCap } from './util.js';
 import { render } from './render-bus.js';
+import { syncUnlocks, UNLOCK_FAIL_MSG } from './unlock-store.js';
 
 export const SAVE_KEY = 'kingmix-save-v1';
 // 損毀自動存檔的備份鍵（「開新局」前先另存，避免資料無聲遺失）。
@@ -35,6 +36,7 @@ export function flushSave(){
   if (!saveDirty) return;
   saveDirty = false;
   if (!U.state) return;
+  if (syncUnlocks(U.state).writeFailed) saveMsg(UNLOCK_FAIL_MSG);
   writeLocal(U.seed, U.state);
   cloudPush();
 }
