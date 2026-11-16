@@ -5,6 +5,7 @@ import { officeHolder } from './offices.js';
 import { POLICIES } from './policy.js';
 import { warDefenseMultiplier, markOccupied } from './city.js';
 import { BALANCE } from './balance.js';
+import { ruleMod } from './rule-mods.js';
 
 // 己方戰力的名目值（不含擲骰）：軍備、武略、兵部/大將武力與國策修正。
 export function nominalStrength(state) {
@@ -12,7 +13,7 @@ export function nominalStrength(state) {
   const martial = commander ? commander.abilities.martial : 0;
   const policy = POLICIES[state.policy];
   const base = state.stats.armament / 4 + state.stats.military * 1.5 + martial * 2.5;
-  return base * (policy ? policy.warStrength : 1);
+  return ruleMod(state, 'military_strength', base) * (policy ? policy.warStrength : 1);
 }
 
 export function ourStrength(state, rng) {

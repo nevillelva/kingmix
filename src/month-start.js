@@ -10,6 +10,7 @@ import { isAvailable, optionOpen, EVENT_MAX_PER_RUN } from './events.js';
 import { drawPolicyCards } from './cards.js';
 import { ensureAgency } from './slots.js';
 import { orderMorningPair } from './ministry-order.js';
+import { prepareIntel } from './intel.js';
 
 // 連鎖事件：不看 when 與冷卻，但仍需可用、未達每局上限。
 export function chainEvent(state, events, id) {
@@ -31,6 +32,9 @@ export function prepareMonth(state, events) {
 
   // 本月的時段行動配額（依年月分桶，冪等）。
   ensureAgency(state);
+
+  // 密折預警（intel.js）：本月可呈報的預警寫入 state.intel；不消耗亂數。
+  if (state.alive) prepareIntel(state);
 
   // 早朝兩則奏摺：同月只決定一次，結果存於 state.monthChain。
   if (!state.monthChain || state.monthChain.key !== key) {

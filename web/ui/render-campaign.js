@@ -1,6 +1,6 @@
 // web/ui/render-campaign.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
 import { TACTICS, formatBattleLog, nominalStrength } from '../../src/war.js';
-import { MAX_ROUNDS, RECON_GRAIN_COST, WINS_NEEDED } from '../../src/campaign.js';
+import { MAX_ROUNDS, PEACE_TRIBUTE_COST, RECON_GRAIN_COST, WINS_NEEDED } from '../../src/campaign.js';
 import { U } from './store.js';
 import { esc, fbLine } from './util.js';
 import { battleTickMs, nextBattleSpeed, visibleRoundCount, battleFrames } from '../../src/war-autoplay.js';
@@ -154,5 +154,6 @@ export function campaignCard() {
     <div class="opts">${tactics}</div>
     ${canRecon ? `<button class="btn ghost" data-act="camp-recon">遣探偵察（耗粮 ${RECON_GRAIN_COST}）</button>` : ''}
     ${c.round >= 1 ? `<button class="btn ghost" data-act="camp-peace">遣使議和</button>` : ''}
+    ${c.neighborId ? `<button class="btn ghost" data-act="camp-tribute">歲幣求和（耗國庫 ${PEACE_TRIBUTE_COST}）</button>` : ''}
   </section>`;
 }

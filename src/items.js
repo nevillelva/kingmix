@@ -24,6 +24,7 @@ export const ITEMS = Object.freeze([
   { id: 'yujian', name: '御賜寶劍', desc: '皇帝親賜之劍，象徵天恩，可賜予重臣以示信任。' },
   { id: 'danyao', name: '丹藥', desc: '丹房所進之丹，珍貴難得，賜予妃嬪或近臣可示恩寵。' },
   { id: 'zihua', name: '字畫', desc: '名家墨寶，文雅之物，賜予文臣或妃嬪最為相宜。' },
+  { id: 'liangma', name: '良馬', desc: '互市所得的西域良驥，可賜予武臣以示重用。' },
 ]);
 
 export const GIFT_LOYALTY_OFFICIAL = 6;

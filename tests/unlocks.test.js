@@ -22,7 +22,7 @@ const throwingStorage = { getItem() { throw new Error('denied'); }, setItem() { 
 after(() => setUnlockedPolicyCards([]));
 
 test('預設紀錄為空且版本為 1；基本內容恆為已解鎖', () => {
-  assert.deepEqual(emptyUnlockRecord(), { version: UNLOCK_RECORD_VERSION, titles: [] });
+  assert.deepEqual(emptyUnlockRecord(), { version: UNLOCK_RECORD_VERSION, titles: [], biographies: [] });
   assert.equal(isUnlocked(emptyUnlockRecord(), 'origin', 'dichangzi'), true);
   assert.equal(isUnlocked(emptyUnlockRecord(), 'scenario', 'steady'), true);
 });
@@ -41,8 +41,8 @@ test('每條解鎖規則指向的稱號皆存在於 titles.js', () => {
 test('normalizeUnlockRecord: 遷移與容錯（缺版本號、非物件、未知稱號、重複）', () => {
   assert.deepEqual(normalizeUnlockRecord(null), emptyUnlockRecord());
   assert.deepEqual(normalizeUnlockRecord('x'), emptyUnlockRecord());
-  assert.deepEqual(normalizeUnlockRecord({ titles: ['博士', '博士', '不存在', 3] }), { version: 1, titles: ['博士'] });
-  assert.deepEqual(normalizeUnlockRecord({ titles: 'bad' }), { version: 1, titles: [] });
+  assert.deepEqual(normalizeUnlockRecord({ titles: ['博士', '博士', '不存在', 3] }), { version: 2, titles: ['博士'], biographies: [] });
+  assert.deepEqual(normalizeUnlockRecord({ titles: 'bad' }), { version: 2, titles: [], biographies: [] });
 });
 
 test('readUnlockRecord: 無資料、損毀 JSON、儲存拋錯皆回傳預設值，不拋錯', () => {
@@ -63,7 +63,7 @@ test('readUnlockRecord: 較新版本的紀錄為唯讀，不被覆寫', () => {
 
 test('writeUnlockRecord: 成功回傳 true 並可讀回；儲存失敗回傳 false 而不拋錯', () => {
   const s = memStorage();
-  const rec = { version: 1, titles: ['博士'] };
+  const rec = { version: 2, titles: ['博士'], biographies: [] };
   assert.equal(writeUnlockRecord(s, KEY, rec), true);
   assert.deepEqual(readUnlockRecord(s, KEY).record, rec);
   let ok = null;

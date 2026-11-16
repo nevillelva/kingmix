@@ -10,7 +10,8 @@ import { openInvestigationOnLowest, tickDongchang, applyTyrannyDrift } from './d
 import { activeMonthly } from './policy.js';
 import { resolveWar } from './war.js';
 import { startCampaign } from './campaign.js';
-import { neighborById, diplomacyAction, recordDiplomacy, DECLARE_WAR_REWARD, DECLARE_WAR_LOSS } from './diplomacy.js';
+import { neighborById, diplomacyAction, recordDiplomacy, DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, tickVassalTribute, tickTrade } from './diplomacy.js';
+import { addItem } from './items.js';
 import { createHeir, advanceHeirs, tickHeirs, tickCrownPrince } from './succession.js';
 import { tickTutorTraits } from './education.js';
 import { tickCurriculum } from './curriculum.js';
@@ -31,6 +32,7 @@ import { applyFacilityMonthly, advanceConstruction } from './facilities.js';
 import { stepRelations } from './relations.js';
 import { tickRebellion } from './city-capture.js';
 import { trimCapped, WARNINGS_CAP, DIPLOMACY_LOG_CAP } from './caps.js';
+import { ruleMod } from './rule-mods.js';
 
 // 官員名單上限：朝臣 12 人（開局 4 人加進士招募）＋ 六府知府 6 人。
 export const MAX_OFFICIALS = 18;
@@ -234,13 +236,17 @@ export function monthlyTick(state, rng) {
   if (tp) drift(state, 'power', g('power') + tp);
   applyFactionPressure(state);
   tickLatePressure(state); // 後期壓力：知府割據、權臣坐大、天災連鎖（見 late-pressure.js）
+  // 玩法深度擴充（C）：冊封之國每年朝貢、互市增益與良馬產出；皆為玩家主動開通後才生效，預設模擬不觸發。不消耗 rng。
+  tickVassalTribute(state);
+  for (const itemId of tickTrade(state)) addItem(state, itemId);
 
   // 派系勢力影響官員忠誠：勢力高於中性則忠誠微升，低於則微降
   // 野心越高，忠誠每月流失越快（野心/200）；派系勢力則加減忠誠
   for (const o of state.officials) {
     if (isLoyaltyFrozen(state, o)) continue; // 君臣相得：忠誠不再月月流失（見 bonds.js）
     const influence = state.factions[o.faction];
-    const drift = (influence - FACTION_BASE) / 100 - o.ambition / 200;
+    const rawDrift = (influence - FACTION_BASE) / 100 - o.ambition / 200;
+    const drift = rawDrift < 0 ? ruleMod(state, 'loyalty_loss', rawDrift) : rawDrift; // 祖訓：減緩流失（僅作用於負向）
     // 忠誠取整至小數二位，避免浮點誤差累積（B8）。
     o.loyalty = Math.round(Math.min(100, Math.max(0, o.loyalty + drift)) * 100) / 100;
   }
