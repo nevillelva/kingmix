@@ -25,6 +25,7 @@ import { actionsLeft, portrait, pressureLine } from './render-court.js';
 import { openResignDialog } from './overlays.js';
 import { deferButton, flushButton, giveItemMenu } from './render-cards.js';
 import { renderRelationsCard } from './render-relations.js';
+import { prefecturePressureText, courtMinisterText } from './render-pressure.js';
 
 // 忠誠安全線：本派勢力達 33 + 野心/2 時，忠誠不再每月下滑；未達則流失（見 turn.js 忠誠漂移）。
 // 忠誠安全線：本派勢力達安全線忠誠才不流失；君臣相得者忠誠凍結，另註明。
@@ -120,7 +121,7 @@ export function renderOfficials(){
   app.innerHTML = `
     ${fbLine()}
     <section class="card"><h2>朝局</h2>
-      <div class="factions">${bar}</div><div class="legend">${legend}</div>${pressureLine()}</section>
+      <div class="factions">${bar}</div><div class="legend">${legend}</div>${pressureLine()}<div class="sub" style="margin:10px 0 0">${esc(courtMinisterText(U.state))}</div></section>
     ${renderRelationsCard()}
     ${officeCard()}
     ${groups}${localHtml}
@@ -227,7 +228,8 @@ export function economyCard(){
   const eff = administrativeEfficiency(U.state);
   const chips = TAX_TIERS.map(t => `<span class="chip ${t === econ.tax ? 'up' : ''}">${t}稅</span>`).join('');
   const rows = (U.state.prefectures || []).map(p => `<div class="case"><div><b style="font-weight:500">${esc(p.name)}</b>
-    <div class="loy">知府${esc(p.governor?.name || '—')}　政 ${esc(p.governor?.abilities?.politics ?? '—')}　${p.output === 'agriculture' ? '農產' : '商產'}　城防 ${Math.round(p.defense ?? 50)}</div></div>
+    <div class="loy">知府${esc(p.governor?.name || '—')}　政 ${esc(p.governor?.abilities?.politics ?? '—')}　${p.output === 'agriculture' ? '農產' : '商產'}　城防 ${Math.round(p.defense ?? 50)}</div>
+    <div class="loy" style="margin:2px 0 0">${esc(prefecturePressureText(U.state, p.id))}</div></div>
     <span class="chip">產值 ${Number(p.yield || 0).toFixed(2)}</span></div>`).join('');
   return `<section class="card"><h2>稅制與州府</h2>
     <div class="kicker">目前稅制</div><div class="eff" style="margin:0 0 6px">${chips}</div>

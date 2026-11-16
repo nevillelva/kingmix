@@ -8,6 +8,7 @@ import { render } from './render-bus.js';
 import { save } from './state-io.js';
 import { INK_DEFS, INK_BACKDROP, MAP_CSS, governorBadge, defenseFill, peopleFill } from './map-svg.js';
 import { attackCity, captureStatus } from '../../src/city-capture.js';
+import { prefecturePressureText } from './render-pressure.js';
 import { tourWithEncounter } from '../../src/side-events.js';
 import { showEncounter } from './render-side.js';
 
@@ -123,6 +124,7 @@ export function renderMap(){
       <div class="row">城防 ${defense}　產值 ${Number(p.yield || 0).toFixed(2)}</div>
       <div class="track"><div class="fill${defense < 40 ? ' warn' : ''}" style="width:${defense}%"></div></div>
       ${statusText ? `<div class="row">${esc(statusText)}</div>` : ''}
+      <div class="row">${esc(prefecturePressureText(U.state, def.id))}</div>
       ${cap.rebel ? `<div class="row" style="color:var(--vermilion)">叛亂：民心渙散，可遣兵攻城平定。</div>` : ''}
       ${cap.occupied ? `<div class="row" style="color:var(--vermilion)">敵方佔領：此府失守，可遣兵攻回。</div>` : ''}
       ${cap.besieged ? `<div class="row" style="color:var(--vermilion)">攻城中：本年攻城未克，圍城待來年。</div>` : ''}
