@@ -7,7 +7,7 @@ import { ERA_CHANGE_COOLDOWN_MONTHS, ERA_CHANGE_PRESTIGE_COST, ERA_REASON_TEXT, 
 import { CHANGE_CROWN_PRINCE_PRESTIGE_COST, chooseCrownPrince, eligibleCrownHeirs, heirFaction } from '../../src/heirs-choice.js';
 import { TAX_TIERS, ensureEconomy, setTaxTier } from '../../src/economy.js';
 import { REPAIR_COST, cityOf, ensureCity, repairCity } from '../../src/city.js';
-import { ALLIANCE_MIN_ATTITUDE, DECLARE_WAR_LOSS, DECLARE_WAR_REWARD, MARRIAGE_COST, MAX_ALLIANCES, NEIGHBORS, TRIBUTE_GAIN, TRIBUTE_MIN_ATTITUDE, acceptTribute, arrangeMarriage, diplomacyOf, formAlliance, neighborById } from '../../src/diplomacy.js';
+import { ALLIANCE_MIN_ATTITUDE, DECLARE_WAR_LOSS, DECLARE_WAR_REWARD, MARRIAGE_COST, MAX_ALLIANCES, NEIGHBORS, PRINCESS_ATTITUDE_GAIN, PRINCESS_TRUCE_MONTHS, TRIBUTE_GAIN, TRIBUTE_MIN_ATTITUDE, acceptTribute, arrangeMarriage, diplomacyOf, eligiblePrincesses, formAlliance, marryPrincess, neighborById } from '../../src/diplomacy.js';
 import { assignOffice, dismissOffice, suggestCandidate } from '../../src/offices.js';
 import { startCampaign } from '../../src/campaign.js';
 import { remonstrate } from '../../src/bonds.js';
@@ -140,7 +140,10 @@ export function actionsCard(){
       ['ally', '結盟', `好感達 ${ALLIANCE_MIN_ATTITUDE}，最多 ${MAX_ALLIANCES} 國；盟國不可宣戰`, ''],
       ['war', '宣戰', '三回合親征，成敗決於戰局與議和', 'zhu'],
     ].map(([k, l, h, cls]) => `<button class="opt ${cls}" data-act="dpath" data-arg="${k}" ${dis}><span class="mark">${cls ? '征' : '和'}</span>
-      <span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span></span></button>`).join('') + `</div>`
+      <span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span></span></button>`).join('')
+      + eligiblePrincesses(U.state).map(h => `<button class="opt" data-act="dprincess" data-arg="${esc(h.id)}" ${dis}><span class="mark">女</span>
+      <span class="otxt"><span class="label">和親：${esc(h.name)}</span><span class="hint">皇女出嫁，花費國庫 ${MARRIAGE_COST}，停戰 ${PRINCESS_TRUCE_MONTHS} 月，好感 +${PRINCESS_ATTITUDE_GAIN}</span></span></button>`).join('')
+      + `</div>`
       : '<p class="empty">無此鄰國。</p>';
   }
   const fb = U.feedback ? `<div class="sub" style="color:var(--green);margin:0 0 10px">${esc(U.feedback)}</div>` : '';
@@ -271,6 +274,14 @@ export function onAgency(e){
     return useAction(`工匠修繕${nm}城池，城防提升。`);
   }
   if (a === 'dneigh') { U.pick1 = v; U.panel = 'diplo2'; return render(); }
+  // 皇女和親（diplomacy.js marryPrincess）：v 為皇女 id，鄰國取自 U.pick1。
+  if (a === 'dprincess') {
+    const n = neighborById(U.pick1);
+    if (!n) return render();
+    const r = marryPrincess(U.state, n.id, v);
+    if (!r.ok) { U.feedback = `此舉未成：${REASON[r.reason] || '條件未符'}。`; return render(); }
+    return useAction(`皇女${r.name}出嫁${n.name}，兩國停戰${PRINCESS_TRUCE_MONTHS}月。`);
+  }
   if (a === 'dpath') {
     const n = neighborById(U.pick1);
     if (!n) return render();

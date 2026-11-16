@@ -21,11 +21,8 @@ const REASON_TEXT = {
 // 伴讀舉薦候選人數（依忠誠由高至低）。
 const COMPANION_CANDIDATES = 3;
 
-// 僅皇子（男）可排課；皇女不入課表。
-export const isPrince = (h) => h?.gender === 'm' || h?.gender === 'male';
-
-// 排課是否可見：皇子且已達入學年齡。
-export const canSchedule = (h) => isPrince(h) && Number(h.age) >= CURRICULUM_MIN_AGE;
+// 排課是否可見：皇子與皇女皆可排課（不分性別），已達入學年齡者。
+export const canSchedule = (h) => !!h && Number(h.age) >= CURRICULUM_MIN_AGE;
 
 // 課表摘要文字（純函式，供顯示與測試）。
 export function curriculumSummary(entry) {
@@ -37,7 +34,7 @@ export function curriculumSummary(entry) {
 
 // 單一皇子的排課區塊。
 export function curriculumControlHtml(h, state = U.state) {
-  if (!isPrince(h)) return '';
+  if (!h) return '';
   if (!canSchedule(h)) return `<div class="loy">課表：年幼，${CURRICULUM_MIN_AGE} 歲方入學。</div>`;
   const entry = curriculumEntry(state, h.id);
   const current = entry?.course ?? null;
