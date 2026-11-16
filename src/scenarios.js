@@ -64,6 +64,33 @@ export const SCENARIOS = {
 
 export const SCENARIO_IDS = Object.keys(SCENARIOS);
 
+// 傳承解鎖的劇本（見 src/unlocks.js）。不列入 SCENARIOS／SCENARIO_IDS，故未解鎖時的行為不變。
+export const UNLOCKABLE_SCENARIOS = {
+  wenzhi: {
+    id: 'wenzhi',
+    name: '文治之世',
+    summary: '先帝留下承平之業，以文教化民。八年內使仁德達 200，即文治告成。',
+    start: {
+      stats: { literature: 150, benevolence: 120 },
+    },
+    goal: {
+      win: [
+        { key: 'turn', gte: 96 },
+        { key: 'benevolence', gte: 200 },
+      ],
+      fail: [
+        [{ key: 'minPeople', lt: 25 }],
+        [{ key: 'turn', gte: 120 }],
+      ],
+    },
+    goalText: '八年（96 月）內仁德達 200 即成功；民心曾跌破 25 或滿十年仍未達成則失敗。',
+  },
+};
+
+// 所有劇本定義（含傳承解鎖者）；查詢劇本定義時使用。
+export const SCENARIO_DEFS = { ...SCENARIOS, ...UNLOCKABLE_SCENARIOS };
+export const scenarioDef = (id) => SCENARIO_DEFS[id];
+
 function readKey(state, key) {
   if (key === 'minPeople') return state.scenario?.minPeople ?? state.stats.people;
   if (key in state.stats) return state.stats[key];
@@ -86,7 +113,7 @@ function holds(state, cond) {
 
 // 建立劇本開局狀態：先產生標準開局，再套用劇本的數值與旗標覆寫。
 export function createScenarioState(seed, scenarioId, opts = {}) {
-  const def = SCENARIOS[scenarioId];
+  const def = SCENARIO_DEFS[scenarioId];
   if (!def) throw new Error(`unknown scenario: ${scenarioId}`);
   const state = createInitialState(seed, opts);
   if (def.start.age !== undefined) state.age = def.start.age;
@@ -99,7 +126,7 @@ export function createScenarioState(seed, scenarioId, opts = {}) {
 // 評估劇本進度。回傳目前狀態與各勝利條件的達成情況，供介面顯示。
 export function evaluateScenario(state) {
   const sc = state.scenario;
-  const def = sc && SCENARIOS[sc.id];
+  const def = sc && SCENARIO_DEFS[sc.id];
   if (!def) return null;
 
   if (sc.status === 'ongoing') {

@@ -13,6 +13,7 @@ import { defaultOf } from './schema.js';
 
 import { isCourtOfficial, FACTIONS } from './officials.js';
 import { makeRng } from './rng.js';
+import { endFate } from './fates.js';
 
 export const REL_KINDS = Object.freeze(['teacher', 'marriage', 'rival']);
 export const SPREAD_KINDS = Object.freeze(['teacher', 'marriage']); // 連坐沿師生、姻親傳遞；孿敵不連坐
@@ -100,6 +101,7 @@ function dismiss(state, official) {
   const idx = state.officials.indexOf(official);
   if (idx === -1) return;
   state.officials.splice(idx, 1);
+  endFate(state, 'official', official.id, 'dismissed');
   official.office = null;
   state.factions[official.faction] = Math.max(0, state.factions[official.faction] - 2);
   for (const c of state.dongchang.cases) {

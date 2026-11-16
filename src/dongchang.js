@@ -3,6 +3,7 @@
 
 import { setStat } from './state.js';
 import { isCourtOfficial } from './officials.js';
+import { endFate } from './fates.js';
 
 export const DC_ACTIONS = ['warn', 'punish', 'prison'];
 export const MAX_ACTIVE_CASES = 2; // 東廠同時最多進行的案件數（未結案者皆計入）
@@ -104,6 +105,7 @@ export function applyDongchangAction(state, caseId, action) {
     if (official) {
       const idx = state.officials.indexOf(official);
       state.officials.splice(idx, 1);
+      endFate(state, 'official', official.id, 'dismissed');
       if (official.office) official.office = null;
       state.factions[official.faction] = Math.max(0, state.factions[official.faction] - 2);
       setStat(state, 'treasury', state.stats.treasury + c.level * 25 + Math.round((100 - official.abilities.virtue) / 4));

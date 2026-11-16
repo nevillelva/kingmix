@@ -11,7 +11,7 @@ import { ALLIANCE_MIN_ATTITUDE, DECLARE_WAR_LOSS, DECLARE_WAR_REWARD, MARRIAGE_C
 import { assignOffice, dismissOffice, suggestCandidate } from '../../src/offices.js';
 import { startCampaign } from '../../src/campaign.js';
 import { remonstrate } from '../../src/bonds.js';
-import { SLOTS, canTakeSlot, slotCost } from '../../src/slots.js';
+import { SLOTS, canTakeSlot, slotCost, ensureAgency, periodLeft, spendSlot } from '../../src/slots.js';
 import { U } from './store.js';
 import { esc, rng } from './util.js';
 import { FAC, FACTION, REASON, heirPersonLabel, officeName } from './labels.js';
@@ -25,11 +25,8 @@ import { handleCardAct } from './render-cards.js';
 // ── 主動決策（Phase 6）：每月兩次行動，不推進時間 ──
 export const ACTION_LIMIT = 2;
 
-export function agency(){
-  const k = `${U.state.year}-${U.state.month}`;
-  if (!U.state.agency || U.state.agency.key !== k) U.state.agency = { key: k, used: 0 };
-  return U.state.agency;
-}
+// 本月行動桶由引擎（src/slots.js ensureAgency）維護，此處僅讀取。
+export function agency(){ return ensureAgency(U.state); }
 
 export function actionsLeft(){ return ACTION_LIMIT - agency().used; }
 
@@ -291,7 +288,8 @@ export function slotsCard(){
       return `<button class="opt" data-slot="${k}" data-arg="${id}" ${ok ? '' : 'disabled'}><span class="mark">${l.slice(0,1)}</span>
       <span class="otxt"><span class="label">${l}</span><span class="hint">${h}</span><span class="slot-cost">耗 ${slotCost(k, id)} 行動</span></span></button>`;
     }).join('')}</div>
-    ${exhausted ? `<p class="slot-why">本月行動已用盡，待下月再議。</p>` : ''}
+    ${exhausted ? `<p class="slot-why">本月行動已用盡，待下月再議。</p>`
+      : (U.state && periodLeft(U.state, k) <= 0 ? `<p class="slot-why">本${s.name}配額已用，待下一時段或下月再議。</p>` : '')}
     ${s.note ? `<p class="hint slot-note">${s.note}</p>` : ''}
   </section>`).join('');
 }
@@ -302,8 +300,7 @@ export function onSlot(e){
   const s = SLOTS[b.dataset.slot];
   const o = s && s.opts.find(x => x[0] === b.dataset.arg);
   if (!o) return;
-  if (!canTakeSlot(U.state, b.dataset.slot, agency().used)) return;
-  agency().used += slotCost(b.dataset.slot, o[0]);
+  if (!spendSlot(U.state, b.dataset.slot, o[0]).ok) return;
   save();
   const t = o[3];
   U.panel = null; U.pick1 = null; U.feedback = t.feedback || '';
