@@ -1,3 +1,4 @@
+import { autoCanalPatrol } from './canal.js';
 import { defaultSimPolicy, applySimPolicy } from './sim-policy.js';
 // 無頭模擬：以固定種子逐月跑完，回傳可比對的摘要。
 // 東廠有待處置的把柄時，該月的奏摺改為「東廠密報」。
@@ -25,6 +26,7 @@ import { pickEvent, pickSecondMemorial, autoAppoint } from './selection.js';
 import { applyEdictsUnchecked } from './edicts.js';
 import { autoRespondPartisan, partisanStatus } from './partisan.js';
 import { attemptAlchemy } from './alchemy.js';
+import { governorOf } from './economy.js';
 
 // 核心選擇規則已搬至 selection.js；此處 re-export 以維持既有 import 路徑。
 export {
@@ -65,11 +67,12 @@ function strategyOption(choose, state, event, seed, year, month) {
 // scenario 為選用：省略時行為與原本相同（標準開局、回傳不含 scenario 欄位）。
 // partisan：黨爭模擬策略（'balance' | 'rally' | 'purge' | 'ignore'，見 partisan.js）。省略時黨爭不參與（預設，稽核數字不變）。
 // monthlyAlchemy 為選用（預設 false）：每月月結前嘗試煉丹一次（煉丹側線壓力測試用，見 alchemy.js）；預設不煉丹，結果與原版相同。
-export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE, choose, origin, edicts, partisan, simPolicy = defaultSimPolicy(), monthlyAlchemy = false }) {
+export function runSimulation({ seed, months, events, policy = 'agrarian', scenario, mode = DEFAULT_MODE, choose, origin, edicts, partisan, simPolicy = defaultSimPolicy(), monthlyAlchemy = false, canal }) {
   const state = scenario
     ? createScenarioState(seed, resolveScenarioId(scenario), { policy, mode })
     : createInitialState(seed, { policy, mode });
   state.partisan = { enabled: partisan !== undefined };
+  state.canal = { enabled: canal !== undefined }; // 漕運：預設模擬不參與（canal.js），指定 canal 策略時才開啟
   applyOrigin(state, origin ?? ORIGINS[Math.floor(makeRng([seed, 'origin'])() * ORIGINS.length)].id); // 出身（預設依 seed 輪替，使四種出身事件皆可達）
   if (Array.isArray(edicts) && edicts.length) applyEdictsUnchecked(state, edicts); // 祖訓（未指定時 state.edicts 為空，與原版相同）
   events = withOriginEvents(events, state.origin); // 出身專屬事件（獨立檔，如寒門崛起）併入事件池
@@ -140,6 +143,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
     }
     if (partisan !== undefined) autoRespondPartisan(state, partisan); // 黨爭：依策略裁決未了訴求（未參與時不呼叫）
     applySimPolicy(state, simPolicy, { seed, year, month }); // 玩家時段行動（午後、夜間各一項，見 sim-policy.js）
+    if (canal !== undefined) autoCanalPatrol(state, canal, governorOf); // 漕運：依策略派遣東廠巡漕（不佔東廠處置上限）
     if (monthlyAlchemy && state.alive) attemptAlchemy(state);
     endOfMonth(state); // 月結：與 web 的 finishMonth 共用（見 month.js）
   }
@@ -147,6 +151,7 @@ export function runSimulation({ seed, months, events, policy = 'agrarian', scena
   return {
     ...(scenario ? { scenario: evaluateScenario(state) } : {}),
     ...(partisan !== undefined ? { partisan: partisanStatus(state) } : {}),
+    ...(canal !== undefined ? { canalLog: state.canalLog ?? [], canalLost: state.canal?.lostTotal ?? 0 } : {}),
     seed,
     year: state.year,
     month: state.month,

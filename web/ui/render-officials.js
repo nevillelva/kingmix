@@ -11,7 +11,10 @@ import { TAIHOU_OPPOSE, WAIJIA_THRESHOLD, taihouOpposes } from '../../src/harem.
 import { illnessLabel } from '../../src/heir-status.js';
 import { curriculumControlHtml } from './render-curriculum.js';
 import { scenarioDef, evaluateScenario } from '../../src/scenarios.js';
-import { TAX_TIERS, administrativeEfficiency, ensureEconomy } from '../../src/economy.js';
+import { TAX_TIERS, administrativeEfficiency, ensureEconomy, governorOf, PREFECTURE_DEFS } from '../../src/economy.js';
+import { canalStatus, dispatchCanalPatrol, CANAL_PATROL_COST, CANAL_PATROL_MONTHS, CANAL_DISLOYAL } from '../../src/canal.js';
+import { save } from './state-io.js';
+import { render } from './render-bus.js';
 import { COLLECTIONS, collectionProgress } from '../../src/collections.js';
 import { chronicleLine } from '../../src/chronicle.js';
 import { tyrannyStatus } from '../../src/dongchang.js';
@@ -222,11 +225,30 @@ export function renderDC(){
     ${c.status === 'leverage' ? `<div style="margin-top:6px">${deferButton(c)}</div>` : ''}</div>
     <div class="lvl" title="把柄等級 ${c.level}">${[1,2,3].map(i => `<span class="${i<=c.level?'on':''}"></span>`).join('')}</div></div>`;
   const deferredN = open.filter(c => c.status === 'deferred').length;
+  const canalRows = canalStatus(U.state).map(st => {
+    const pref = U.state.prefectures.find(p => p.id === st.id);
+    const gov = governorOf(U.state, pref);
+    const name = (PREFECTURE_DEFS.find(d => d.id === st.id) || {}).name || st.id;
+    const loss = gov && gov.loyalty < CANAL_DISLOYAL ? '貪腐風險' : '無貪腐風險';
+    const btn = st.patrolling
+      ? `<span class="chip up">巡漕中 · 尚餘 ${st.patrolLeft} 月</span>`
+      : `<button class="opt" data-canal="${st.id}">東廠巡漕（耗 ${CANAL_PATROL_COST} 國庫，${CANAL_PATROL_MONTHS} 月）</button>`;
+    return `<div class="case"><div><b style="font-weight:500">${esc(name)}</b><div class="loy">知府${gov ? `忠誠 ${Math.round(gov.loyalty)}` : '缺位'}　${loss}</div></div>${btn}</div>`;
+  }).join('');
+  const canalLog = (U.state.canalLog || []).slice(-6).reverse();
   app.innerHTML = `
     ${fbLine()}
     <section class="card"><h2>進行中</h2>${open.map(row).join('') || '<p class="empty">目前無案件。</p>'}
       ${deferredN ? `<div style="margin-top:10px">${flushButton()}</div>` : ''}</section>
+    <section class="card"><h2>漕運</h2><div class="sub">知府忠誠低則稅入於解送途中被貪腐；叛亂或民心低落之府另有劫掠風險。巡漕可免除該府損耗，並小幅增收。</div>${canalRows}
+      ${canalLog.length ? `<div class="kicker" style="margin-top:10px">近期損耗</div>` + canalLog.map(x => `<div class="case"><span>${esc((PREFECTURE_DEFS.find(d => d.id === x.prefecture) || {}).name || x.prefecture)}</span><span class="loy">${x.year}年${x.month}月 損 ${x.lost}${x.causes.includes('raid') ? '（劫掠）' : ''}</span></div>`).join('') : ''}</section>
     <section class="card"><h2>近期結案</h2>${closed.map(c => `<div class="case"><span>${esc(off(c.officialId))}</span><span class="loy">${esc(c.outcome || '結案')}</span></div>`).join('') || '<p class="empty">尚無結案。</p>'}</section>`;
+  app.querySelectorAll('[data-canal]').forEach(b => b.onclick = () => {
+    const r = dispatchCanalPatrol(U.state, b.dataset.canal);
+    U.feedback = r.ok ? '已派東廠巡漕，該府六月內免於貪腐與劫掠。' : ({ limit: '本月巡漕派遣已達上限。', treasury: '國庫不足，無力派遣巡漕。', unknown: '無此府。', disabled: '此局未開放漕運。' }[r.reason] || '巡漕未成。');
+    if (r.ok) save();
+    render();
+  });
 }
 
 export function scenarioCard(){

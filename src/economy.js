@@ -9,6 +9,7 @@ import { FACTIONS } from './officials.js';
 import { attachPerson } from './people.js';
 import { defaultOf } from './schema.js';
 import { ruleMod } from './rule-mods.js';
+import { canalRate, canalPatrolMult, logCanalLoss } from './canal.js';
 
 export const TAX_TIERS = ['低', '中', '高'];
 export const TAX_EFFECTS = {
@@ -151,7 +152,13 @@ export function applyPrefectureYield(state) {
     const yieldMod = ruleMod(state, pref.output === 'agriculture' ? 'yield_agriculture' : 'yield_commerce', 1);
     const treasuryMod = ruleMod(state, 'treasury_gain', 1);
     const peopleMod = ruleMod(state, 'people_gain', 1);
-    setStat(state, 'treasury', state.stats.treasury + pref.yield * mult * remit * yieldMod * treasuryMod * YIELD_TREASURY, { silent: true });
+    // 漕運（canal.js）：貪腐與劫掠損耗自解送稅入扣除；巡漕之府小幅增收。canal 關閉時損耗為 0、係數為 1，結果與原式相同。
+    const gross = pref.yield * mult * remit * yieldMod * treasuryMod * YIELD_TREASURY * canalPatrolMult(state, pref);
+    const gov = governorOf(state, pref);
+    const { rate, causes } = canalRate(state, pref, gov, () => makeRng([state.seed, state.year, state.month, 'canal', pref.id])());
+    const lost = gross * rate;
+    setStat(state, 'treasury', state.stats.treasury + gross - lost, { silent: true });
+    logCanalLoss(state, pref, lost, causes);
     setStat(state, 'people', state.stats.people + (pref.yield - 1) * mult * yieldMod * peopleMod * YIELD_PEOPLE, { silent: true });
   }
   return state;

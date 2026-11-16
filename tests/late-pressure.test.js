@@ -73,6 +73,7 @@ test('割據州府的稅入只解送 AUTONOMY_REMIT；叛亂府仍不減產（RE
   const rebel = seeded('lp-remit');
   for (const s of [base, cut, rebel]) {
     s.stats.treasury = 500;
+    s.canal = { enabled: false }; // 隔離漕運損耗，本測試只驗證割據解送與叛亂不減產
     for (const p of s.prefectures) p.yield = 2;
   }
   cut.prefectures[0].autonomous = true;
