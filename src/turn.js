@@ -10,7 +10,8 @@ import { openInvestigationOnLowest, tickDongchang, applyTyrannyDrift } from './d
 import { activeMonthly } from './policy.js';
 import { resolveWar } from './war.js';
 import { startCampaign } from './campaign.js';
-import { neighborById, diplomacyAction, recordDiplomacy, DECLARE_WAR_REWARD, DECLARE_WAR_LOSS } from './diplomacy.js';
+import { neighborById, diplomacyAction, recordDiplomacy, DECLARE_WAR_REWARD, DECLARE_WAR_LOSS, tickVassalTribute, tickTrade } from './diplomacy.js';
+import { addItem } from './items.js';
 import { createHeir, advanceHeirs, tickHeirs, tickCrownPrince } from './succession.js';
 import { tickTutorTraits } from './education.js';
 import { tickCurriculum } from './curriculum.js';
@@ -234,6 +235,9 @@ export function monthlyTick(state, rng) {
   if (tp) drift(state, 'power', g('power') + tp);
   applyFactionPressure(state);
   tickLatePressure(state); // 後期壓力：知府割據、權臣坐大、天災連鎖（見 late-pressure.js）
+  // 玩法深度擴充（C）：冊封之國每年朝貢、互市增益與良馬產出；皆為玩家主動開通後才生效，預設模擬不觸發。不消耗 rng。
+  tickVassalTribute(state);
+  for (const itemId of tickTrade(state)) addItem(state, itemId);
 
   // 派系勢力影響官員忠誠：勢力高於中性則忠誠微升，低於則微降
   // 野心越高，忠誠每月流失越快（野心/200）；派系勢力則加減忠誠

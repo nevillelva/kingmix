@@ -140,6 +140,16 @@ export function offerPeace(state, applyEffects = defaultApply) {
   return { ok: true, accepted, finished: finishCampaign(state, accepted ? 'peace' : 'talks_failed', applyEffects) };
 }
 
+// 歲幣求和（避戰）：敵國來犯、戰役進行中，耗國庫即可直接議和，沿用 finishCampaign 的 'peace' 結算（不擲骰、不受議和時機限制）。
+export const PEACE_TRIBUTE_COST = 50;
+export function payPeaceTribute(state, applyEffects = defaultApply) {
+  const c = state.campaign;
+  if (!c || c.status !== 'active' || !c.neighborId) return { ok: false, reason: 'inactive' };
+  if (state.stats.treasury < PEACE_TRIBUTE_COST) return { ok: false, reason: 'treasury' };
+  state.stats.treasury -= PEACE_TRIBUTE_COST;
+  return { ok: true, finished: finishCampaign(state, 'peace', applyEffects) };
+}
+
 // 結算：寫入 state.wars、套用獎懲、更新好感，並清除 state.campaign。
 export function finishCampaign(state, outcome, applyEffects = defaultApply) {
   const c = state.campaign;
