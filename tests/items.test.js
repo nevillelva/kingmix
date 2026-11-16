@@ -131,10 +131,11 @@ test('item events match the events.json schema and use only known keys and item 
   }
 });
 
-test('every item event is reachable: each fires at least once in 40 headless seeds of 40 years', () => {
+test('every item event is reachable: each fires at least once in 300 headless seeds of 40 years', () => {
   const all = [...base, ...itemEvents];
   const hit = new Map(itemEvents.map((e) => [e.id, 0]));
-  for (let seed = 1; seed <= 40; seed++) {
+  // 稀有事件（如 E526，旗標加軍備條件）40 局內命中具偶然性；時段行動建模後放大樣本至 300 局，以確認仍可達。
+  for (let seed = 1; seed <= 300; seed++) {
     const r = runSimulation({ seed: `items-test-${seed}`, months: 480, events: all });
     for (const id of hit.keys()) if (r.triggered[id]) hit.set(id, hit.get(id) + 1);
   }
