@@ -1,3 +1,4 @@
+import { withAllOriginEvents } from '../../src/origin.js';
 // web/ui/render-gallery.js：圖鑑頁。以 galleryProgress 計算收藏進度；未解鎖條目以「？？？」示意。
 import { GALLERY_CATEGORIES, galleryProgress, galleryRegistry } from '../../src/gallery.js';
 import { U, app } from './store.js';
@@ -7,8 +8,8 @@ import { esc } from './util.js';
 const CAT_TEXT = { emperor: '先帝', official: '具名官員', event: '事件', battle: '戰功' };
 
 export function renderGallery(){
-  const progress = galleryProgress(U.state, loadLegacy(), U.events);
-  const registry = galleryRegistry(U.events);
+  const progress = galleryProgress(U.state, loadLegacy(), withAllOriginEvents(U.events));
+  const registry = galleryRegistry(withAllOriginEvents(U.events));
   const unlockedIds = new Set(progress.unlocked.map(e => e.id));
 
   const summary = GALLERY_CATEGORIES.map(c => {

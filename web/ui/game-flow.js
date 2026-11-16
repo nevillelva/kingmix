@@ -1,13 +1,7 @@
 import { pruneNewYearKeys } from './newyear-keys.js';
-import { applyEdictsUnchecked } from '../../src/edicts.js';
 // web/ui/game-flow.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
-import { DEFAULT_MODE, MODES } from '../../src/mode.js';
-import { createScenarioState } from '../../src/scenarios.js';
-import { createInitialState, setStat } from '../../src/state.js';
-import { seedRelations } from '../../src/relations.js';
-import { seedBondedCourtOfficial } from '../../src/bonds.js';
-import { setAccessionPolicies } from '../../src/policy.js';
-import { setOpeningDeck } from '../../src/cards.js';
+import { buildNewGame } from '../../src/new-game.js';
+import { setStat } from '../../src/state.js';
 import { recordEvent } from '../../src/events.js';
 import { prepareMonth, chainEvent as chainEventEngine } from '../../src/month-start.js';
 import { endOfMonth } from '../../src/month.js';
@@ -27,28 +21,14 @@ import { STAT } from './labels.js';
 import { currentEventPool, findPoolEvent } from './event-pool.js';
 
 // deckIds（選用）：開局策卡 3–5 張，作為本局策卡卡池；空陣列或未給即沿用全部卡池。
-export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds, edicts){
+export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds, edicts, origin){
   U.seed = s || String(Math.floor(Math.random()*1e9));
   pruneNewYearKeys(U.seed); // M1：開新局時清除其他種子的新年鍵
-  const list = pols && pols.length ? pols : ['agrarian'];
-  const opts = { policy: list[0], era: eraRaw, mode: MODES[modeKey] ? modeKey : DEFAULT_MODE };
-  try {
-    U.state = scenId ? createScenarioState(U.seed, scenId, opts) : createInitialState(U.seed, opts);
-  } catch (e) {
-    U.state = createInitialState(U.seed, opts);
-    U.feedback = '本紀劇本載入失敗，已改為一般開局。';
-  }
-  setAccessionPolicies(U.state, list);
-  // 祖訓：開局即寫入本局 state.edicts（已於開始畫面依解鎖紀錄驗證；此處不再讀跨局紀錄）。
-  if (Array.isArray(edicts) && edicts.length) {
-    try { applyEdictsUnchecked(U.state, edicts); } catch (e) { U.feedback = '祖訓不合規，本局未套用祖訓。'; }
-  }
-  seedRelations(U.state); // 開局臣子關係網
-  seedBondedCourtOfficial(U.state); // 開局即有一位相得之臣（與 sim.js 一致）
-  // 開局策卡須於月初準備（會抽本年政策卡）之前寫入，否則首年抽卡不受本局卡池限制。
-  if (Array.isArray(deckIds) && deckIds.length) {
-    try { setOpeningDeck(U.state, deckIds); } catch (e) { U.feedback = '開局策卡不合規，已改用全部策卡。'; }
-  }
+  const { state, notes } = buildNewGame({ seed: U.seed, scenId, era: eraRaw, policies: pols, modeKey, deckIds, edicts, origin });
+  U.state = state;
+  if (notes.includes('scenario')) U.feedback = '本紀劇本載入失敗，已改為一般開局。';
+  if (notes.includes('edicts')) U.feedback = '祖訓不合規，本局未套用祖訓。';
+  if (notes.includes('deck')) U.feedback = '開局策卡不合規，已改用全部策卡。';
   prepareMonth(U.state, currentEventPool()); // 月初準備：本月奏摺與政策卡（A5）
   U.reviewedCount = 0;
   U.guideArmed = true;

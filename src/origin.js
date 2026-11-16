@@ -101,3 +101,11 @@ export function withOriginEvents(events, originId) {
   const extra = originEventDefs(originId).filter((e) => !events.some((x) => x.id === e.id));
   return extra.length ? [...events, ...extra] : events;
 }
+
+// 圖鑑用：基礎事件庫併入「所有出身」的專屬事件（依 id 去重）。出身專屬事件只在該出身的局中觸發，
+// 但圖鑑列出全部條目，玩過該出身即可解鎖。不寫回事件庫。
+export function withAllOriginEvents(events) {
+  let out = events;
+  for (const o of [...ORIGINS, ...UNLOCKABLE_ORIGINS]) out = withOriginEvents(out, o.id);
+  return out;
+}
