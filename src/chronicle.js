@@ -12,17 +12,20 @@
 //   disaster     天災（late-pressure.js tickDisasters）：州府名
 //   companion_bond   伴讀與皇子相得（companions.js tickCompanionBond）：皇子、舉薦人
 //   companion_ascend 伴讀舉薦人隨皇子登基（companions.js applyCompanionAscension）：皇子、舉薦人、派系
+//   alchemy_death 丹毒致死（alchemy.js）：死因 cause、年月
+//   fangshi      方士干政（alchemy.js）：年月
 //   （無 kind）  駕崩或禪位後的世代紀錄（succession.js 的 tryAccession）
 
 // 結束原因代碼：resigned＝禪位（B6 由中文改為英文代碼）；'禪位' 保留為舊存檔相容。
 const END_WORD = { death: '駕崩', abdicated: '高年致仕', resigned: '禪位', '禪位': '禪位', assassinated: '遇刺' };
 const HEIR_DEATH_CAUSE = { child_mortality: '幼年夭折', rivalry: '奪嫡失勢' };
-const ASSASSIN_SOURCE = { tyranny: '暴政', remnant: '前朝遺臣', court: '朝堂江湖' };
+const ASSASSIN_SOURCE = { tyranny: '暴政', remnant: '前朝遺臣', court: '朝堂江湖', fangshi: '方士' };
 const ASSASSIN_OUTCOME = { blocked: '擋下', injured: '受傷', killed: '死亡' };
 const FAC_NAME = { qingliu: '清流', xunggui: '勳貴', hanmen: '寒門' };
 const COURSE_LABEL = { classics: '經史', statecraft: '政論', martial: '騎射', administration: '理政', ethics: '德行' };
 
 import { FATE_END_TAG } from './fate-data.js';
+import { ALCHEMY_DEATH_CAUSE } from './alchemy-data.js';
 
 const orDash = (v) => (v === undefined || v === null || v === '' ? '—' : String(v));
 
@@ -37,6 +40,14 @@ export function chronicleLine(c) {
       text: `${orDash(ASSASSIN_SOURCE[c.source])}行刺${orDash(c.targetName)} · ${orDash(c.year)}年${orDash(c.month)}月`,
       tag: ASSASSIN_OUTCOME[c.outcome] ?? '—',
     };
+  }
+  // 煉丹側線（見 alchemy.js）：丹毒致死註明死因；方士干政記一筆。
+  if (c.kind === 'alchemy_death') {
+    const cause = ALCHEMY_DEATH_CAUSE[c.cause] ?? '丹毒';
+    return { text: `皇帝因${cause}駕崩 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '丹毒' };
+  }
+  if (c.kind === 'fangshi') {
+    return { text: `方士干政 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '方士' };
   }
   if (c.kind === 'city_capture') {
     return { text: `${orDash(c.prefectureName)}平定 · ${orDash(c.year)}年${orDash(c.month)}月`, tag: '攻城' };

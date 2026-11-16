@@ -3351,6 +3351,9 @@
           "key": "B",
           "label": "寬以待人",
           "tone": "仁厚",
+          "when": {
+            "flag_not": "alchemy:paranoid"
+          },
           "effects": {
             "benevolence": 3,
             "official_loyalty_add": 2
@@ -4644,6 +4647,9 @@
           "key": "B",
           "label": "寬宥不究",
           "tone": "仁厚",
+          "when": {
+            "flag_not": "alchemy:paranoid"
+          },
           "effects": {
             "benevolence": 3
           }
