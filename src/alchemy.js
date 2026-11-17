@@ -9,7 +9,8 @@
 // 三段門檻：甲（丹毒中）每月健康流失；乙（丹毒高）設旗標 alchemy:paranoid，部分奏摺選項以 flag_not 鎖定；
 // 丙（方士影響力）每月可能觸發方士干政，極端時經 assassination.js 的 attemptFangshiCoup 觸發政變。
 //
-// 丹毒致死：健康歸 0 且死因為丹毒（月結丹毒流失）時，史冊寫入 kind 'alchemy_death'；煉丹失敗不致死（健康下限為 1）；
+// 丹毒致死（原決定：允許丹毒直接致死）：月結時丹毒已達 TOXICITY_LETHAL，健康歸 0，史冊寫入 kind 'alchemy_death'（cause 'toxicity'）；
+// 另一條路徑是丹毒中段的每月健康流失歸零，同樣寫入 'alchemy_death'。煉丹失敗不致死（健康下限為 1）；
 // endReason 仍為既有代碼 'death'（不新增結束代碼），由 turn.js 月結的健康 ≤ 0 判定寫入。
 //
 // 亂數：皆以 state.seed、年、月與 'alchemy' 系列雜湊取得，不消耗既有亂數流。
@@ -58,13 +59,10 @@ export function alchemyStatus(state) {
   if (se?.enabled === false) return { ok: false, reason: 'disabled' };
   if (se?.alchemyMonth === monthIndex(state)) return { ok: false, reason: 'cooldown' };
   if (state.stats.treasury < ALCHEMY_COST) return { ok: false, reason: 'treasury' };
-  // 只允許不致死的服法：服用後丹毒會達到或超過 TOXICITY_LETHAL 則拒絕（唯讀，不改狀態）。
-  const projected = (alchemyState(state)?.toxicity ?? 0) + PILLS[DEFAULT_PILL].toxicityGain;
-  if (projected >= TOXICITY_LETHAL) return { ok: false, reason: 'toxic' };
   return { ok: true, reason: null };
 }
 
-// 煉丹：每月至多一次。回傳 { ok, reason, outcome, effects }；reason 為 disabled / cooldown / treasury / toxic 時 ok 為 false 且狀態不變。
+// 煉丹：每月至多一次。回傳 { ok, reason, outcome, effects }；reason 為 disabled / cooldown / treasury 時 ok 為 false 且狀態不變。
 // 煉丹失敗的健康代價以 1 為下限：失敗不致死。
 export function attemptAlchemy(state, pill = DEFAULT_PILL) {
   const se = ensureBase(state); // 與舊版相同：嘗試即建立側線欄位（僅於煉丹呼叫時發生）
@@ -107,6 +105,13 @@ export function tickAlchemy(state) {
   const a = alchemyState(state);
   if (!a) return null;
   const rng = makeRng([state.seed, state.year, state.month, 'alchemy', 'tick']);
+
+  // 直接致死：月初丹毒已達 TOXICITY_LETHAL，駕崩；死因為丹毒，史冊記一筆（endReason 由 turn.js 健康 ≤ 0 判定寫入）。
+  if (a.toxicity >= TOXICITY_LETHAL) {
+    setStat(state, 'health', 0, { silent: true });
+    recordAlchemyDeath(state, 'toxicity');
+    return null;
+  }
 
   a.toxicity = Math.max(0, a.toxicity - TOXICITY_DECAY);
   a.fangshi = Math.max(0, a.fangshi - FANGSHI_DECAY);

@@ -8,8 +8,8 @@ export const PILLS = Object.freeze({
 export const DEFAULT_PILL = 'zhenyao';
 
 export const TOXICITY_MAX = 100;
-export const TOXICITY_DECAY = 6; // 丹毒每月緩降
-export const TOXICITY_LETHAL = 90; // 服用後丹毒將達此值即不得服用（alchemyStatus reason 'toxic'）：只允許不致死的服法
+export const TOXICITY_DECAY = 4; // 丹毒每月緩降（須小於每服增量 5，否則丹毒永不累積、段落與致死皆不可達）
+export const TOXICITY_LETHAL = 90; // 丹毒達此值，月結直接駕崩（原決定：允許丹毒直接致死）
 export const FANGSHI_DECAY = 3; // 方士影響力每月緩降
 
 // 三段門檻（丹毒為甲、乙，方士為丙）
