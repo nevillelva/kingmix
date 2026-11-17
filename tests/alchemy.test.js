@@ -124,20 +124,21 @@ test('煉丹失敗不致死：失敗的健康代價以 1 為下限，月結不�
   assert.equal(s.chronicle.some((c) => c.kind === 'alchemy_death'), false);
 });
 
-test('只允許不致死的服法：服用後丹毒將達 TOXICITY_LETHAL 則拒絕且狀態不變', () => {
-  const s = createInitialState('alch-toxic-lock');
-  s.stats.treasury = 500;
+test('丹毒直接致死（原決定）：丹毒達 TOXICITY_LETHAL 時月結駕崩，史冊 alchemy_death，服丹不再被拒', () => {
+  const s = createInitialState('alch-toxic-lethal');
   const gain = PILLS[DEFAULT_PILL].toxicityGain;
   s.sideEvents = { enabled: true, encounterMonth: -1, alchemyMonth: -1, alchemy: { toxicity: TOXICITY_LETHAL - gain, doses: 9, fangshi: 0 } };
-  assert.deepEqual(alchemyStatus(s), { ok: false, reason: 'toxic' });
-  const before = JSON.stringify({ a: alchemyState(s), t: s.stats.treasury, m: s.sideEvents.alchemyMonth });
-  const r = attemptAlchemy(s);
-  assert.deepEqual([r.ok, r.reason], [false, 'toxic']);
-  assert.equal(JSON.stringify({ a: alchemyState(s), t: s.stats.treasury, m: s.sideEvents.alchemyMonth }), before);
-
-  s.sideEvents.alchemy.toxicity = TOXICITY_LETHAL - gain - 1;
   assert.deepEqual(alchemyStatus(s), { ok: true, reason: null });
+  const r = attemptAlchemy(s);
+  assert.equal(r.ok, true);
+  assert.equal(alchemyState(s).toxicity, TOXICITY_LETHAL);
+  tickAlchemy(s);
+  assert.equal(s.stats.health, 0);
+  const entry = s.chronicle.find((c) => c.kind === 'alchemy_death');
+  assert.ok(entry, '史冊應有 alchemy_death');
+  assert.equal(entry.cause, 'toxicity');
 });
+
 
 test('存檔往返：丹毒、服丹次數與方士影響力保留，死因史冊不遺失', () => {
   const s = createInitialState('alch-save');
