@@ -14,6 +14,7 @@ import { campaignActive, chooseDC, chooseOption, finishMonth, fastForward, morni
 import { memorialItem, secondItem, chooseSecond, skipSecond, memo } from './render-memorial.js';
 import { actionsItem, crownChoiceItem, slotsItems } from './render-actions.js';
 import { txt, vstack, hrow, boxed, optionCard, btn, spacer, tag, screenInner, paintStack, setContentHeight, stampThen, installSwipe, drawTextEntry, guarded } from './canvas/court.js';
+import { courtPageBar, ministersItems } from './canvas/ministers.js';
 
 const GAP = () => 12 * C.U;
 
@@ -141,11 +142,14 @@ export function courtItems(w) {
   return items;
 }
 
-// 朝堂畫面（registerScreen 使用）。
+// 朝堂畫面（registerScreen 使用）。頂端為「朝政／名臣」分頁列；名臣分頁不接受奏摺左右選取。
 export function drawCourt(Cx) {
   installSwipe(Cx.canvas);
   const L = screenInner(Cx);
-  const bottom = paintStack(courtItems(L.w), L.x, L.top, L.w, GAP());
+  const onMinisters = U.courtPage === 'ministers';
+  if (onMinisters) memo.n = 0;
+  const body = onMinisters ? ministersItems(L.w) : courtItems(L.w);
+  const bottom = paintStack([courtPageBar(L.w), ...body], L.x, L.top, L.w, GAP());
   setContentHeight(bottom);
   drawTextEntry();
 }

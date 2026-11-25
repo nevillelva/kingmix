@@ -2,6 +2,7 @@
 import { buildScroll } from '../../src/posthumous.js';
 import { evaluateDynasty } from '../../src/ending.js';
 import { chronicleLine } from '../../src/chronicle.js';
+import { selectBiographies, BIO_TAGS } from '../../src/biographies.js';
 import { scenarioDef } from '../../src/scenarios.js';
 import { U } from './store.js';
 import { SCEN_STATUS } from './labels.js';
@@ -67,6 +68,19 @@ export function renderEnding(c = C) {
     const l = chronicleLine(ch);
     const h = text(`${l.text}（${l.tag}）`, x + 16 * U_, cy, { size: 13 * U_, color: INK, maxW: inner, lh: 1.5 });
     cy += h + 8 * U_;
+  }
+
+  // 名臣列傳：本局終局最終名單（與跨局列傳同一挑選規則，見 src/biographies.js）
+  cy += 12 * U_;
+  text('名臣列傳', x + 16 * U_, cy, { size: 16 * U_, weight: 'bold', color: INK });
+  cy += 28 * U_;
+  const picks = selectBiographies(U.state);
+  if (!picks.length) cy += text('本局無名臣入傳', x + 16 * U_, cy, { size: 13 * U_, color: '#5a4f45' }) + 6 * U_;
+  for (const p of picks) {
+    cy += text(`${p.name}（${BIO_TAGS[p.tag] || p.tag}）`, x + 16 * U_, cy, { size: 14 * U_, weight: 'bold', color: INK, maxW: inner }) + 2 * U_;
+    const note = p.endLine || p.lines[p.lines.length - 1] || '';
+    if (note) cy += text(note, x + 16 * U_, cy, { size: 13 * U_, color: '#5a4f45', maxW: inner, lh: 1.5 }) + 2 * U_;
+    cy += 8 * U_;
   }
 
   cy += 12 * U_;

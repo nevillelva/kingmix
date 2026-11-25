@@ -160,6 +160,7 @@ registerChrome(
 export function render() {
   if (U.tab === 'legacy') return setScreen('legacy');
   if (U.tab === 'gallery') return setScreen('gallery');
+  if (U.tab !== 'court') U.courtPage = null; // 離開朝堂即回到朝政分頁
   paintMilestone();
   if (U.state && !U.state.alive) recordLegacyOnce();
   if (!U.state) {
