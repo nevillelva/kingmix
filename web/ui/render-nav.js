@@ -169,6 +169,7 @@ export function render() {
 function resolveScreen() {
   if (U.tab === 'legacy' || U.tab === 'legacy-stats') return U.tab;
   if (U.tab === 'gallery') return 'gallery';
+  if (U.tab !== 'court') U.courtPage = null; // 離開朝堂即回到朝政分頁
   paintMilestone();
   if (U.state && !U.state.alive) recordLegacyOnce();
   if (!U.state) {
