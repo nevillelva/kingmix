@@ -1,199 +1,215 @@
-// web/ui/render-map.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
+// web/ui/render-map.js：全國輿圖（Canvas）。六府依城防著色、府印顯示知府首字，割據、天災與權臣狀況於圖上與頂部標示；
+// 點州府看詳情並可巡幸、攻城；點鄰國開外交面板。巡幸與攻城之結果寫入詳情區（U.mapNote）。
 import { ensureCity } from '../../src/city.js';
 import { NEIGHBORS, diplomacyOf } from '../../src/diplomacy.js';
 import { PREFECTURE_DEFS, governorOf } from '../../src/economy.js';
-import { U, app } from './store.js';
-import { esc, fbLine } from './util.js';
-import { render } from './render-bus.js';
-import { save } from './state-io.js';
-import { INK_DEFS, INK_BACKDROP, MAP_CSS, governorBadge, defenseFill, peopleFill } from './map-svg.js';
 import { attackCity, captureStatus } from '../../src/city-capture.js';
-import { prefecturePressureText } from './render-pressure.js';
 import { tourWithEncounter } from '../../src/side-events.js';
-import { showEncounter } from './render-side.js';
+import { prefectureLatePressure } from '../../src/late-pressure.js';
+import * as tour from '../../src/tour.js';
+import { C, registerScreen, setScreen } from './canvas/core.js';
+import { hit } from './canvas/input.js';
+import { bar } from './canvas/widgets.js';
+import { tx, btn, pnl } from './canvas/bfx.js';
+import { GOLD, RED, PAPER, INK as INK_TEXT } from './canvas/theme.js';
+import { MAP_SHAPE, defenseColor, peopleColor, mapTransform, pathBBox, drawShape, drawGovernorBadge, drawPrefectureOverlay, ministerBanner } from './map-svg.js';
+import { U } from './store.js';
+import { save } from './state-io.js';
+import { render } from './render-bus.js';
+import { prefecturePressureText, courtMinisterText } from './render-pressure.js';
+import { showEncounter, keepOverlays } from './render-side.js';
 
-// 巡幸引擎（src/tour.js）與本檔平行開發：以動態匯入防禦式載入，尚未合入時退回待接線狀態。
-const tour = await import('../../src/tour.js').catch(() => null);
-const hasTour = !!tour && typeof tour.tourTo === 'function';
+export { MAP_SHAPE };
 
-// ── 全國輿圖：六府依城防著色、府印顯示知府首字，鄰國列於邊界；點州府看詳情，點鄰國開外交面板 ──
-// 示意版圖（非實際地理比例）；座標僅供排版。民心為全國單一數值，不分府。
-export const MAP_SHAPE = {
-  pref: {
-    jingzhao: { d: 'M60 100 L120 92 L124 150 L100 168 L64 160 Z', x: 92, y: 134, b: [74, 110] },
-    hedong: { d: 'M124 60 L186 56 L196 118 L150 126 L124 112 Z', x: 160, y: 94, b: [176, 74] },
-    denglai: { d: 'M206 56 L262 40 L300 70 L292 118 L240 112 L210 96 Z', x: 254, y: 84, b: [284, 56] },
-    yangzhou: { d: 'M214 128 L270 124 L286 176 L238 190 L210 160 Z', x: 248, y: 160, b: [270, 140] },
-    yizhou: { d: 'M60 184 L118 176 L124 240 L92 262 L56 236 Z', x: 90, y: 222, b: [74, 198] },
-    jiangning: { d: 'M140 196 L200 190 L216 240 L178 262 L142 240 Z', x: 178, y: 230, b: [196, 208] },
-  },
-  nb: {
-    north: { d: 'M40 14 L300 10 L300 32 L40 36 Z', x: 170, y: 26 },
-    west: { d: 'M14 96 L48 88 L50 236 L18 244 Z', x: 30, y: 168 },
-    south: { d: 'M50 286 L300 290 L290 314 L50 310 Z', x: 170, y: 304 },
-    east: { d: 'M304 190 L330 184 L330 262 L304 262 Z', x: 318, y: 226 },
-  },
-};
-
-// 知府姓名首字：優先 personName，其次 name，缺漏時回「—」。
-const initialOf = (gov, p) => (gov?.personName || gov?.name || p?.governor?.name || '—').slice(0, 1);
-
-// 巡幸狀態與事件：引擎函式存在才呼叫，回傳格式不明時只取可讀字串。
-// prefectureStatus 回傳 [{ id, name, defense, morale, visited }]。
-function tourStatusText(state, id) {
-  if (!tour || typeof tour.prefectureStatus !== 'function') return null;
-  try {
-    const row = (tour.prefectureStatus(state) || []).find(x => x?.id === id);
-    if (!row) return null;
-    return `民心 ${row.morale}　${row.visited ? '曾巡幸' : '未巡幸'}`;
-  } catch (e) { return null; }
-}
 const ATTACK_REASON = {
   unknown: '查無此府。', not_rebel: '此府民心尚安，並無叛亂或失守，不可攻。', cooldown: '本年已攻過此府，須待來年再議。',
 };
 const TOUR_REASON = {
   unknown: '查無此府。', here: '天子已在此府。', busy: '巡幸之後正在整頓，尚未可再行。', treasury: '國庫不足，無力支付沿途費用。',
 };
-function tourEventLines(state, id) {
-  if (!tour || typeof tour.tourEvents !== 'function') return [];
+const initialOf = (gov, p) => (gov?.personName || gov?.name || p?.governor?.name || '—').slice(0, 1);
+const hasTour = () => !!tour && typeof tour.tourTo === 'function';
+
+// 巡幸狀態（一行）與近況（至多三則）；引擎回傳格式不明時只取可讀字串。
+function tourStatusText(state, id) {
+  if (typeof tour.prefectureStatus !== 'function') return null;
   try {
-    const list = tour.tourEvents(state) || [];
-    return list.filter(e => !e?.prefId || e.prefId === id).slice(-3).map(e => e?.text || e?.msg || String(e));
+    const row = (tour.prefectureStatus(state) || []).find((x) => x?.id === id);
+    return row ? `民心 ${row.morale}　${row.visited ? '曾巡幸' : '未巡幸'}` : null;
+  } catch (e) { return null; }
+}
+function tourEventLines(state, id) {
+  if (typeof tour.tourEvents !== 'function') return [];
+  try {
+    return (tour.tourEvents(state) || []).filter((e) => !e?.prefId || e.prefId === id).slice(-3).map((e) => e?.text || e?.msg || String(e));
   } catch (e) { return []; }
 }
 
-// 輿圖 SVG 快取：SVG 標記由府城防、知府、攻城、鄰國關係與選取府決定；標記的 hash 未變時重用既有節點，
-// 不重新解析與建立 DOM。點擊行為與 data 屬性仍由 renderMap 每次重新綁定。
-let mapCache = { hash: null, node: null };
-function hashText(s) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
-  return `${h.toString(36)}:${s.length}`;
-}
-function mapSvgNode(markup) {
-  const hash = hashText(markup);
-  if (mapCache.node && mapCache.hash === hash) return mapCache.node;
-  const tpl = document.createElement('template');
-  tpl.innerHTML = markup;
-  mapCache = { hash, node: tpl.content.firstElementChild };
-  return mapCache.node;
+// 詳情區的資料（純函式，不改 state）；府不存在時回傳 null。
+export function mapDetailModel(state, prefId) {
+  const def = PREFECTURE_DEFS.find((x) => x.id === prefId);
+  const p = def ? ensureCity(state).find((x) => x.id === prefId) : null;
+  if (!def || !p) return null;
+  const gov = governorOf(state, p);
+  const cap = captureStatus(state, prefId);
+  const defense = Math.max(0, Math.min(100, Math.round(p.defense ?? 50)));
+  return {
+    id: prefId,
+    name: def.name,
+    govLine: `知府 ${gov?.personName || gov?.name || p.governor?.name || '缺'}　政 ${gov?.abilities?.politics ?? p.governor?.abilities?.politics ?? '—'}　${p.output === 'agriculture' ? '農產' : '商產'}`,
+    yieldLine: `城防 ${defense}　產值 ${Number(p.yield || 0).toFixed(2)}`,
+    defense,
+    statusText: tourStatusText(state, prefId),
+    pressure: prefecturePressureText(state, prefId),
+    events: tourEventLines(state, prefId),
+    rebel: !!cap.rebel,
+    occupied: !!cap.occupied,
+    besieged: !!cap.besieged,
+    attackable: !!cap.attackable,
+    attackChance: cap.attackable ? Math.round(cap.chance * 100) : 0,
+    attackHint: cap.attackable ? '' : (ATTACK_REASON[cap.reason] ?? ''),
+  };
 }
 
-export function renderMap(){
-  const prefs = ensureCity(U.state);
-  const d = diplomacyOf(U.state);
-  const people = Math.round(U.state.stats.people);
-  const zones = PREFECTURE_DEFS.map(def => {
-    const p = prefs.find(x => x.id === def.id);
-    const def2 = Math.round(p?.defense ?? 50);
+// 巡幸：tourWithEncounter 回傳 { ok, reason, encounter, error }；失敗時狀態不變，僅顯示原因。
+export function tourAct(prefId) {
+  let r;
+  try { r = tourWithEncounter(U.state, prefId); } catch (e) { r = { ok: false, reason: null, error: e }; }
+  const name = PREFECTURE_DEFS.find((x) => x.id === prefId)?.name ?? '';
+  U.mapNote = r?.ok ? `天子巡幸${name}，所至府民心、城防皆增。` : (TOUR_REASON[r?.reason] ?? `巡幸未成：${r?.error?.message || '未知原因'}`);
+  save();
+  render();
+  if (r?.ok && r.encounter) showEncounter(r.encounter, name);
+  return !!r?.ok;
+}
+
+// 攻城：由玩家主動觸發，結果寫入詳情區。
+export function attackAct(prefId) {
+  let r;
+  try { r = attackCity(U.state, prefId); } catch (e) { r = { ok: false, reason: null, error: e }; }
+  U.mapNote = r?.ok ? r.text : (ATTACK_REASON[r?.reason] ?? `攻城未成：${r?.error?.message || '未知原因'}`);
+  save();
+  render();
+  return !!r?.ok;
+}
+
+function selectPref(id) {
+  U.mapSel = id;
+  U.mapNote = '';
+  render();
+}
+
+export function drawMapScreen() {
+  const g = C.ctx;
+  const state = U.state;
+  if (!g || !state) return;
+  const u = C.U;
+  const W = C.W, y0 = C.content.y, H = y0 + C.content.h;
+  const pad = 12 * u;
+  const prefs = ensureCity(state);
+  const d = diplomacyOf(state);
+  const people = Math.round(state.stats.people);
+  const wide = W > 640 * u;
+  const mapX = pad, mapY = y0 + 96 * u;
+  const mapW = wide ? Math.min(W * 0.56, 620 * u) : W - pad * 2;
+  const mapH = wide ? H - mapY - pad : Math.min((H - y0) * 0.46, 380 * u);
+  const detX = wide ? mapX + mapW + 16 * u : pad, detY = wide ? mapY : mapY + mapH + 10 * u;
+  const detW = wide ? W - detX - pad : W - pad * 2;
+
+  // 頂部：民心、城防色例、權臣狀況
+  pnl(pad, y0 + 8 * u, W - pad * 2, 44 * u, { fill: 'rgba(255,250,236,.7)' });
+  tx('全國輿圖', pad + 12 * u, y0 + 16 * u, 16, { weight: 'bold' });
+  tx(String(people), pad + 118 * u, y0 + 16 * u, 16, { weight: 'bold', color: peopleColor(people) });
+  tx('（全國）', pad + 146 * u, y0 + 18 * u, 12, { color: 'rgba(28,26,23,.6)' });
+  [[10, '城防低'], [50, '中'], [90, '高']].forEach(([v, label], i) => {
+    const lx = pad + 220 * u + i * 72 * u;
+    g.save(); g.fillStyle = defenseColor(v); g.fillRect(lx, y0 + 20 * u, 12 * u, 12 * u); g.restore();
+    tx(label, lx + 16 * u, y0 + 18 * u, 12, { color: 'rgba(28,26,23,.6)' });
+  });
+  tx(ministerBanner(courtMinisterText(state)), pad + 12 * u, y0 + 60 * u, 12, { color: 'rgba(28,26,23,.6)', maxW: W - pad * 2 - 24 * u });
+
+  // 版圖
+  const tr = mapTransform(mapW, mapH);
+  const X = (x) => mapX + tr.ox + x * tr.s;
+  const Y = (y) => mapY + tr.oy + y * tr.s;
+  const sel = U.mapSel;
+  g.save();
+  g.beginPath(); g.rect(mapX, mapY, mapW, mapH); g.clip();
+  g.translate(mapX + tr.ox, mapY + tr.oy); g.scale(tr.s, tr.s);
+  for (const id of Object.keys(MAP_SHAPE.nb)) {
+    drawShape(g, MAP_SHAPE.nb[id].d, { fill: 'rgba(170,150,110,.35)', stroke: '#8a7a4a', lineWidth: 1 });
+  }
+  for (const def of PREFECTURE_DEFS) {
+    const p = prefs.find((x) => x.id === def.id);
     const sh = MAP_SHAPE.pref[def.id];
-    const gov = p ? governorOf(U.state, p) : null;
-    const sel = U.mapSel === def.id;
-    const cap = captureStatus(U.state, def.id);
-    const siege = cap.besieged ? '，攻城中' : '';
-    const unrest = cap.rebel ? '，叛亂' : cap.occupied ? '，敵方佔領' : '';
-    return `<g class="mzone${sel ? ' sel' : ''}${cap.besieged ? ' siege' : ''}" role="button" tabindex="0" data-pref="${def.id}" aria-label="${esc(def.name)}，城防 ${def2}，知府 ${esc(gov?.personName || gov?.name || '缺')}${siege}${unrest}">
-      <path d="${sh.d}" fill="${defenseFill(def2)}" filter="url(#ink-wash)"/>
-      ${cap.besieged ? `<path class="siege-ring" d="${sh.d}" fill="none" stroke="var(--vermilion)" stroke-width="2" stroke-dasharray="5 3" pointer-events="none"/>` : ''}
-      ${cap.rebel || cap.occupied ? `<path class="unrest-ring" d="${sh.d}" fill="none" stroke="var(--vermilion)" stroke-width="3" pointer-events="none"/>` : ''}
-      <text x="${sh.x}" y="${sh.y}" text-anchor="middle">${esc(def.name)}</text>
-      <text class="mv" x="${sh.x}" y="${sh.y + 14}" text-anchor="middle">城防 ${def2}${cap.rebel ? ' 叛' : cap.occupied ? ' 失' : ''}</text>
-      ${governorBadge(sh.b[0], sh.b[1], initialOf(gov, p))}</g>`;
-  }).join('');
-  const edges = NEIGHBORS.map(n => {
+    if (!sh) continue;
+    const defense = Math.round(p?.defense ?? 50);
+    const cap = captureStatus(state, def.id);
+    const lp = prefectureLatePressure(state, def.id);
+    drawShape(g, sh.d, { fill: defenseColor(defense), stroke: def.id === sel ? '#e6b84a' : '#5a4a2a', lineWidth: def.id === sel ? 3 : 1 });
+    drawPrefectureOverlay(g, sh.d, { autonomous: !!lp?.autonomous, disasters: lp?.disasterCount ?? 0, besieged: cap.besieged, rebel: cap.rebel, occupied: cap.occupied });
+  }
+  g.restore();
+
+  // 府名、城防、府印與鄰國標籤（畫布座標）
+  const labelSz = (n) => Math.max(9, n * tr.s * 1.1) / C.U;
+  for (const def of PREFECTURE_DEFS) {
+    const sh = MAP_SHAPE.pref[def.id];
+    const p = prefs.find((x) => x.id === def.id);
+    if (!sh) continue;
+    const cap = captureStatus(state, def.id);
+    const gov = p ? governorOf(state, p) : null;
+    tx(def.name, X(sh.x), Y(sh.y) - 8 * u, labelSz(12), { weight: 'bold', align: 'center', color: INK_TEXT });
+    tx(`城防 ${Math.round(p?.defense ?? 50)}${cap.rebel ? ' 叛' : cap.occupied ? ' 失' : ''}`, X(sh.x), Y(sh.y) + 6 * u, labelSz(10), { align: 'center', color: 'rgba(28,26,23,.6)' });
+    drawGovernorBadge(g, X(sh.b[0]), Y(sh.b[1]), initialOf(gov, p));
+    const bb = pathBBox(sh.d);
+    hit({ x: X(bb.x), y: Y(bb.y), w: bb.w * tr.s, h: bb.h * tr.s }, () => selectPref(def.id));
+  }
+  const dip = Object.fromEntries(NEIGHBORS.map((n) => [n.id, d[n.id]]));
+  for (const n of NEIGHBORS) {
     const sh = MAP_SHAPE.nb[n.id];
-    const s = d[n.id];
-    const tag = s.allied ? '盟' : s.kin > 0 ? '婚' : '';
-    return `<g class="medge" role="button" tabindex="0" data-nb="${n.id}" aria-label="${esc(n.name)}，好感 ${s.attitude}，開外交面板">
-      <path d="${sh.d}" filter="url(#ink-wash)"/>
-      <text x="${sh.x}" y="${sh.y}" text-anchor="middle">${esc(n.name)}</text>
-      <text class="mv" x="${sh.x}" y="${sh.y + 14}" text-anchor="middle">好感 ${s.attitude}${tag ? ' ' + tag : ''}</text></g>`;
-  }).join('');
+    const s = dip[n.id];
+    if (!sh || !s) continue;
+    tx(`${n.name}　好感 ${s.attitude}${s.allied ? ' 盟' : s.kin > 0 ? ' 婚' : ''}`, X(sh.x), Y(sh.y), labelSz(11), { align: 'center' });
+    const bb = pathBBox(sh.d);
+    hit({ x: X(bb.x), y: Y(bb.y), w: bb.w * tr.s, h: bb.h * tr.s }, () => { U.tab = 'court'; U.panel = 'diplo'; U.pick1 = null; render(); });
+  }
 
-  const p = prefs.find(x => x.id === U.mapSel);
-  const def = PREFECTURE_DEFS.find(x => x.id === U.mapSel);
-  const gov = p && def ? governorOf(U.state, p) : null;
-  const defense = Math.max(0, Math.min(100, Math.round(p?.defense ?? 50)));
-  const statusText = p && def ? tourStatusText(U.state, def.id) : null;
-  const events = p && def ? tourEventLines(U.state, def.id) : [];
-  const cap = p && def ? captureStatus(U.state, def.id) : null;
-  const attackHint = cap && !cap.attackable ? (ATTACK_REASON[cap.reason] ?? '') : '';
-  const detail = p && def ? `<div class="pdetail">
-      <div class="name">${esc(def.name)}</div>
-      <div class="row">知府 ${esc(gov?.personName || gov?.name || p.governor?.name || '缺')}　政 ${esc(gov?.abilities?.politics ?? p.governor?.abilities?.politics ?? '—')}　${p.output === 'agriculture' ? '農產' : '商產'}</div>
-      <div class="row">城防 ${defense}　產值 ${Number(p.yield || 0).toFixed(2)}</div>
-      <div class="track"><div class="fill${defense < 40 ? ' warn' : ''}" style="width:${defense}%"></div></div>
-      ${statusText ? `<div class="row">${esc(statusText)}</div>` : ''}
-      <div class="row">${esc(prefecturePressureText(U.state, def.id))}</div>
-      ${cap.rebel ? `<div class="row" style="color:var(--vermilion)">叛亂：民心渙散，可遣兵攻城平定。</div>` : ''}
-      ${cap.occupied ? `<div class="row" style="color:var(--vermilion)">敵方佔領：此府失守，可遣兵攻回。</div>` : ''}
-      ${cap.besieged ? `<div class="row" style="color:var(--vermilion)">攻城中：本年攻城未克，圍城待來年。</div>` : ''}
-      ${events.length ? `<ul class="row" style="padding-left:18px">${events.map(e => `<li>${esc(e)}</li>`).join('')}</ul>` : ''}
-      ${attackHint ? `<p class="sub" style="margin:8px 0 0">${esc(attackHint)}</p>` : ''}
-      ${U.mapNote ? `<p class="sub" role="status" style="color:var(--vermilion);margin:8px 0 0">${esc(U.mapNote)}</p>` : ''}
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
-        <button class="btn" data-tour="${def.id}" ${hasTour ? '' : 'disabled aria-disabled="true"'}>${hasTour ? '巡幸' : '巡幸（巡幸功能待接線）'}</button>
-        <button class="btn" data-attack="${def.id}" ${cap?.attackable ? '' : 'disabled aria-disabled="true"'}>攻城${cap?.attackable ? `（成功機率約 ${Math.round(cap.chance * 100)}%）` : ''}</button>
-        <button class="btn ghost" data-go-city="1">前往朝堂修繕城池</button>
-      </div>
-    </div>` : `<div class="pdetail"><p class="sub" style="margin:0">點選州府，檢視其知府、城防與巡幸狀況。點邊界鄰國可開外交面板。</p></div>`;
-
-  const svgMarkup = `<svg viewBox="0 0 340 322" role="group" aria-label="全國輿圖，六府與四鄰">${INK_DEFS}${INK_BACKDROP}${edges}${zones}</svg>`;
-  const mapNode = mapSvgNode(svgMarkup);
-
-  app.innerHTML = `
-    ${MAP_CSS}
-    ${fbLine()}
-    <section class="card"><h2>全國輿圖</h2>
-      <div class="legend" style="margin-bottom:8px">
-        <span>民心 <b style="color:${peopleFill(people)}">${people}</b>（全國）</span>
-        <span><i style="background:${defenseFill(10)}"></i>城防低</span>
-        <span><i style="background:${defenseFill(50)}"></i>中</span>
-        <span><i style="background:${defenseFill(90)}"></i>高</span>
-      </div>
-      <div class="map-wrap">
-        <div class="plan map" data-map-slot></div>
-        ${detail}
-      </div>
-    </section>`;
-  app.querySelector('[data-map-slot]')?.appendChild(mapNode);
-
-  app.querySelectorAll('[data-pref]').forEach(g => {
-    const go = () => { U.mapSel = g.dataset.pref; U.mapNote = ''; render(); };
-    g.onclick = go;
-    g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
-  });
-  app.querySelectorAll('[data-nb]').forEach(g => {
-    const go = () => { U.tab = 'court'; U.panel = 'diplo'; U.pick1 = null; render(); };
-    g.onclick = go;
-    g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
-  });
-  // tourTo 回傳 { state, ok, reason }；失敗時狀態不變，僅顯示原因。
-  // 結果寫入側欄（U.mapNote），緊接巡幸鈕之上顯示，不放在頁首的 fbLine 以免離按鈕太遠。
-  const tourBtn = app.querySelector('[data-tour]');
-  if (tourBtn && hasTour) tourBtn.onclick = () => {
-    let r;
-    try { r = tourWithEncounter(U.state, tourBtn.dataset.tour); } catch (e) { r = { ok: false, reason: null, error: e }; }
-    const name = PREFECTURE_DEFS.find(x => x.id === tourBtn.dataset.tour)?.name ?? '';
-    if (r?.ok) {
-      U.mapNote = `天子巡幸${name}，所至府民心、城防皆增。`;
-    } else {
-      U.mapNote = TOUR_REASON[r?.reason] ?? `巡幸未成：${r?.error?.message || '未知原因'}`;
-    }
-    save();
-    render();
-    // 奇遇（微服私訪）於巡幸抵達後擲出；以覆蓋層告知，側線關閉時 encounter 恆為 null。
-    if (r?.ok && r.encounter && !document.querySelector('.dlg-ov')) showEncounter(r.encounter, name); // 已由 render 重新顯示待決者則不重複
-  };
-  // 攻城由玩家主動觸發；結果寫入側欄（U.mapNote）。失敗時狀態僅依引擎變動，不影響其他府。
-  const attackBtn = app.querySelector('[data-attack]');
-  if (attackBtn) attackBtn.onclick = () => {
-    let r;
-    try { r = attackCity(U.state, attackBtn.dataset.attack); } catch (e) { r = { ok: false, reason: null, error: e }; }
-    U.mapNote = r?.ok ? r.text : (ATTACK_REASON[r?.reason] ?? `攻城未成：${r?.error?.message || '未知原因'}`);
-    save();
-    render();
-  };
-  const cityBtn = app.querySelector('[data-go-city]');
-  if (cityBtn) cityBtn.onclick = () => { U.tab = 'court'; U.panel = 'city'; U.pick1 = null; render(); };
+  // 詳情
+  const m = sel ? mapDetailModel(state, sel) : null;
+  pnl(detX, detY, detW, wide ? H - detY - pad : Math.min(H - detY - pad, 340 * u), { fill: PAPER });
+  let y = detY + 12 * u;
+  const lx = detX + 12 * u, lw = detW - 24 * u;
+  if (!m) {
+    tx('點選州府，檢視其知府、城防與巡幸狀況。點邊界鄰國可開外交面板。', lx, y, 13, { color: 'rgba(28,26,23,.6)', maxW: lw });
+    C.contentH = 0;
+    keepOverlays();
+    return;
+  }
+  tx(m.name, lx, y, 18, { weight: 'bold' }); y += 30 * u;
+  y += tx(m.govLine, lx, y, 13, { color: 'rgba(28,26,23,.6)', maxW: lw }) + 2 * u;
+  y += tx(m.yieldLine, lx, y, 13, { color: 'rgba(28,26,23,.6)' }) + 4 * u;
+  bar(lx, y + 4 * u, lw, 10 * u, m.defense, 100, m.defense < 40 ? RED : GOLD); y += 22 * u;
+  if (m.statusText) { tx(m.statusText, lx, y, 13, { color: 'rgba(28,26,23,.6)' }); y += 20 * u; }
+  y += tx(m.pressure, lx, y, 13, { color: 'rgba(28,26,23,.6)', maxW: lw }) + 4 * u;
+  if (m.rebel) { y += tx('叛亂：民心渙散，可遣兵攻城平定。', lx, y, 13, { color: RED, maxW: lw }) + 4 * u; }
+  if (m.occupied) { y += tx('敵方佔領：此府失守，可遣兵攻回。', lx, y, 13, { color: RED, maxW: lw }) + 4 * u; }
+  if (m.besieged) { y += tx('攻城中：本年攻城未克，圍城待來年。', lx, y, 13, { color: RED, maxW: lw }) + 4 * u; }
+  for (const e of m.events) { y += tx(`・${e}`, lx, y, 12, { color: 'rgba(28,26,23,.6)', maxW: lw }) + 4 * u; }
+  if (m.attackHint) { y += tx(m.attackHint, lx, y, 12, { color: 'rgba(28,26,23,.6)', maxW: lw }) + 4 * u; }
+  if (U.mapNote) { y += tx(U.mapNote, lx, y, 13, { color: RED, maxW: lw }) + 8 * u; }
+  y += 8 * u;
+  const bw = Math.min(150 * u, (detW - 36 * u) / 3);
+  btn(detX + 12 * u, y, bw, 34 * u, hasTour() ? '巡幸' : '巡幸（待接線）', () => tourAct(m.id), { disabled: !hasTour(), why: '巡幸功能尚未接線' });
+  btn(detX + 24 * u + bw, y, bw, 34 * u, m.attackable ? `攻城（約 ${m.attackChance}%）` : '攻城', () => attackAct(m.id), { disabled: !m.attackable, why: m.attackHint || '目前不可攻城' });
+  btn(detX + 36 * u + bw * 2, y, bw, 34 * u, '朝堂修繕', () => { U.tab = 'court'; U.panel = 'city'; U.pick1 = null; render(); }, { ghost: true });
+  C.contentH = 0;
+  keepOverlays();
 }
+
+// 導覽：由宮城或底部鈕進入輿圖。
+export function renderMap() {
+  setScreen('map');
+}
+
+registerScreen('map', drawMapScreen);

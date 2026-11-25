@@ -7,6 +7,11 @@ import { INK } from './canvas/theme.js';
 import { SOUND_KEY, unlockAudio } from './audio.js';
 import { importGame, initCloud } from './state-io.js';
 import { render } from './render-nav.js'; // 載入即註冊頂欄、底欄與畫面分派
+// 各代理的畫面模組於載入時登記自己的畫面名稱。
+import './render-palace.js';
+import './render-map.js';
+import './render-facility.js';
+import './canvas/harem.js';
 
 // 舊格式新年鍵 kingmix.newyear.<seed>.<year>（值為 '1'）於開機時清除；每種子一鍵 kingmix.newyear.<seed> 保留。
 function purgeLegacyNewYearKeys() {

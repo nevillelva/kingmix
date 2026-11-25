@@ -10,7 +10,9 @@ import { setRenderer } from './render-bus.js';
 import { recordLegacyOnce } from './render-legacy.js';
 import { levelWord, pctOf } from './util.js';
 import { save, drawSaveModal, drawConflictModal, openSaveDialog } from './state-io.js';
-import { C, registerChrome, registerScreen, setScreen, currentScreen, pushToast } from './canvas/core.js';
+import { C, registerChrome, registerOverlay, registerScreen, setScreen, currentScreen, pushToast } from './canvas/core.js';
+import { keepOverlays, paintPendingEncounter } from './render-side.js';
+import { drawCourt, drawReview, reviewPending } from './render-court.js';
 import { bar, button, seal, text } from './canvas/widgets.js';
 import { GOLD, INK, SEASON_TINT } from './canvas/theme.js';
 import { unlockAudio, stopBgm, sfx, SOUND_KEY } from './audio.js';
@@ -165,7 +167,8 @@ export function render() {
     return setScreen('start');
   }
   if (!U.state.alive) return setScreen('ending');
-  if ((U.state.annals || []).length > U.reviewedCount) return setScreen('review');
+  paintPendingEncounter();
+  if (reviewPending()) return setScreen('review');
   return setScreen(U.tab);
 }
 
@@ -180,3 +183,7 @@ function paintMilestone() {
 setRenderer(render);
 registerScreen('start', renderStart);
 registerScreen('ending', renderEnding);
+registerScreen('court', drawCourt);
+registerScreen('review', drawReview);
+// 全域覆蓋層（奇遇等）：由頂欄迴圈統一承載，任何畫面皆可顯示。
+registerOverlay(keepOverlays);
