@@ -40,22 +40,7 @@ export function guideMount(){
   });
 }
 
-// 禪位確認：頁內對話框（不使用 confirm()），取消或 Esc 即關閉；確認後結束本世，由太子或成年皇子即位。
-export function openResignDialog(){
-  const heir = U.state.dynasty.crownPrince ? U.state.heirs.find(h => h.id === U.state.dynasty.crownPrince) : null;
-  const who = heir ? `太子${heir.personName || heir.name}` : '成年皇子中擇定之人';
-  openCanvasDialog({
-    title: '禪位予皇子',
-    body: `禪位即結束本世，由${who}即位。此舉不可復原，史冊將記下此次禪位。`,
-    buttons: [{ key: 'cancel', label: '取消', plain: true }, { key: 'ok', label: '確認禪位' }],
-    dismissible: true,
-    onButton: (key, close) => {
-      if (key === 'ok') { close(); confirmResign(); return; }
-      close();
-    },
-  });
-}
-
+// 禪位確認對話框只在帝王頁呈現（render-officials.js 的 openResign／drawResignDialog）；此檔保留結算函式。
 export function confirmResign(){
   if (!U.state || !U.state.alive) return;
   U.state.campaign = null;

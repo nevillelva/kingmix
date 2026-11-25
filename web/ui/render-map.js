@@ -12,7 +12,7 @@ import { hit } from './canvas/input.js';
 import { bar } from './canvas/widgets.js';
 import { tx, btn, pnl } from './canvas/bfx.js';
 import { GOLD, RED, PAPER, INK as INK_TEXT } from './canvas/theme.js';
-import { MAP_SHAPE, defenseColor, peopleColor, mapTransform, pathBBox, drawShape, drawGovernorBadge, drawPrefectureOverlay, ministerBanner } from './map-svg.js';
+import { MAP_SHAPE, defenseColor, peopleColor, mapTransform, pathBBox, drawShape, drawGovernorBadge, drawPrefectureOverlay, drawInkBackdrop, ministerBanner } from './map-svg.js';
 import { U } from './store.js';
 import { save } from './state-io.js';
 import { render } from './render-bus.js';
@@ -136,8 +136,9 @@ export function drawMapScreen() {
   g.save();
   g.beginPath(); g.rect(mapX, mapY, mapW, mapH); g.clip();
   g.translate(mapX + tr.ox, mapY + tr.oy); g.scale(tr.s, tr.s);
+  drawInkBackdrop(g);
   for (const id of Object.keys(MAP_SHAPE.nb)) {
-    drawShape(g, MAP_SHAPE.nb[id].d, { fill: 'rgba(170,150,110,.35)', stroke: '#8a7a4a', lineWidth: 1 });
+    drawShape(g, MAP_SHAPE.nb[id].d, { fill: 'rgba(170,150,110,.35)', stroke: '#8a7a4a', lineWidth: 1, wash: true });
   }
   for (const def of PREFECTURE_DEFS) {
     const p = prefs.find((x) => x.id === def.id);
@@ -146,7 +147,7 @@ export function drawMapScreen() {
     const defense = Math.round(p?.defense ?? 50);
     const cap = captureStatus(state, def.id);
     const lp = prefectureLatePressure(state, def.id);
-    drawShape(g, sh.d, { fill: defenseColor(defense), stroke: def.id === sel ? '#e6b84a' : '#5a4a2a', lineWidth: def.id === sel ? 3 : 1 });
+    drawShape(g, sh.d, { fill: defenseColor(defense), stroke: def.id === sel ? '#e6b84a' : '#5a4a2a', lineWidth: def.id === sel ? 3 : 1, wash: true });
     drawPrefectureOverlay(g, sh.d, { autonomous: !!lp?.autonomous, disasters: lp?.disasterCount ?? 0, besieged: cap.besieged, rebel: cap.rebel, occupied: cap.occupied });
   }
   g.restore();

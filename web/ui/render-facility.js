@@ -1,5 +1,6 @@
 // web/ui/render-facility.js：宮內設施（Canvas）。顯示御花園、太醫院、翰林院、武庫、藏書閣之等級、下一級費用與效果，並可興建。
 import { FACILITIES, FACILITY_IDS, FACILITY_MAX_LEVEL, buildFacility, constructionOf, facilityCost, facilityLevels } from '../../src/facilities.js';
+import { acknowledgeMark } from '../../src/palace.js';
 import { STAT } from './labels.js';
 import { U } from './store.js';
 import { save } from './state-io.js';
@@ -47,6 +48,15 @@ export function buildAct(id) {
   save();
   render();
   return true;
+}
+
+// 完工紅點（B-U7）：進入該設施頁（點選宮城之地塊）即確認，清除 state.facilityDone 之標記（引擎 acknowledgeMark）。
+export function ackFacilityMark(id) {
+  if (!U.state) return;
+  const next = acknowledgeMark(U.state, id);
+  if (next === U.state) return;
+  U.state = next;
+  save();
 }
 
 export function drawFacilityScreen() {

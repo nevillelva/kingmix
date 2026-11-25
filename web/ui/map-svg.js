@@ -51,11 +51,53 @@ export function pathBBox(d) {
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
 
-// 府縣多邊形（畫布）。opts：{ fill, stroke, dash, lineWidth }。Path2D 於無 DOM 環境下不可用時退回不繪。
+// 淡墨山河（B-039）：山丘與一道河流的淡墨示意線，座標同版圖（340×322），不具地理比例、不可點。
+const INK_HILLS = Object.freeze([[28, 70], [236, 14], [316, 120], [10, 300]]);
+export function drawInkBackdrop(g) {
+  g.save();
+  g.lineCap = 'round';
+  g.lineWidth = 1;
+  g.strokeStyle = '#5c4c3a';
+  g.globalAlpha = 0.42;
+  for (const [x, y] of INK_HILLS) {
+    g.beginPath();
+    g.moveTo(x, y);
+    g.quadraticCurveTo(x + 6, y - 10, x + 12, y);
+    g.quadraticCurveTo(x + 18, y - 12, x + 24, y);
+    g.stroke();
+  }
+  g.strokeStyle = '#2f6f8f';
+  g.globalAlpha = 0.35;
+  g.lineWidth = 1.6;
+  g.beginPath();
+  g.moveTo(20, 40);
+  g.bezierCurveTo(60, 60, 90, 30, 130, 52);
+  g.bezierCurveTo(170, 74, 200, 74, 240, 44);
+  g.bezierCurveTo(280, 14, 300, 60, 330, 40);
+  g.stroke();
+  g.restore();
+}
+
+// 府縣多邊形（畫布）。opts：{ fill, stroke, dash, lineWidth, wash }。
+// wash 為真時，填色以 shadowBlur 模擬宣紙暈染（B-040）；描邊不帶陰影，邊線仍清楚。
+// Path2D 於無 DOM 環境下不可用時退回不繪。
 export function drawShape(g, d, opts = {}) {
   if (typeof Path2D === 'undefined') return;
   const p = new Path2D(d);
-  if (opts.fill) { g.fillStyle = opts.fill; g.fill(p); }
+  if (opts.fill) {
+    if (opts.wash) {
+      g.save();
+      g.shadowColor = 'rgba(28,26,23,.35)';
+      g.shadowBlur = 4;
+      g.shadowOffsetX = 1;
+      g.shadowOffsetY = 1.5;
+      g.fillStyle = opts.fill;
+      g.fill(p);
+      g.restore();
+    } else {
+      g.fillStyle = opts.fill; g.fill(p);
+    }
+  }
   if (opts.stroke) {
     g.strokeStyle = opts.stroke;
     g.lineWidth = opts.lineWidth ?? 1;

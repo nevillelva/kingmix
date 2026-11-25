@@ -32,6 +32,8 @@ import { bar, button, panel, portrait, text } from './canvas/widgets.js';
 import { INK, LAC_TEXT, GOLD } from './canvas/theme.js';
 import { pad, gapOf, contentBox, card, cardHeight, section, feedbackBlock, setContentHeight, heading } from './canvas/d-parts.js';
 import { personFromRecord } from './canvas/people.js';
+import { loadUnlocks } from './unlock-store.js';
+import { BIO_TAGS, biographiesForSeed } from '../../src/biographies.js';
 
 export { heirPersonLabel };
 
@@ -449,6 +451,23 @@ function collectionBlocks() {
   return blocks;
 }
 
+// 名臣列傳（E-029）：取自 unlock-store 已寫入之跨局列傳，只列本種子（同一局之前幾世）的入傳者。
+export function biographyEntries(seed) {
+  return biographiesForSeed(loadUnlocks(), seed).slice().reverse();
+}
+
+function biographyBlocks() {
+  const list = biographyEntries(U.state.seed);
+  if (!list.length) return [{ t: 'text', s: '尚無名臣入傳。國祚終結時，朝中名臣將記於此。', size: 13 * S() }];
+  return list.flatMap((b) => {
+    const note = b.endLine || (Array.isArray(b.lines) && b.lines.length ? b.lines[b.lines.length - 1] : '');
+    return [
+      { t: 'text', s: `${b.name}（${BIO_TAGS[b.tag] || b.tag}）　第${b.year}年`, size: 13 * S() },
+      ...(note ? [{ t: 'text', s: note, size: 12.5 * S() }] : []),
+    ];
+  });
+}
+
 export function drawThrone() {
   const box = contentBox();
   const { x, w } = box;
@@ -480,6 +499,7 @@ export function drawThrone() {
   y += section(x, y, w, '史記', chron.length
     ? chron.map((l) => ({ t: 'text', s: `${l.text}　${l.tag}`, size: 13 * S() }))
     : [{ t: 'text', s: '本朝初立，尚無史記。' }]) + gapOf();
+  y += section(x, y, w, '名臣列傳', biographyBlocks()) + gapOf();
   if (resignOpen && currentScreen() === 'throne') modal((cc) => drawResignDialog(cc), () => { resignOpen = false; });
   setContentHeight(y);
 }
