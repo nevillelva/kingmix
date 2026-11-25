@@ -51,7 +51,7 @@ test('B9：奏摺選項與戰報列不再共用 data-i，改用 data-opt-index�
   }
   assert.match(read('render-court.js'), /data-opt-index="\$\{i\}"/);
   assert.match(read('render-memorial.js'), /\.opt\[data-opt-index\]/);
-  assert.match(read('render-campaign.js'), /data-line-index="\$\{i\}"/);
+  assert.match(read('canvas/campaign.js'), /hidden: i >= visible/, '戰報列以 hidden 旗標標示未播放之列（Canvas）');
 });
 
 test('shouldCommit：同一局且同一回合才裁決', async () => {

@@ -43,68 +43,61 @@ globalThis.localStorage ??= { getItem: () => null, setItem() {}, removeItem() {}
 const { openDialog } = await import('../web/ui/dialog.js');
 const { bgmLookahead, BGM_STEP, BGM_LOOKAHEAD } = await import('../web/ui/audio.js');
 
-// ── openDialog ──────────────────────────────────────────────
+// ── 對話框（Canvas）：堆疊、Esc、相容層 openDialog ─────────────
+const { openCanvasDialog, dialogCount, drawDialogs } = await import('../web/ui/dialog.js');
+const { C } = await import('../web/ui/canvas/core.js');
+const { beginFrame, takeModal, leaveModal, endFrame, closeModal, dispatchPoint, publishedHits } = await import('../web/ui/canvas/input.js');
 
-test('openDialog：掛上外層、套用 class 與屬性，並將焦點給 initialFocus', () => {
-  const close = openDialog({ html: '<b>x</b>', className: 'nianhao', attrs: { role: 'dialog' }, initialFocus: '.go' });
-  const ov = close.el;
-  assert.equal(ov.className, 'nianhao');
-  assert.equal(ov.attrs.role, 'dialog');
-  assert.equal(ov.innerHTML, '<b>x</b>');
-  assert.equal(ov.isConnected, true);
-  assert.equal(ov.focused, 1);
-  close();
+function ctxStub() {
+  const noop = () => {};
+  const known = { measureText: () => ({ width: 10 }), createLinearGradient: () => ({ addColorStop: noop }), createRadialGradient: () => ({ addColorStop: noop }) };
+  return new Proxy({}, { get: (t, k) => (k in known ? known[k] : noop), set: () => true });
+}
+// 模擬一幀：登記對話框請求並發布命中表（與 core.drawFrame 的順序相同）。
+function frame() {
+  C.ctx ??= ctxStub(); C.W = 640; C.H = 480; C.U = 1;
+  beginFrame(); drawDialogs(); const req = takeModal(); if (req) req.drawFn(C); leaveModal(); endFrame();
+}
+
+test('openCanvasDialog：堆疊計數；關閉兩次只呼叫一次 onClose', () => {
+  let n = 0;
+  const close = openCanvasDialog({ title: 'x', onClose: () => n++ });
+  assert.equal(dialogCount() >= 1, true);
+  close(); close();
+  assert.equal(n, 1);
 });
 
-test('openDialog：預設 class 為 dlg-ov；Esc 關閉並移除 keydown 監聽，onClose 只呼叫一次', () => {
-  let closedCount = 0;
-  const before = dom.count('keydown');
-  const close = openDialog({ html: '', onClose: () => closedCount++ });
-  assert.equal(close.el.className, 'dlg-ov');
-  assert.equal(dom.count('keydown'), before + 1);
+test('drawDialogs：無對話框時不登記 modal；Esc 關閉最上層並呼叫 onClose', () => {
+  frame();
+  let closed = 0;
+  const close = openCanvasDialog({ title: 'x', dismissible: true, onClose: () => closed++ });
+  frame();
   dom.fire('keydown', { key: 'Escape' });
-  assert.equal(close.el.isConnected, false);
-  assert.equal(dom.count('keydown'), before);
-  assert.equal(closedCount, 1);
-  close();
-  assert.equal(closedCount, 1, '重複 close 無副作用');
-});
-
-test('openDialog：非 Esc 按鍵不關閉', () => {
-  const close = openDialog({ html: '' });
-  dom.fire('keydown', { key: 'Enter' });
-  assert.equal(close.el.isConnected, true);
+  closeModal();
+  assert.equal(closed, 1);
+  assert.equal(dialogCount(), 0);
   close();
 });
 
-test('openDialog：外部已移除節點時，下一次 keydown 會清理監聽而不再處理', () => {
-  const before = dom.count('keydown');
-  let closedCount = 0;
-  const close = openDialog({ html: '', onClose: () => closedCount++ });
-  close.el.remove(); // 外部移除
-  dom.fire('keydown', { key: 'Escape' });
-  assert.equal(dom.count('keydown'), before, '監聽已被清除');
-  assert.equal(closedCount, 0, '外部移除不視為 close');
-});
-
-test('openDialog：onClick 收到 (event, close)；未提供 onClick 時點擊不關閉', () => {
-  let seen = null;
-  const close = openDialog({ html: '', onClick: (e, c) => { seen = { e, c }; } });
-  assert.equal(close.el.clicks.length, 1);
-  close.el.clicks[0]({ target: close.el });
-  assert.equal(seen.c, close);
-  assert.equal(close.el.isConnected, true);
+test('相容層 openDialog：html 按鈕（data-dlg）點擊時 onClick 收到對應 key；背景點擊 e.target 為 close.el', () => {
+  frame();
+  const seen = [];
+  const close = openDialog({ html: '<p>提示</p><button data-dlg="ok">好</button>', onClick: (e, c) => { seen.push(e.target === c.el ? 'backdrop' : e.target.closest('[data-dlg]')?.dataset.dlg); c(); } });
+  frame();
+  const hit = publishedHits().find((h) => h.w > 0 && h.h > 0 && h.w < 640);
+  assert.ok(hit, '應有按鈕命中區');
+  dispatchPoint(hit.x + hit.w / 2, hit.y + hit.h / 2);
+  assert.deepEqual(seen, ['ok']);
+  assert.equal(dialogCount(), 0);
   close();
-
-  const plain = openDialog({ html: '' });
-  assert.equal(plain.el.clicks.length, 0);
-  plain();
 });
 
-test('openDialog：initialFocus 可為函式', () => {
-  let got = null;
-  const close = openDialog({ html: '', initialFocus: (ov) => { got = ov; return null; } });
-  assert.equal(got, close.el);
+test('相容層 openDialog：無 onClick 時背景點擊不關閉（以吞掉點擊實現）', () => {
+  frame();
+  const close = openDialog({ html: '<p>x</p>' });
+  frame();
+  dispatchPoint(1, 1);
+  assert.equal(dialogCount(), 1);
   close();
 });
 
@@ -166,11 +159,11 @@ test('首屏載入提示：index.html 內含靜態提示與樣式，main.js 於 
   assert.match(main, /removeBootHint\(\);\n\} else/, '錯誤路徑亦移除提示');
 });
 
-test('overlays.js 與 render-ruler.js 改用 openDialog，不再各自管理 keydown', () => {
+test('overlays.js 與 render-ruler.js 皆經 dialog.js，不再各自管理 keydown', () => {
   const read = (f) => readFileSync(new URL(`../web/ui/${f}`, import.meta.url), 'utf8');
   for (const f of ['overlays.js', 'render-ruler.js']) {
     const src = read(f);
-    assert.match(src, /import \{ openDialog \} from '\.\/dialog\.js'/, `${f} imports openDialog`);
+    assert.match(src, /from '\.\/dialog\.js'/, `${f} imports dialog.js`);
     assert.doesNotMatch(src, /addEventListener\('keydown'|removeEventListener\('keydown'/, `${f} has no own keydown listener`);
   }
 });

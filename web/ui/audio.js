@@ -1,5 +1,6 @@
 // web/ui/audio.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
 import { U } from './store.js';
+import { button } from './canvas/widgets.js';
 
 export const SOUND_KEY = 'kingmix-sound';
 
@@ -113,8 +114,24 @@ export const SFX = {
 
 export function sfx(name){ if (!U.soundOn || !U.audioUnlocked || !U.audioCtx) return; const f = SFX[name]; if (f) f(); }
 
+// 音效開關（與 main.js 舊按鈕相同之行為：寫入 localStorage、啟停 BGM、開啟時播放提示音）。
+export function sndLabel(){ return U.soundOn ? '音效：開' : '音效：關'; }
+
+export function toggleSound(){
+  U.soundOn = !U.soundOn;
+  try { localStorage.setItem(SOUND_KEY, U.soundOn ? 'on' : 'off'); } catch(e) {}
+  if (U.soundOn) { unlockAudio(); sfx('pick'); } else stopBgm();
+}
+
+// 舊版頁首按鈕之同步（僅於 DOM 存在時）；Canvas 版以 drawSoundToggle 繪製。
 export function paintSnd(){
-  const b = document.getElementById('snd');
-  b.textContent = U.soundOn ? '音效：開' : '音效：關';
+  const b = typeof document !== 'undefined' && document.getElementById ? document.getElementById('snd') : null;
+  if (!b) return;
+  b.textContent = sndLabel();
   b.setAttribute('aria-pressed', String(U.soundOn));
+}
+
+// Canvas 音效按鈕：點擊切換音效（toggleSound）。
+export function drawSoundToggle(C, x, y, w, h){
+  button(x, y, w, h, sndLabel(), () => toggleSound(), { lac: false, fs: 13 * (C.U || 1) });
 }
