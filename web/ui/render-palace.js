@@ -1,20 +1,25 @@
-// web/ui/render-palace.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
-import { U, app } from './store.js';
+// web/ui/render-palace.js：宮城（Canvas）。以等角鳥瞰圖呈現御書房、後宮、慈寧宮、太和殿、校場、東廠與五處設施空地；
+// 點選地標即前往對應分頁。紅點：pendingMarks(state) 所列之宮室；待批件數與史冊、嬪妃、子嗣之數字由既有狀態取得。
+import { U } from './store.js';
 import { campaignActive, morningPair, pendingCase } from './game-flow.js';
-import { esc, levelWord } from './util.js';
+import { levelWord } from './util.js';
 import { render } from './render-bus.js';
 import { FACILITIES, constructionOf, facilityLevels } from '../../src/facilities.js';
+import { C, registerScreen, setScreen } from './canvas/core.js';
+import { panel } from './canvas/widgets.js';
+import { tx, btn } from './canvas/bfx.js';
+import { drawPalaceScene, palaceZones, drawSeasonTint } from './canvas/palace.js';
+import { drawSideRow, keepOverlays } from './render-side.js';
 
 // 宮城引擎（src/palace.js：pendingMarks、seasonFor）可能尚未合入；以動態匯入防護，缺漏時宮城照常呈現。
 let engine = {};
-import('../../src/palace.js').then(m => {
+import('../../src/palace.js').then((m) => {
   engine = m;
   if (U.state && U.tab === 'palace') render();
 }, () => {});
 
-// ── 宮城平面圖：點選宮室即前往對應分頁 ──
 // 待批件數：東廠密報或戰事優先；否則為早朝的第一則與次奏（未留中者）。
-export function pendingMemorials(){
+export function pendingMemorials() {
   if (!U.state || !U.state.alive) return 0;
   if (pendingCase() || campaignActive()) return 1;
   const p = morningPair();
@@ -22,7 +27,7 @@ export function pendingMemorials(){
 }
 
 // 紅點：pendingMarks(state) 所列之宮室（可為宮室代號、分頁名，或含 id 的物件）。
-function markedSet(){
+export function markedSet() {
   if (typeof engine.pendingMarks !== 'function' || !U.state) return new Set();
   try {
     const out = new Set();
@@ -34,91 +39,67 @@ function markedSet(){
   } catch { return new Set(); }
 }
 
-// 季節色：seasonFor(state)；缺漏時沿用 applySeason 已設定之 html[data-season]。
+// 季節：seasonFor(state) 可用則採之，缺漏時沿用 html[data-season]（與舊版相同）。
 const SEASONS = ['spring', 'summer', 'autumn', 'winter'];
-function seasonOf(){
+export function seasonOf() {
   let s = null;
   if (typeof engine.seasonFor === 'function' && U.state) {
     try { s = engine.seasonFor(U.state); } catch { s = null; }
   }
-  s = s || document.documentElement.dataset.season || '';
+  s = s || (typeof document !== 'undefined' ? document.documentElement?.dataset?.season : '') || '';
   return SEASONS.includes(s) ? s : '';
 }
 
-// 設施空地：五處設施（園林、醫館、武庫、翻書院、國子監）分置於宮城四側，未營造時顯示為空地，點選即開啟營造面板。
-const FACILITY_PLOTS = [
-  {id:'garden',  x:22,  y:128, w:66, h:48},
-  {id:'medical', x:22,  y:184, w:66, h:48},
-  {id:'academy', x:232, y:128, w:66, h:48},
-  {id:'armory', x:232, y:184, w:66, h:48},
-  {id:'library', x:122, y:270, w:76, h:36},
-];
-
-export function renderPalace(){
-  const openCases = U.state.dongchang.cases.filter(c => c.status !== 'closed').length;
-  const pend = pendingMemorials();
-  const marks = markedSet();
-  const season = seasonOf();
-  const Z = [
-    {id:'yushu', n:'御書房', s:`史冊 ${(U.state.annals||[]).length}`, t:'throne', x:22, y:40, w:66, h:78},
-    {id:'houggong', n:'後宮', s:`嬪妃 ${(U.state.consorts||[]).length} / 8`, t:'harem', x:100, y:40, w:120, h:78},
-    {id:'cining', n:'慈寧宮', s:`子嗣 ${(U.state.heirs||[]).length}`, t:'harem', x:232, y:40, w:66, h:78},
-    {id:'taihe', n:'太和殿', s: pend ? `待批 ${pend} 件` : '朝會・御批', t:'court', x:100, y:128, w:120, h:104, hall:true},
-    {id:'jiaochang', n:'校場', s:`軍備 ${levelWord('armament')}`, t:'officials', x:22, y:250, w:92, h:106},
-    {id:'dongchang', n:'東廠', s:`進行中 ${openCases} 案`, t:'dc', x:206, y:250, w:92, h:106},
-  ];
-  const marked = z => marks.has(z.id) || marks.has(z.t);
-  const zone = z => {
-    const cx = z.x + z.w/2, cy = z.y + z.h/2;
-    const dot = marked(z) ? `<circle class="mdot" cx="${z.x + z.w - 9}" cy="${z.y + 9}" r="5"/>` : '';
-    return `<g class="zone" role="button" tabindex="0" data-tab="${z.t}" aria-label="${z.n}，${esc(z.s)}${marked(z) ? '，有待批事' : ''}">
-      <rect class="${z.hall ? 'tile hall' : 'tile'}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="5"/>
-      <text class="${z.hall ? 'hallname' : ''}" x="${cx}" y="${z.hall ? cy-4 : cy-2}" text-anchor="middle">${z.n}</text>
-      <text class="sm" x="${cx}" y="${cy+16}" text-anchor="middle">${esc(z.s)}</text>${dot}</g>`;
-  };
-  const facilities = facilityLevels(U.state);
-  const plot = p => {
-    const def = FACILITIES[p.id];
-    const level = facilities[p.id] || 0;
-    const cx = p.x + p.w/2, cy = p.y + p.h/2;
-    const empty = level === 0;
-    const label = empty ? '空地・可營造' : `第 ${level} 級`;
-    const job = constructionOf(U.state)[p.id];
-    const dot = marks.has(p.id) ? `<circle class="mdot" cx="${p.x + p.w - 9}" cy="${p.y + 9}" r="5"/>` : '';
-    const sub = job ? `興建中 尚餘 ${job.monthsLeft} 月` : empty ? '點選營造' : esc(label);
-    return `<g class="zone plot${empty ? ' empty' : ''}" role="button" tabindex="0" data-facility="${p.id}" aria-label="${def.name}，${label}${marks.has(p.id) ? '，有待辦' : ''}">
-      <rect class="tile" x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="5" pointer-events="all"/>
-      <text x="${cx}" y="${cy-2}" text-anchor="middle">${def.name}</text>
-      <text class="sm" x="${cx}" y="${cy+12}" text-anchor="middle">${sub}</text>${dot}</g>`;
-  };
-  app.innerHTML = `
-    <section class="card"><h2>宮城</h2>
-      <p class="sub">點選宮室，前往其所主之事。</p>
-      <div class="plan${season ? ' season-' + season : ''}">
-        <svg viewBox="0 0 320 380" role="group" aria-label="宮城平面圖">
-          <rect class="wall" x="10" y="10" width="300" height="360" rx="6"/>
-          <path class="gate" d="M140 10 L180 10"/>
-          <path class="gate" d="M140 370 L180 370"/>
-          <text class="compass" x="160" y="28" text-anchor="middle">午門</text>
-          <text class="compass" x="160" y="364" text-anchor="middle">玄武門</text>
-          ${Z.map(zone).join('')}
-          ${FACILITY_PLOTS.map(plot).join('')}
-          <text class="sm" x="160" y="250" text-anchor="middle">午朝廣場</text>
-          ${season ? '<rect class="season" x="10" y="10" width="300" height="360" rx="6"/>' : ''}
-        </svg>
-      </div>
-      <p class="sub" style="margin:10px 0 0">太和殿處理朝政奏摺；御書房（史冊與帝王）、校場（朝臣任免）、後宮與慈寧宮（嬪妃與子嗣）、東廠各司其事；空地可營造宮內設施。</p>
-      <button class="btn ghost" data-go-map="1">展開全國輿圖</button>
-      <button class="btn ghost" data-go-facility="1">營造宮內設施</button>
-    </section>`;
-  app.querySelector('[data-go-map]').onclick = () => { U.tab = 'map'; U.panel = null; U.pick1 = null; render(); };
-  app.querySelector('[data-go-facility]').onclick = () => { U.tab = 'facility'; U.panel = null; U.pick1 = null; render(); };
-  app.querySelectorAll('g.zone').forEach(g => {
-    const go = () => {
-      if (g.dataset.facility) U.tab = 'facility'; else U.tab = g.dataset.tab;
-      U.panel = null; U.pick1 = null; render();
-    };
-    g.onclick = go;
-    g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
-  });
+// 地標點選：設施空地前往設施頁，其餘依 nav.tab 前往分頁。
+export function goZone(z) {
+  if (z.facility) U.tab = 'facility';
+  else U.tab = z.nav?.tab ?? 'palace';
+  U.panel = null;
+  U.pick1 = null;
+  render();
 }
+
+// 繪製宮城畫面（每幀；C 為 core 的繪製狀態，座標以內容區為準）。宮城不捲動。
+export function drawPalaceScreen() {
+  const g = C.ctx;
+  if (!g || !U.state) return;
+  const u = C.U;
+  const W = C.W, y0 = C.content.y, areaH = C.content.h;
+  const openCases = (U.state.dongchang?.cases || []).filter((c) => c.status !== 'closed').length;
+  const facilities = facilityLevels(U.state);
+  const jobs = constructionOf(U.state);
+  const zones = palaceZones({
+    pend: pendingMemorials(),
+    marks: markedSet(),
+    openCases,
+    armLevel: levelWord('armament'),
+    counts: { annals: (U.state.annals || []).length, consorts: (U.state.consorts || []).length, heirs: (U.state.heirs || []).length },
+    facilities,
+    jobs,
+    facilityName: Object.fromEntries(Object.entries(FACILITIES).map(([k, v]) => [k, v.name])),
+  });
+  const headH = 44 * u, noteH = 40 * u, rowH = 44 * u, sideH = 64 * u;
+  const sceneTop = y0 + headH;
+  const sceneH = Math.max(160 * u, areaH - headH - noteH - rowH - sideH - 8 * u);
+  panel(12 * u, y0 + 6 * u, W - 24 * u, 36 * u, { fill: 'rgba(255,250,236,.7)' });
+  tx('宮城', 26 * u, y0 + 14 * u, 18, { weight: 'bold' });
+  tx('點選宮室，前往其所主之事。', 96 * u, y0 + 17 * u, 13, { color: 'rgba(28,26,23,.6)' });
+  drawPalaceScene(zones, goZone, W, sceneH, sceneTop);
+  const season = seasonOf();
+  if (season) { g.save(); g.translate(0, sceneTop); drawSeasonTint(g, season, W, sceneH); g.restore(); }
+  tx('太和殿處理朝政奏摺；御書房（史冊與帝王）、校場（朝臣任免）、後宮與慈寧宮（嬪妃與子嗣）、東廠各司其事；空地可營造宮內設施。', 16 * u, sceneTop + sceneH + 2 * u, 12, { color: 'rgba(28,26,23,.6)', maxW: W - 32 * u });
+  const by = sceneTop + sceneH + noteH;
+  const bw = Math.min(170 * u, W / 2 - 18 * u);
+  btn(12 * u, by, bw, 36 * u, '展開全國輿圖', () => { U.tab = 'map'; U.panel = null; U.pick1 = null; render(); }, { ghost: true });
+  btn(W - 12 * u - bw, by, bw, 36 * u, '營造宮內設施', () => { U.tab = 'facility'; U.panel = null; U.pick1 = null; render(); }, { ghost: true });
+  drawSideRow(12 * u, by + rowH, W - 24 * u);
+  C.contentH = 0; // 宮城不捲動
+  keepOverlays();
+}
+
+// 導覽：進入宮城頁。
+export function renderPalace() {
+  setScreen('palace');
+}
+
+registerScreen('palace', drawPalaceScreen);
