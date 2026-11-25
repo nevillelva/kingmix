@@ -18,7 +18,8 @@ test('忠誠門檻統一：render-officials 自 assassination.js 匯入常數，
 
 test('態度分級：效忠 60、觀望 50–60、離心低於 50（以常數作下限）', () => {
   assert.match(uiSource, /loy >= 60 \? '效忠' : loy >= ASSASSIN_LOW_LOYALTY \? '觀望' : '離心'/);
-  assert.match(uiSource, /fill\$\{loy < ASSASSIN_LOW_LOYALTY \? ' warn' : ''\}/);
+  assert.match(uiSource, /const low = loy < ASSASSIN_LOW_LOYALTY;/);
+  assert.match(uiSource, /low \? '#c04a3a' : GOLD/);
 });
 
 test('武將判定確定性：相同官員物件結果相同，且判定只讀取所任職位', () => {
@@ -80,8 +81,8 @@ test('武將標記不改動官員物件（不新增欄位，存檔格式不變�
   assert.equal(s.officials.every((o) => !('general' in o) && !('isGeneral' in o)), true);
 });
 
-test('只有武將才走將領卡：render-officials 以 isGeneral 分流，非武將使用小卡', () => {
-  assert.match(uiSource, /isGeneral\(o\) \? generalCard\(o\) : officialCard\(o\)/);
+test('只有武將才走將領卡：render-officials 以 isGeneral 分流（同一朝臣卡規格，武將加經歷兵力）', () => {
+  assert.match(uiSource, /officialSpec\(o, isGeneral\(o\)\)/);
 });
 
 test('開局朝堂四位官員皆無武職，故無將領卡（依職位判定的結果）', () => {

@@ -1,118 +1,101 @@
-// web/ui/render-cards.js：策卡國策、寶物賜予、東廠稍後處理的介面。
-// 引擎模組（cards.js／items.js／relations.js／fastforward.js 的 deferLeverage）來自平行 PR，尚未合入前
-// 以動態匯入載入；缺席時介面照常呈現，相關按鈕停用並註明「引擎尚未就緒」。
+// web/ui/render-cards.js：策卡國策、寶物賜予、東廠稍後處理的畫面資料（Canvas 版）。
+// 畫面以 blocks 回傳（見 canvas/d-parts.js）；點擊經 handleCardAct 執行，行為與舊版 DOM 介面相同。
 import { U } from './store.js';
-import { esc, rng } from './util.js';
+import { C } from './canvas/core.js';
+import { card, contentBox, gapOf, pad, stack } from './canvas/d-parts.js';
+import { INK } from './canvas/theme.js';
 import { save } from './state-io.js';
 import { render } from './render-bus.js';
 import { EFFECT } from './labels.js';
+import { activeCards, activeSynergies, choosePolicyCard, drawPolicyCards as drawPolicyCardsEngine, policyCardDef } from '../../src/cards.js';
+import { giveItem, listInventory } from '../../src/items.js';
+import { deferLeverage, flushDeferredLeverage } from '../../src/fastforward.js';
 
-// 可選引擎：匯入失敗或匯出名稱不存在時維持空物件，各處以 typeof 檢查。
-export const engine = {};
-const optional = (path) => import(path).then((m) => Object.assign(engine, m)).catch(() => {});
-// 非同步載入，完成後重繪一次（不使用頂層 await，避免與 render-nav 的循環匯入互等）。
-Promise.all([
-  optional('../../src/cards.js'),
-  optional('../../src/items.js'),
-  optional('../../src/relations.js'),
-  optional('../../src/fastforward.js'),
-]).then(() => { if (U.state) render(); });
-
-export const has = (name) => typeof engine[name] === 'function';
-
-const cardLabel = (c) => esc(c.name ?? c.label ?? c.title ?? c.id ?? '策卡');
-const cardDesc = (c) => esc(c.desc ?? c.description ?? c.text ?? cardEffectText(c));
-// 卡面效果：由 monthly 欄位列出，例如「農業 +0.4」。
-const cardEffectText = (c) => Object.entries(c.monthly ?? {}).map(([k, v]) => `${k} ${v > 0 ? '+' : ''}${v}`).join('　');
-
-// 策卡名稱與效果文字（效果以中文屬性名列出，例如「商業 +0.6　國庫 +2」）。
-const policyDef = (id) => engine.policyCardDef?.(id);
-const policyName = (id) => { const c = policyDef(id); return c ? (c.name ?? c.label ?? id) : id; };
+const policyName = (id) => { const c = policyCardDef(id); return c ? (c.name ?? c.label ?? id) : id; };
 const policyEffectText = (id) => {
-  const c = policyDef(id);
+  const c = policyCardDef(id);
   return Object.entries(c?.monthly ?? {}).map(([k, v]) => `${EFFECT[k] ?? k} ${v > 0 ? '+' : ''}${v}`).join('　');
 };
 
-// 目前生效的策卡（activeCards）：列於策卡區塊之下，擇卡後仍可見。
-export function activeCardsLine() {
-  if (!has('activeCards') || !U.state) return '';
+// 目前生效的策卡（activeCards）文字；無則空字串。
+export function activeCardsText() {
+  if (!U.state) return '';
   let ids = [];
-  try { ids = engine.activeCards(U.state) || []; } catch (e) { ids = []; }
+  try { ids = activeCards(U.state) || []; } catch (e) { ids = []; }
   if (!Array.isArray(ids) || ids.length === 0) return '';
-  return `<div class="sub" style="margin:10px 0 0">生效策卡：${ids.map((id) => esc(`${policyName(id)}（${policyEffectText(id)}）`)).join('、')}</div>`;
+  return `生效策卡：${ids.map((id) => `${policyName(id)}（${policyEffectText(id)}）`).join('、')}`;
 }
 
-// 年度策卡國策區塊，外加生效策卡列。
-export function policyCardsCard() {
-  return policyOfferCard() + activeCardsLine();
-}
-
-// 每年（正月）三選一的策卡國策。已選定本年者不再顯示。
-// 抽卡只在本年首次呈現時進行一次，結果寫入 state.policyCards.offer，並以 flags.policy_offer_year 記年；
-// 之後重繪僅讀取既有 offer，不再重抽（drawPolicyCards 會覆寫 offer，故不可每次呼叫）。
-function policyOfferCard() {
-  const s = U.state;
-  if (!s || !s.alive || s.month !== 1 || !has('drawPolicyCards') || !has('choosePolicyCard')) return '';
-  s.flags = s.flags || {};
-  if (s.flags.policy_card_year === s.year) return '';
-  // 月初已由 prepareMonth 抽定（A5）；此處僅讀取。尚未抽定者不顯示。
-  if (s.flags.policy_offer_year !== s.year) return '';
-  const ids = Array.isArray(s.policyCards?.offer) ? s.policyCards.offer : [];
-  const cards = ids.map((id) => ({ id, ...(policyDef(id) || {}) }));
-  if (cards.length === 0) return '';
-  const syn = synergyLine();
-  return `<section class="card" data-policy-cards="${s.year}"><h2>年度策卡國策</h2>
-    <div class="kicker">${s.year} 年　・　三選一，擇一施行</div>
-    <div class="opts">${cards.slice(0, 3).map((c) => `<button class="opt zhu" data-act="pickcard" data-arg="${esc(c.id)}">
-      <span class="mark">${cardLabel(c).slice(0, 1)}</span><span class="otxt"><span class="label">${cardLabel(c)}</span>
-      <span class="hint">${cardDesc(c)}</span></span></button>`).join('')}</div>
-    ${syn}</section>`;
-}
-
-// 目前生效的策卡協同（activeSynergies）。
-export function synergyLine() {
-  if (!has('activeSynergies')) return '';
+// 目前生效的策卡協同文字。
+export function synergyText() {
+  if (!U.state) return '';
   let list = [];
-  try { list = engine.activeSynergies(U.state) || []; } catch (e) { list = []; }
+  try { list = activeSynergies(U.state) || []; } catch (e) { list = []; }
   if (!Array.isArray(list) || list.length === 0) return '';
-  return `<div class="sub" style="margin:10px 0 0">生效協同：${list.map((x) => esc(x.name ?? x.label ?? x.id ?? '協同')).join('、')}</div>`;
+  return `生效協同：${list.map((x) => x.name ?? x.label ?? x.id ?? '協同').join('、')}`;
 }
 
-// 寶物賜予：列出庫中寶物，點選即賜予該官員或嬪妃。
-export function giveItemMenu(targetId, kind = 'official') {
-  if (!has('giveItem') || !has('listInventory')) {
-    return `<div class="loy">賜寶：引擎尚未就緒</div>`;
+// 每年（正月）三選一的策卡國策區塊。抽卡於月初由 prepareMonth 完成（A5）；此處僅讀取 offer，不再重抽。
+// 已選定本年者、非正月、或尚未抽定者回傳空陣列。
+export function policyOfferBlocks() {
+  const s = U.state;
+  if (!s || !s.alive || s.month !== 1 || !drawPolicyCardsEngine || !choosePolicyCard) return [];
+  s.flags = s.flags || {};
+  if (s.flags.policy_card_year === s.year) return [];
+  if (s.flags.policy_offer_year !== s.year) return [];
+  const ids = Array.isArray(s.policyCards?.offer) ? s.policyCards.offer : [];
+  if (ids.length === 0) return [];
+  const blocks = [
+    { t: 'title', s: '年度策卡國策' },
+    { t: 'text', s: `${s.year} 年　・　三選一，擇一施行` },
+  ];
+  for (const id of ids.slice(0, 3)) {
+    const c = policyCardDef(id) || {};
+    blocks.push({ t: 'text', s: `${c.name ?? id}　${c.desc ?? c.description ?? c.text ?? policyEffectText(id)}` });
+    blocks.push({ t: 'btns', items: [{ label: `擇「${c.name ?? id}」`, onClick: () => handleCardAct('pickcard', id) }] });
   }
+  const syn = synergyText();
+  if (syn) blocks.push({ t: 'text', s: syn, size: 13 * C.U });
+  return blocks;
+}
+
+// 寶物賜予：open 為 true 時列出庫中寶物（按鈕），否則只顯示「賜寶」展開鈕。
+// onToggle 由畫面提供（切換展開狀態）。
+export function giveItemBlocks(targetId, kind = 'official', open = false, onToggle = () => {}) {
+  if (!listInventory) return [{ t: 'text', s: '賜寶：引擎尚未就緒' }];
   let inv = [];
-  try { inv = engine.listInventory(U.state) || []; } catch (e) { inv = []; }
+  try { inv = listInventory(U.state) || []; } catch (e) { inv = []; }
   inv = inv.filter((it) => (it.count ?? 0) > 0);
-  if (inv.length === 0) return `<div class="loy">賜寶：庫中無寶物</div>`;
-  // data-arg 格式：itemId|targetKind|targetId（giveItem 需要目標種類）。
-  return `<details class="giveitem"><summary class="btn ghost mini">賜寶</summary><div class="opts">` +
-    inv.map((it) => `<button class="opt" data-act="giveitem" data-arg="${esc(it.id)}|${esc(kind)}|${esc(targetId)}">
-      <span class="mark">寶</span><span class="label">${esc(it.name ?? it.id)}（${it.count}）</span></button>`).join('') +
-    `</div></details>`;
+  if (inv.length === 0) return [{ t: 'text', s: '賜寶：庫中無寶物' }];
+  if (!open) return [{ t: 'btns', items: [{ label: '賜寶', onClick: onToggle, lac: false }] }];
+  return [
+    { t: 'btns', items: [{ label: '收起賜寶', onClick: onToggle, lac: false }] },
+    { t: 'btns', items: inv.map((it) => ({
+      label: `${it.name ?? it.id}（${it.count}）`,
+      onClick: () => handleCardAct('giveitem', `${it.id}|${kind}|${targetId}`),
+    })) },
+  ];
 }
 
-// 東廠密報的「稍後處理」按鈕。
-export function deferButton(dc) {
-  const ok = has('deferLeverage');
-  return `<button class="btn ghost mini" data-act="defer" data-arg="${esc(dc.id ?? dc.officialId ?? '')}" ${ok ? '' : 'disabled'}>稍後處理${ok ? '' : '（引擎尚未就緒）'}</button>`;
+// 東廠密報「稍後處理」按鈕（區塊）。
+export function deferBlock(dc) {
+  return { t: 'btns', items: [{ label: '稍後處理', onClick: () => handleCardAct('defer', String(dc.id ?? dc.officialId ?? '')) }] };
 }
 
-// 暫緩之案取回鈕（東廠頁）。
-export function flushButton() {
-  return `<button class="btn ghost mini" data-act="flushdefer" ${has('flushDeferredLeverage') ? '' : 'disabled'}>取回暫緩之案</button>`;
+// 暫緩之案取回鈕（區塊）。
+export function flushBlock() {
+  return { t: 'btns', items: [{ label: '取回暫緩之案', onClick: () => handleCardAct('flushdefer', '') }] };
 }
 
-// 本卡片的行動分派，由 onAgency 先行呼叫；已處理則回傳 true。
 const REASON_TEXT = {
   bad_target_kind: '賜寶對象不合。', not_owned: '庫中無此寶物。', no_target: '查無此人。',
 };
+
+// 策卡區塊的行動分派（pickcard、giveitem、defer、flushdefer）；已處理則回傳 true。
 export function handleCardAct(a, v) {
   if (a === 'pickcard') {
     let r;
-    try { r = engine.choosePolicyCard(U.state, v); } catch (e) { r = null; }
+    try { r = choosePolicyCard(U.state, v); } catch (e) { r = null; }
     const ok = !!r;
     const eff = policyEffectText(v);
     U.feedback = ok ? `已定策卡：${policyName(v)}${eff ? `（${eff}）` : ''}，施行於本年。` : '此策卡未能施行。';
@@ -121,21 +104,47 @@ export function handleCardAct(a, v) {
   }
   if (a === 'giveitem') {
     const [itemId, kind, targetId] = v.split('|');
-    const r = engine.giveItem(U.state, itemId, kind, targetId);
+    const r = giveItem(U.state, itemId, kind, targetId);
     U.feedback = r?.ok ? '寶物已賜出。' : `賜寶未成：${REASON_TEXT[r?.reason] ?? '無法賜予。'}`;
     save(); render(); return true;
   }
   if (a === 'defer') {
     // deferLeverage 回傳布林值（true＝已暫緩）。
-    const ok = engine.deferLeverage(U.state, v) === true;
+    const ok = deferLeverage(U.state, v) === true;
     U.feedback = ok ? '此案暫緩，留待後議。' : '稍後處理未成。';
     save(); render(); return true;
   }
   if (a === 'flushdefer') {
     // flushDeferredLeverage 回傳還原為待決的案件陣列。
-    const back = engine.flushDeferredLeverage(U.state) || [];
+    const back = flushDeferredLeverage(U.state) || [];
     U.feedback = back.length ? `暫緩之案 ${back.length} 件已取回，待處置。` : '並無暫緩之案。';
     save(); render(); return true;
   }
   return false;
+}
+
+// 年初策卡國策（Canvas）：三選一卡與生效策卡列，畫於 (x, y)，缺省為內容區左上；回傳佔用高度。
+export function drawPolicyCards(cc = C, x, y, w) {
+  const box = contentBox();
+  const bx = x ?? box.x, by = y ?? box.y, bw = w ?? box.w;
+  let h = 0;
+  const blocks = policyOfferBlocks();
+  if (blocks.length) h += card(bx, by, bw, { lac: true, blocks }) + gapOf();
+  const line = activeCardsText();
+  if (line) h += stack(bx + pad(), by + h, bw - 2 * pad(), [{ t: 'text', s: line, size: 13 * cc.U }], true, INK) + gapOf();
+  return h;
+}
+
+// ── 舊 DOM 相容（待 C 改寫 render-court.js 後移除）──
+// 舊版 render-court.js 仍以 HTML 字串引用下列名稱；點擊仍經 onAgency → handleCardAct，行為不變。
+export function deferButton(dc) {
+  return `<button class="btn ghost mini" data-act="defer" data-arg="${String(dc.id ?? dc.officialId ?? '')}">稍後處理</button>`;
+}
+export function policyCardsCard() {
+  const offer = U.state && U.state.policyCards && Array.isArray(U.state.policyCards.offer) ? U.state.policyCards.offer : [];
+  const live = policyOfferBlocks().length > 0;
+  const btns = live ? offer.slice(0, 3).map((id) => `<button class="opt zhu" data-act="pickcard" data-arg="${id}">${policyName(id)}</button>`).join('') : '';
+  const line = activeCardsText();
+  return (live ? `<section class="card"><h2>年度策卡國策</h2><div class="opts">${btns}</div></section>` : '') +
+    (line ? `<div class="sub" style="margin:10px 0 0">${line}</div>` : '');
 }

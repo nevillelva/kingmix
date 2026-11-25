@@ -1,10 +1,14 @@
-// web/ui/render-ruler.js：帝王面板（角色卡、五維雷達圖、本質與加成後對照）。
-// 入口由朝堂頁以一行加入：${rulerEntryHTML()}；點擊後以對話框開啟，不改動其他頁面的渲染流程。
+// web/ui/render-ruler.js：帝王面板（Canvas 版）。角色卡、五維雷達圖、本質與加成後對照表。
+// 入口歸朝堂頁（C）：按鈕呼叫 openRuler()；朝堂畫面每幀呼叫 rulerModalFrame() 以保持對話框開啟。
+// 關閉：按「返回朝堂」、點對話框外、或按 Esc（由 input.js 的 modal 處理）。
 import { COLLECTIONS } from '../../src/collections.js';
 import { eraName } from '../../src/era.js';
+import { C } from './canvas/core.js';
+import { modal } from './canvas/input.js';
+import { button, panel, text } from './canvas/widgets.js';
+import { contentBox, gapOf } from './canvas/d-parts.js';
+import { GOLD, INK, RED, font } from './canvas/theme.js';
 import { U } from './store.js';
-import { esc } from './util.js';
-import { openDialog } from './dialog.js';
 
 // 五維：文、武、魅、健康、威望。max 為雷達圖的正規化上限（取自 state.js 的 BOUNDS）。
 export const RULER_DIMS = Object.freeze([
@@ -34,82 +38,111 @@ export function rulerProfile(state) {
   };
 }
 
-// 雷達圖（inline SVG）：外框為加成後（實線填色），虛線為本質。顏色走 CSS 變數。
-export function radarSVG(rows, size = 240) {
-  const c = size / 2;
-  const R = size / 2 - 44;
+// 雷達圖各頂點座標（純函式，可測）。frac 為 0..1 的正規化值；第 i 軸自上方起順時針排列。
+export function radarPoint(i, n, frac, cx, cy, R) {
+  const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+  return [cx + Math.cos(a) * R * frac, cy + Math.sin(a) * R * frac];
+}
+
+function drawRadar(c, rows, cx, cy, R) {
   const n = rows.length;
-  const pt = (i, frac) => {
-    const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
-    return [c + Math.cos(a) * R * frac, c + Math.sin(a) * R * frac];
+  const poly = (vals, style) => {
+    c.beginPath();
+    vals.forEach((v, i) => {
+      const [x, y] = radarPoint(i, n, Math.max(0, Math.min(1, v)), cx, cy, R);
+      if (i) c.lineTo(x, y); else c.moveTo(x, y);
+    });
+    c.closePath();
+    if (style.fill) { c.fillStyle = style.fill; c.fill(); }
+    if (style.stroke) { c.strokeStyle = style.stroke; c.lineWidth = style.lw ?? 1; c.setLineDash(style.dash || []); c.stroke(); c.setLineDash([]); }
   };
-  const poly = (vals) => vals.map((v, i) => pt(i, Math.max(0, Math.min(1, v))).map((x) => x.toFixed(1)).join(',')).join(' ');
-  const rings = [0.25, 0.5, 0.75, 1].map((f) =>
-    `<polygon points="${rows.map((_, i) => pt(i, f).map((x) => x.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="currentColor" stroke-opacity=".18"/>`).join('');
-  const axes = rows.map((_, i) => {
-    const [x, y] = pt(i, 1);
-    return `<line x1="${c}" y1="${c}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="currentColor" stroke-opacity=".18"/>`;
-  }).join('');
-  const baseVals = rows.map((r) => r.base / r.max);
-  const finalVals = rows.map((r) => r.final / r.max);
-  const labels = rows.map((r, i) => {
-    const [x, y] = pt(i, 1.22);
-    return `<text x="${x.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle" font-size="13" fill="currentColor">${esc(r.label)}</text>`;
-  }).join('');
-  return `<svg class="ruler-radar" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="帝王五維雷達圖">
-    ${rings}${axes}
-    <polygon points="${poly(baseVals)}" fill="none" stroke="currentColor" stroke-dasharray="4 3" stroke-opacity=".6"/>
-    <polygon points="${poly(finalVals)}" fill="var(--zhu, #b3261e)" fill-opacity=".22" stroke="var(--zhu, #b3261e)" stroke-width="2"/>
-    ${labels}</svg>`;
-}
-
-// 面板內容（不含外框）。未開局時回傳提示文字。
-export function renderRuler(u = U) {
-  if (!u.state) return '<section class="card"><p class="sub">尚未開局，無帝王可觀。</p></section>';
-  const p = rulerProfile(u.state);
-  const table = p.rows.map((r) => `<tr>
-      <th scope="row">${esc(r.label)}</th>
-      <td class="num">${r.base}</td>
-      <td class="num">${r.final}${r.bonus ? `<span class="hint"> （+${r.bonus}）</span>` : ''}</td></tr>`).join('');
-  return `<section class="card ruler-panel" aria-label="帝王面板">
-    <div class="ruler-head">
-      <div class="ruler-seal" aria-hidden="true">帝</div>
-      <div><h2>${esc(p.name)}</h2><div class="kicker">${esc(p.title)}</div></div>
-    </div>
-    <div class="ruler-body">
-      <div class="ruler-radar-wrap">${radarSVG(p.rows)}</div>
-      <div class="ruler-cols">
-        <table class="ruler-table">
-          <caption class="sub">本質 ／ 加成後</caption>
-          <thead><tr><th scope="col">屬性</th><th scope="col">本質</th><th scope="col">加成後</th></tr></thead>
-          <tbody>${table}</tbody>
-        </table>
-      </div>
-    </div>
-  </section>`;
-}
-
-// 朝堂頁入口（一行）。
-export function rulerEntryHTML() {
-  return '<button type="button" class="btn ghost mini" data-ruler="open">帝王面板</button>';
-}
-
-// 以對話框開啟帝王面板；Esc 或點擊背景即關閉。
-export function openRulerDialog() {
-  openDialog({
-    html: `<div class="dlg ruler-dlg" role="dialog" aria-modal="true" aria-label="帝王面板">
-      ${renderRuler(U)}
-      <div class="dlg-btns"><button type="button" class="btn zhu mini" data-ruler="close">返回朝堂</button></div>
-    </div>`,
-    initialFocus: '[data-ruler="close"]',
-    onClick: (e, close) => {
-      if (e.target === close.el || e.target.closest('[data-ruler="close"]')) close();
-    },
+  for (const f of [0.25, 0.5, 0.75, 1]) poly(rows.map(() => f), { stroke: 'rgba(60,30,20,.2)' });
+  rows.forEach((_, i) => {
+    const [x, y] = radarPoint(i, n, 1, cx, cy, R);
+    c.strokeStyle = 'rgba(60,30,20,.2)'; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(cx, cy); c.lineTo(x, y); c.stroke();
+  });
+  poly(rows.map((r) => r.base / r.max), { stroke: 'rgba(60,30,20,.6)', dash: [4, 3] });
+  poly(rows.map((r) => r.final / r.max), { fill: 'rgba(179,38,30,.22)', stroke: RED, lw: 2 });
+  c.fillStyle = INK; c.font = font(13 * C.U); c.textAlign = 'center'; c.textBaseline = 'middle';
+  rows.forEach((r, i) => {
+    const [x, y] = radarPoint(i, n, 1.22, cx, cy, R);
+    c.fillText(r.label, x, y);
   });
 }
 
-if (typeof document !== 'undefined') {
+// 對話框內容（固定版面）。
+export function drawRulerDialog(cc = C, u = U) {
+  const ctx = cc.ctx, S = cc.U;
+  if (!u.state) return;
+  const p = rulerProfile(u.state);
+  const m = 22 * S;
+  const w = Math.min(cc.W - 2 * m, 520 * S);
+  const radarR = 80 * S, radarH = radarR * 2 + 44 * S;
+  const rowH = 26 * S;
+  const h = 64 * S + radarH + (rowH * (p.rows.length + 2)) + 64 * S;
+  const x = (cc.W - w) / 2, y = Math.max(m, (cc.H - h) / 2);
+  panel(x, y, w, h, { block: true, r: 10 });
+
+  // 角色頭：紅印與名號。
+  const sealS = 46 * S;
+  ctx.fillStyle = RED; ctx.fillRect(x + 16 * S, y + 16 * S, sealS, sealS);
+  ctx.strokeStyle = GOLD; ctx.lineWidth = 1.4; ctx.strokeRect(x + 19 * S, y + 19 * S, sealS - 6 * S, sealS - 6 * S);
+  ctx.fillStyle = '#f1e6c8'; ctx.font = font(sealS * 0.55, 'bold'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('帝', x + 16 * S + sealS / 2, y + 16 * S + sealS / 2 + 1);
+  text(p.name, x + 76 * S, y + 14 * S, { size: 20 * S, weight: 'bold', color: INK, maxW: w - 100 * S });
+  text(p.title, x + 76 * S, y + 42 * S, { size: 13 * S, color: '#8a6a2a', maxW: w - 100 * S });
+
+  // 雷達圖（左）與表格（右下）。
+  const cx = x + w / 2, cy = y + 64 * S + radarR + 24 * S;
+  drawRadar(ctx, p.rows, cx, cy, radarR);
+  let ty = y + 64 * S + radarH + 6 * S;
+  const colX = [x + 24 * S, x + w * 0.5, x + w * 0.78];
+  ctx.font = font(13 * S); ctx.fillStyle = '#8a6a2a'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText('屬性', colX[0], ty + rowH / 2);
+  ctx.fillText('本質', colX[1], ty + rowH / 2);
+  ctx.fillText('加成後', colX[2], ty + rowH / 2);
+  ty += rowH;
+  for (const r of p.rows) {
+    ctx.fillStyle = INK; ctx.font = font(14 * S);
+    ctx.fillText(r.label, colX[0], ty + rowH / 2);
+    ctx.fillText(String(r.base), colX[1], ty + rowH / 2);
+    ctx.fillText(String(r.final), colX[2], ty + rowH / 2);
+    if (r.bonus) { ctx.fillStyle = '#8a6a2a'; ctx.font = font(12 * S); ctx.fillText(`（+${r.bonus}）`, colX[2] + 46 * S, ty + rowH / 2); }
+    ty += rowH;
+  }
+  button(x + w / 2 - 80 * S, y + h - 52 * S, 160 * S, 36 * S, '返回朝堂', () => closeRuler(), { fs: 14 * S });
+}
+
+// 朝堂頁的帝王面板入口（Canvas）：畫一顆按鈕於 (x, y)，缺省為內容區左上；回傳佔用高度。
+// 朝堂每幀呼叫本函式即會同時維持對話框（rulerModalFrame）。
+export function drawRulerEntry(cc = C, x, y) {
+  const box = contentBox();
+  const bx = x ?? box.x, by = y ?? box.y;
+  const bw = 150 * cc.U, bh = 36 * cc.U;
+  button(bx, by, bw, bh, '帝王面板', openRuler, { lac: false, fs: 14 * cc.U });
+  rulerModalFrame();
+  return bh + gapOf();
+}
+
+// 開啟與關閉（模組層級的開關；不寫入存檔）。
+let open = false;
+export function openRuler() { open = true; }
+export function closeRuler() { open = false; }
+export function isRulerOpen() { return open; }
+
+// 朝堂畫面每幀呼叫：開啟中則請求對話框（modal 於本幀結束時繪製）。
+export function rulerModalFrame() {
+  if (!open) return;
+  modal((c2) => drawRulerDialog(c2), () => closeRuler());
+}
+
+// ── 舊 DOM 相容（待 C 改寫 render-court.js 後移除）──
+export function rulerEntryHTML() {
+  return '<button type="button" class="btn ghost mini" data-ruler="open">帝王面板</button>';
+}
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
   document.addEventListener('click', (e) => {
-    if (e.target.closest?.('[data-ruler="open"]')) openRulerDialog();
+    if (e.target && e.target.closest && e.target.closest('[data-ruler="open"]')) openRuler();
   });
 }
