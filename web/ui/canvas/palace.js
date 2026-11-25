@@ -23,10 +23,10 @@ export const PALACE_LAYOUT = Object.freeze([
   { id: 'taihe', n: '太和殿', kind: 'hall', gx: 3.9, gy: 5.0, w: 4.4, d: 2.6, h: 1.1, wall: '#a8302a', roof: '#e6b84a', rh: 0.55, nav: { tab: 'court' } },
   { id: 'jiaochang', n: '校場', kind: 'field', gx: 0.8, gy: 8.2, w: 3.4, d: 2.9, h: 0, nav: { tab: 'officials' } },
   { id: 'dongchang', n: '東廠', kind: 'yard', gx: 8.6, gy: 8.2, w: 2.6, d: 2.9, h: 0.7, wall: '#7a7a80', roof: '#2a2a2e', rh: 0.45, nav: { tab: 'dc' } },
-  { id: 'garden', n: '園林', kind: 'plot', gx: 0.8, gy: 5.0, w: 2.8, d: 2.4, facility: 'garden' },
-  { id: 'medical', n: '醫館', kind: 'plot', gx: 8.6, gy: 5.0, w: 2.6, d: 2.4, facility: 'medical' },
-  { id: 'library', n: '藏書', kind: 'plot', gx: 4.6, gy: 8.4, w: 3.6, d: 2.4, facility: 'library' },
-  { id: 'academy', n: '翰林', kind: 'plot', gx: 11.4, gy: 5.0, w: 2.0, d: 2.4, facility: 'academy' },
+  { id: 'garden', n: '御花園', kind: 'plot', gx: 0.8, gy: 5.0, w: 2.8, d: 2.4, facility: 'garden' },
+  { id: 'medical', n: '太醫院', kind: 'plot', gx: 8.6, gy: 5.0, w: 2.6, d: 2.4, facility: 'medical' },
+  { id: 'library', n: '翻書院', kind: 'plot', gx: 4.6, gy: 8.4, w: 3.6, d: 2.4, facility: 'library' },
+  { id: 'academy', n: '翰林院', kind: 'plot', gx: 11.4, gy: 5.0, w: 2.0, d: 2.4, facility: 'academy' },
   { id: 'armory', n: '武庫', kind: 'plot', gx: 11.4, gy: 8.2, w: 2.0, d: 2.9, facility: 'armory' },
 ]);
 
@@ -244,6 +244,10 @@ function drawGround(g) {
   box(g, x1 - 0.32, y0, 0.32, y1 - y0, 0.7, wallC, roofC, 0.1);
   // 午門樓
   box(g, gateX0 - 0.2, y1 - 0.4, gateX1 - gateX0 + 0.4, 0.9, 1.2, wallC, roofC, 0.5);
+  // 玄武門：舊版題字居於宮城底緣之門正中，本圖之門樓位於同處，題字置於樓前。
+  g.fillStyle = 'rgba(90,60,30,.7)'; g.font = `${Math.max(10, Math.round(P.TW * 0.2))}px ${THEME.font}`;
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText('玄武門', ...isoPx((gateX0 + gateX1) / 2, y1 + 0.75));
 }
 
 // 季節色：以半透明淡染覆蓋宮城（春青、夏綠、秋赭、冬白）。season 為空字串時不繪。
@@ -282,7 +286,7 @@ export function drawPalaceScene(zones, onZone, W, H, y0 = 0) {
   for (const z of sorted) {
     const top = zu((z.h || 0) + (z.rh || 0.3)) + 6;
     const [cx, cy] = isoPx(z.gx + z.w / 2, z.gy + z.d / 2, top + (z.kind === 'plot' ? 0 : 6));
-    if (C.ctx) drawLabel(g, z, cx, cy, z.n ?? z.label ?? '', z.s, z.marked);
+    if (C.ctx) drawLabel(g, z, cx, cy, z.label ?? z.n ?? '', z.s, z.marked);
     const r = zoneRect(z);
     hit({ x: r.x, y: r.y + y0, w: r.w, h: r.h }, () => onZone(z));
     n++;
