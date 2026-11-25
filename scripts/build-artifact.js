@@ -82,12 +82,21 @@ export function buildArtifact(outDir, { root = ROOT, log = () => {} } = {}) {
     }
     writeFileSync(join(out, 'ui', f), rewriteImports(text, 'artifact'));
   }
+  // Canvas 畫面模組位於 ui/canvas/，需一併改寫與複製，否則 main.js 的 import 會失效。
+  const canvasDir = join(uiDir, 'canvas');
+  mkdirSync(join(out, 'ui', 'canvas'), { recursive: true });
+  for (const f of readdirSync(canvasDir).filter(f => f.endsWith('.js')).sort()) {
+    const text = readFileSync(join(canvasDir, f), 'utf8').replace(/\.\.\/\.\.\/\.\.\/(src|data)(?=\/)/g, '../../$1');
+    writeFileSync(join(out, 'ui', 'canvas', f), text);
+  }
   cpSync(join(root, 'src'), join(out, 'src'), { recursive: true });
   cpSync(join(root, 'data'), join(out, 'data'), { recursive: true });
 
-  for (const f of readdirSync(join(out, 'ui'))) {
-    const hits = findResidue(readFileSync(join(out, 'ui', f), 'utf8'));
-    if (hits.length) throw new Error(`ui/${f} 改寫後仍有殘留路徑，行 ${hits.join(', ')}`);
+  for (const f of [...readdirSync(join(out, 'ui')).filter(f => f.endsWith('.js')), ...readdirSync(join(out, 'ui', 'canvas')).map(f => join('canvas', f))]) {
+    const body = readFileSync(join(out, 'ui', f), 'utf8');
+    const hits = f.startsWith('canvas') ? [] : findResidue(body);
+    const deep = body.split('\n').flatMap((l, i) => (/\.\.\/\.\.\/\.\.\/(src|data)\b/.test(l) ? [i + 1] : []));
+    if (hits.length || deep.length) throw new Error(`ui/${f} 改寫後仍有殘留路徑，行 ${[...hits, ...deep].join(', ')}`);
   }
 
   const files = walk(out);

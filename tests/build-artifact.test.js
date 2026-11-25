@@ -60,10 +60,15 @@ test('buildArtifact：複製網頁、ui/ 無殘留路徑，且不修改原始 we
     assert.ok(existsSync(join(out, 'data', 'events.json')));
     assert.ok(files.some(f => f.path === 'ui/main.js'));
 
-    for (const f of readdirSync(join(out, 'ui'))) {
+    for (const f of readdirSync(join(out, 'ui')).filter(f => f.endsWith('.js'))) {
       assert.deepEqual(findResidue(readFileSync(join(out, 'ui', f), 'utf8')), [], f);
       assert.doesNotMatch(readFileSync(join(out, 'ui', f), 'utf8'), /\.\.\/\.\.\/(src|data)\b/);
     }
+    // ui/canvas 深一層：來源 ../../../src 應改寫為 ../../src，且不殘留三層路徑
+    for (const f of readdirSync(join(out, 'ui', 'canvas')).filter(f => f.endsWith('.js'))) {
+      assert.doesNotMatch(readFileSync(join(out, 'ui', 'canvas', f), 'utf8'), /\.\.\/\.\.\/\.\.\/(src|data)\b/, f);
+    }
+    assert.ok(files.some(f => f.path === 'ui/canvas/core.js'));
     // 原始檔仍保留 repo 的路徑
     assert.match(readFileSync(join(root, 'web', 'ui', 'util.js'), 'utf8'), /\.\.\/\.\.\/src\//);
   } finally {
