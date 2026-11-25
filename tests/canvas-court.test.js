@@ -93,13 +93,18 @@ test('朝政行動子面板：開啟各面板並繪製，不拋錯', () => {
   U.panel = null;
 });
 
-test('親征中：軍務卡繪製，戰術與議和入口不拋錯', () => {
+test('親征中：朝堂分頁改切至戰役畫面（不再於朝堂內以軍務卡呈現），戰役畫面可點擊不拋錯', async () => {
   setup('canvas-court-campaign');
   const r = startCampaign(U.state, { strength: 3, reward: {}, loss: {} });
-  if (!r.ok) return; // 無法出征之局面不在此測試範圍
+  assert.equal(r.ok, true, '測試局面應能出征');
   U.state.campaign.title = '煙霧測試';
-  assert.ok(frame(drawCourt).length > 0);
-  clickThrough(drawCourt, 6);
+  const { render } = await import('../web/ui/render-nav.js');
+  const { currentScreen } = await import('../web/ui/canvas/core.js');
+  U.tab = 'court'; U.courtPage = null;
+  render();
+  assert.equal(currentScreen(), 'campaign', '親征中朝堂分頁應切至 campaign 畫面');
+  const { drawCampaignPage } = await import('../web/ui/render-campaign.js');
+  assert.ok(frame(drawCampaignPage).length > 0, '戰役畫面應登記可點區域');
 });
 
 test('年終考評與邸報：史冊與邸報皆可繪製並可收卷', () => {

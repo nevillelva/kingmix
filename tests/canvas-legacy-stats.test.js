@@ -72,9 +72,14 @@ function frame(fn) {
   return publishedHits().filter(h => !h.disabled);
 }
 
-test('空狀態：沒有紀錄時顯示提示，只登記分頁鈕，且統計為零', () => {
+// 頁內「← 返回宮城」鈕位於最上方；分頁鈕位於其下（同一列、y 較大）。
+const backOf = (hs) => [...hs].sort((a, b) => a.y - b.y || a.x - b.x)[0];
+const tabsOf = (hs) => { const top = backOf(hs).y; return hs.filter(h => h.y > top).sort((a, b) => a.x - b.x); };
+
+test('空狀態：沒有紀錄時顯示提示，登記返回鈕與兩顆分頁鈕，且統計為零', () => {
   const hits = frame(C2 => drawLegacyStats(C2, []));
-  assert.equal(hits.length, 2, '只應有兩顆分頁鈕');
+  assert.equal(hits.length, 3, '應有返回鈕與兩顆分頁鈕');
+  assert.equal(tabsOf(hits).length, 2, '分頁鈕仍為兩顆');
   assert.ok(drawn.includes(LEGACY_STATS_EMPTY), '應顯示空狀態提示');
   const m = legacyStatsModel([]);
   assert.deepEqual({ runs: m.runs, avgYears: m.avgYears, maxYears: m.maxYears, rows: m.rows }, { runs: 0, avgYears: 0, maxYears: 0, rows: [] });
@@ -111,7 +116,7 @@ test('各朝對照：每一局一列，最新一局在最上，並列出在位�
 test('多筆紀錄：繪製統計與各朝對照，分頁鈕仍為兩顆，不拋錯', () => {
   store.set(LEGACY_KEY, JSON.stringify(SAMPLE));
   const hits = frame(drawLegacyStats);
-  assert.equal(hits.length, 2);
+  assert.equal(hits.length, 3, '返回鈕加兩顆分頁鈕');
   assert.ok(drawn.some(s => s.includes('共 4 局')));
   assert.ok(drawn.some(s => s.includes('最長在位 30 年')));
   assert.ok(drawn.some(s => s.includes('第4局') && s.includes('在位 5 年') && s.includes('遇刺')));
@@ -121,7 +126,7 @@ test('多筆紀錄：繪製統計與各朝對照，分頁鈕仍為兩顆，不�
 test('分頁鈕：點擊「帝王表」切至 legacy 畫面，點擊「統計對照」切回本頁', () => {
   store.set(LEGACY_KEY, JSON.stringify(SAMPLE));
   const hits = frame(drawLegacyStats);
-  const [toLegacy] = [...hits].sort((a, b) => a.x - b.x);
+  const [toLegacy] = tabsOf(hits);
 
   let res = dispatchPoint(toLegacy.x + toLegacy.w / 2, toLegacy.y + toLegacy.h / 2);
   assert.equal(res.handled, true);
@@ -131,11 +136,22 @@ test('分頁鈕：點擊「帝王表」切至 legacy 畫面，點擊「統計對
   // 切回統計對照後，再次點擊統計對照本頁鈕應保持本頁。
   setScreen('legacy');
   frame(drawLegacyStats);
-  const back = publishedHits().filter(h => !h.disabled).sort((a, b) => a.x - b.x)[1];
+  const back = tabsOf(publishedHits().filter(h => !h.disabled))[1];
   res = dispatchPoint(back.x + back.w / 2, back.y + back.h / 2);
   assert.equal(res.handled, true);
   assert.equal(currentScreen(), 'legacy-stats');
   assert.equal(U.tab, 'legacy-stats');
+});
+
+test('頁內返回鈕：點擊「← 返回宮城」切回宮城頁，U.tab 與畫面皆為 palace', () => {
+  store.set(LEGACY_KEY, JSON.stringify(SAMPLE));
+  const hits = frame(drawLegacyStats);
+  assert.ok(drawn.includes('← 返回宮城'), '頁內應顯示返回鈕');
+  const back = backOf(hits);
+  const res = dispatchPoint(back.x + back.w / 2, back.y + back.h / 2);
+  assert.equal(res.handled, true);
+  assert.equal(U.tab, 'palace');
+  assert.equal(currentScreen(), 'palace');
 });
 
 test('畫面登記：legacy-stats 經 drawFrame 繪製，不顯示「尚未移植」', () => {

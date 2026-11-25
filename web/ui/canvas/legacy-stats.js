@@ -80,6 +80,9 @@ export function drawLegacyStats(C, runs = loadLegacy()) {
   const x = (C.content?.x || 0) + 12 * u;
   const w = (C.content?.w || C.W) - 24 * u;
   let y = (C.content?.y || 0) + 12 * u;
+  // 頁內返回鈕（與底欄返回鈕擇一，本頁由此顯示，底欄不重複）。
+  button(x, y, w, 32 * u, '← 返回宮城', () => { U.tab = 'palace'; setScreen('palace'); }, { lac: false, fs: 13 * u });
+  y += 32 * u + 8 * u;
   y += drawLegacyTabs(C, 'legacy-stats', y) + 12 * u;
 
   const m = legacyStatsModel(runs);

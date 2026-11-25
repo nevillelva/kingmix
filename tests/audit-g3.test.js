@@ -101,6 +101,25 @@ test('C-020: 東廠開案失敗分支仍經 useAction 扣一次行動', () => {
   assert.match(src, /if \(!c\) return useAction\(activeCaseCount/);
 });
 
+test('C-020: 東廠開案失敗（此官已有案件）仍耗一次行動，且不新增案件', async () => {
+  const { agencyAct, agency } = await import('../web/ui/render-actions.js');
+  const { openInvestigation } = await import('../src/dongchang.js');
+  setup('audit-g3-dc-fail');
+  const off = U.state.officials[0];
+  assert.ok(openInvestigation(U.state, off.id), '前置：先開一案');
+  const casesBefore = U.state.dongchang.cases.length;
+  const used0 = agency().used;
+  agencyAct('dcopen', off.id);
+  assert.equal(U.state.dongchang.cases.length, casesBefore, '失敗不新增案件');
+  assert.equal(agency().used, used0 + 1, '失敗仍耗一次行動');
+  assert.match(U.feedback, /此官已有案件/);
+});
+
+test('C-020: 東廠選單描述為「失敗仍耗一次行動」，並指出可於東廠頁處置', () => {
+  const src = read('web/ui/render-actions.js');
+  assert.match(src, /'對一位官員展開調查（失敗仍耗一次行動），之後可在東廠頁處置'/);
+});
+
 // ── C-080、C-081：快進停止提示文字需對應實際可用的動作與機制 ──
 test('C-080: 民心過低的快進提示不再提及「賑濟」，改為實際可用之朝政行動', async () => {
   const { ffStopNote } = await import('../web/ui/game-flow.js');

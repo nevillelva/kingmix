@@ -4,14 +4,12 @@ import { pickSpeaker } from '../../src/speaker.js';
 import { scenarioDef } from '../../src/scenarios.js';
 import { DC_ACTIONS } from '../../src/dongchang.js';
 import { buildGazette } from '../../src/gazette.js';
-import { TACTICS } from '../../src/war.js';
-import { MAX_ROUNDS, PEACE_TRIBUTE_COST, RECON_GRAIN_COST, WINS_NEEDED } from '../../src/campaign.js';
 import { U } from './store.js';
 import { DC_HINT, DC_LABEL } from './labels.js';
 import { handleCardAct, has, drawPolicyCards, policyCardsHeight } from './render-cards.js';
 import { drawRulerEntry } from './render-ruler.js';
 import { C } from './canvas/core.js';
-import { campaignActive, chooseDC, chooseOption, finishMonth, fastForward, morningPair, pendingCase, startEventCampaign, campAct } from './game-flow.js';
+import { chooseDC, chooseOption, finishMonth, fastForward, morningPair, pendingCase, startEventCampaign } from './game-flow.js';
 import { memorialItem, secondItem, chooseSecond, skipSecond, memo } from './render-memorial.js';
 import { actionsItem, crownChoiceItem, slotsItems } from './render-actions.js';
 import { drawLastBattleCard, lastBattleCardH } from './render-campaign.js';
@@ -65,27 +63,6 @@ function quietItem(w) {
   ], 8), { pad: 12, r: 10 });
 }
 
-// 親征中的軍務卡（與舊 campaignCard 的主要功能相同：偵察、戰術、議和、歲幣求和）。
-// 戰局條與細部提示由 render-campaign.js 的 Canvas 版接手後可改用其函式。
-function campaignItem(w) {
-  const c = U.state.campaign;
-  const scouted = c.intel === 'scouted';
-  const canRecon = c.round === 0 && !scouted;
-  return boxed(w, (iw) => vstack([
-    tag(`軍務・${c.title || '親征'}`),
-    txt(`第 ${Math.min(c.round + 1, MAX_ROUNDS)} 回合　・　己勝 ${c.ourWins}　敵勝 ${c.enemyWins}`, iw, 14, { weight: 'bold' }),
-    txt(`至多 ${MAX_ROUNDS} 回合，先勝 ${WINS_NEEDED} 回合者勝。粮草 ${Math.floor(c.grain)}。敵情：${scouted ? `約 ${c.estimate}（誤差約 ±8%）` : '未明'}`, iw, 12),
-    vstack(Object.entries(TACTICS).map(([k, t]) => optionCard(iw, {
-      mark: t.label.slice(0, 1), label: t.label, zhu: true,
-      hint: `耗粮 ${t.grain}${c.grain < t.grain ? '（粮草不足，戰力減損）' : ''}${t.gambleChance ? '　（有賭運，成敗難料）' : ''}`,
-      onClick: () => campAct('camp-tactic', k),
-    })), 6),
-    canRecon ? btn(iw, `遣探偵察（耗粮 ${RECON_GRAIN_COST}）`, () => campAct('camp-recon'), { lac: false, h: 34 * C.U }) : spacer(0),
-    btn(iw, '遣使議和', () => campAct('camp-peace'), { lac: false, h: 34 * C.U }),
-    btn(iw, `歲幣求和（國庫 ${PEACE_TRIBUTE_COST}）`, () => campAct('camp-tribute'), { lac: false, h: 34 * C.U }),
-  ], 8), { pad: 12, r: 10 });
-}
-
 // 上次戰報：以 render-campaign.js 的 drawLastBattleCard 繪製（戰役名與逐回合紀錄）。
 function lastBattleItem(w) {
   if (!U.lastBattle) return spacer(0);
@@ -132,7 +109,6 @@ export function courtItems(w) {
   memo.n = 0; // 首奏未顯示時，左右滑動不作用
   const items = [scenarioItem(w), rulerEntryItem()];
   // 快進卡於每一分支皆須顯示（與舊版 ffMount 於朝堂永遠附加相同）。
-  if (campaignActive()) { items.push(campaignItem(w), policyCardsItem(w), ...actionsSection(w), ffItem(w)); return items; }
   const dc = pendingCase();
   if (dc) { items.push(dcItem(w, dc), policyCardsItem(w), ffItem(w)); return items; }
   const { first: ev, second: ev2, secondDone } = morningPair();

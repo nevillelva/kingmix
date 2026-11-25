@@ -7,7 +7,7 @@ import { setStat } from './state.js';
 
 export const DRAFT_SIZE = 4; // 每次召入之秀女名額
 export const CONSORT_CAP = 8; // 後宮上限，與 turn.js add_consort 一致
-// 國庫成本（暫定）：引擎目前沒有選秀國庫成本的既有數值，此處沿用 v2 原型之值，待模擬校準後再定。
+// 國庫成本（定案值）：選秀屬獨立路徑，不沿用事件大小選費用；數值維持 v2 原型之獨寵 10、雨露均霑 25。
 export const DRAFT_COST = Object.freeze({ single: 10, all: 25 });
 
 // 本次選秀的四位秀女（純函式，不改 state）。id 與入宮時分配的 id 相同，故預覽與入宮人物一致。

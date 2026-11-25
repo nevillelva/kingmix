@@ -97,3 +97,11 @@ test('入宮後的妃嬪可由既有月結 tickHarem 接續處理', () => {
   assert.equal(s.consorts.length, 4);
   assert.ok(s.harem, 'harem 狀態已建立');
 });
+
+test('選秀國庫成本定案：獨寵 10、雨露均霑 25，註解不再標示暫定', async () => {
+  assert.deepEqual({ ...DRAFT_COST }, { single: 10, all: 25 });
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../src/draft.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(src, /暫定|待模擬校準/);
+  assert.match(src, /定案值/);
+});
