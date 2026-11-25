@@ -1,5 +1,5 @@
 // web/ui/canvas/ministers.js：朝堂「名臣」分頁（Canvas）。列出在任大臣的姓名、官職、派系與忠誠。
-// 任期與政績目前無紀錄（src 未記錄任命之月與個人政績），以「尚無紀錄」標示，見 offices.js 與 fates.js。
+// 任期取自 officeSince（offices.js assignOffice 寫入）；政績目前無對應紀錄（fates.js 的命運線未綁定經手事件），以「尚無紀錄」標示。
 // 分頁列 courtPageBar 由 render-court.js 的 drawCourt 置於朝堂頂端；切換 U.courtPage（'court' 或 'ministers'）。
 import { U } from '../store.js';
 import { FAC, officeName } from '../labels.js';
@@ -26,14 +26,21 @@ export function courtPageBar(w) {
   ], gap);
 }
 
-// 單一大臣卡：姓名、官職、派系與忠誠；任期與政績為尚無紀錄。
+// 任期文字：有 officeSince（任命當下的年月）則顯示「自第N年M月起」；舊存檔無此欄位時為尚無紀錄。
+export function ministerTenureText(o) {
+  const since = o?.officeSince;
+  const ok = since && Number.isFinite(since.year) && Number.isFinite(since.month);
+  return ok ? `任期　自第${since.year}年${since.month}月起` : '任期　尚無紀錄';
+}
+
+// 單一大臣卡：姓名、官職、派系與忠誠、任期；政績尚無紀錄（見 offices.js 說明：既有事件紀錄無法對應到大臣）。
 function ministerCard(o, w) {
   const f = FAC(o.faction);
   return boxed(w, (iw) => vstack([
     txt(o.personName || o.name, iw, 16, { weight: 'bold' }),
     txt(`官職　${officeName(o.office)}`, iw, 14),
     txt(`派系　${f.l}　・　忠誠 ${Math.round(o.loyalty)}`, iw, 13, { color: f.c }),
-    txt('任期　尚無紀錄', iw, 13, { color: '#7a5a3a' }),
+    txt(ministerTenureText(o), iw, 13, { color: '#7a5a3a' }),
     txt('政績　尚無紀錄', iw, 13, { color: '#7a5a3a' }),
   ], 4 * C.U), { pad: 12, r: 10 });
 }

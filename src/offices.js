@@ -31,9 +31,10 @@ export function assignOffice(state, officialId, officeKey) {
 
   // 同一官職只能有一人；舊任者卸任
   const previous = officeHolder(state, officeKey);
-  if (previous) previous.office = null;
-  // 一人只能任一職；原職空出
+  if (previous) { previous.office = null; previous.officeSince = null; }
+  // 一人只能任一職；原職空出。任期起點記為任命當下的年月（純紀錄，不消耗 rng）。
   official.office = officeKey;
+  official.officeSince = { year: state.year, month: state.month };
 
   const gaps = unmetRequirements(official, office.requires);
   if (gaps.length) {
@@ -66,7 +67,7 @@ export function suggestCandidate(state, officeKey) {
 export function dismissOffice(state, officeKey) {
   if (!OFFICES[officeKey]) throw new Error(`unknown office: ${officeKey}`);
   const holder = officeHolder(state, officeKey);
-  if (holder) holder.office = null;
+  if (holder) { holder.office = null; holder.officeSince = null; }
   return holder;
 }
 
