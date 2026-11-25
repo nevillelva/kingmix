@@ -9,14 +9,19 @@ import { sfx } from './audio.js';
 import { save } from './state-io.js';
 import { render } from './render-bus.js';
 import { C } from './canvas/core.js';
-import { txt, vstack, hrow, boxed, optionCard, speakerItem, affectedItem, btn, effectChipList, tag } from './canvas/court.js';
+import { txt, vstack, hrow, boxed, optionCard, speakerItem, affectedItem, btn, effectChipList, tag, onSwipe, guarded } from './canvas/court.js';
 
-// 奏摺左右選取狀態（取代舊版 DOM 滑動）：換了事件即歸零。
-export const memo = { key: null, sel: 0 };
+// 奏摺左右選取狀態：換了事件即歸零；n 為目前畫面上的可裁決項數（0 表示無首奏）。
+export const memo = { key: null, sel: 0, n: 0 };
 function syncMemo(ev) {
   const key = ev ? ev.id : null;
   if (memo.key !== key) { memo.key = key; memo.sel = 0; }
 }
+
+// 水平滑動（canvas/court.js 的 installSwipe）：左滑選下一項、右滑選上一項，僅於首奏可見時生效。
+onSwipe((dir) => {
+  if (memo.n > 1) memo.sel = (memo.sel + dir + memo.n) % memo.n;
+});
 
 // 可裁決之處置（與舊版相同的過濾）。
 export function visibleOptions(ev) {
@@ -55,10 +60,12 @@ export function narrRow(ev, sp, w) {
 
 // 首奏：奏摺卡（每項處置一張，若有親征再加一張親征入口），以及左右選取列。
 // handlers: { onPick(opt, ev), onCamp(opt, ev) }
+// handlers: { onPick(opt, ev, stampKey), onCamp(opt, ev, stampKey) }；點擊經 guarded 防護（滑動放開後不裁決）。
 export function memorialItem(ev, sp, w, handlers) {
   syncMemo(ev);
   const opts = visibleOptions(ev);
   const n = opts.length;
+  memo.n = n;
   return boxed(w, (iw) => {
     const cards = [];
     opts.forEach((o, i) => {
@@ -66,13 +73,15 @@ export function memorialItem(ev, sp, w, handlers) {
         mark: o.key, label: o.label, zhu: true, sel: n > 1 && memo.sel === i,
         chips: effectChipList(o),
         extra: (ww) => affectedItem(affectedList(o, sp), ww),
-        onClick: () => handlers.onPick(o, ev),
+        stampKey: `m${i}`,
+        onClick: guarded(() => handlers.onPick(o, ev, `m${i}`)),
       }));
       if (o.effects && o.effects.war) {
         cards.push(optionCard(iw, {
           mark: '親', label: `${o.label}・親征`, zhu: true,
           hint: '三回合戰役：可偵察、選戰術、遣使議和（上一項為速決）',
-          onClick: () => handlers.onCamp(o, ev),
+          stampKey: `c${i}`,
+          onClick: guarded(() => handlers.onCamp(o, ev, `c${i}`)),
         }));
       }
     });
@@ -81,10 +90,10 @@ export function memorialItem(ev, sp, w, handlers) {
       const bw = Math.max(70 * C.U, (iw - 30 * C.U) / 4);
       const flexW = iw - 3 * bw - 3 * 10 * C.U;
       navItems.push(hrow([
-        { w: bw, item: btn(bw, '◀ 上一項', () => { memo.sel = (memo.sel - 1 + n) % n; }, { h: 34 * C.U }) },
-        { w: flexW, item: txt('左右選擇，或點擊直接裁決', flexW, 11, { align: 'center', color: '#5a4a3a' }) },
-        { w: bw, item: btn(bw, '下一項 ▶', () => { memo.sel = (memo.sel + 1) % n; }, { h: 34 * C.U }) },
-        { w: bw, item: btn(bw, '裁決所選', () => handlers.onPick(opts[memo.sel], ev), { h: 34 * C.U, red: true }) },
+        { w: bw, item: btn(bw, '◀ 上一項', guarded(() => { memo.sel = (memo.sel - 1 + n) % n; }), { h: 34 * C.U }) },
+        { w: flexW, item: txt('左右滑動選擇，或點擊直接裁決', flexW, 11, { align: 'center', color: '#5a4a3a' }) },
+        { w: bw, item: btn(bw, '下一項 ▶', guarded(() => { memo.sel = (memo.sel + 1) % n; }), { h: 34 * C.U }) },
+        { w: bw, item: btn(bw, '裁決所選', guarded(() => handlers.onPick(opts[memo.sel], ev, `m${memo.sel}`)), { h: 34 * C.U, red: true }) },
       ]));
     }
     return vstack([
@@ -99,7 +108,7 @@ export function memorialItem(ev, sp, w, handlers) {
   }, { pad: 12, r: 10 });
 }
 
-// 次奏：可略過；裁決不推進月份、不計行動次數。handlers: { onPick(opt, ev), onSkip() }
+// 次奏：可略過；裁決不推進月份、不計行動次數。handlers: { onPick(opt, ev, stampKey), onSkip() }
 export function secondItem(ev, sp, w, handlers) {
   const opts = visibleOptions(ev);
   return boxed(w, (iw) => vstack([
@@ -108,11 +117,11 @@ export function secondItem(ev, sp, w, handlers) {
     txt(ev.name, iw, 22, { weight: 'bold' }),
     narrRow(ev, sp, iw),
     txt(`${opts.length} 項處置可選；略過則不作處置，亦不計入行動次數。`, iw, 13, { color: '#5a4a3a' }),
-    vstack(opts.map((o) => optionCard(iw, {
-      mark: o.key, label: o.label, zhu: true, chips: effectChipList(o),
-      onClick: () => handlers.onPick(o, ev),
+    vstack(opts.map((o, i) => optionCard(iw, {
+      mark: o.key, label: o.label, zhu: true, chips: effectChipList(o), stampKey: `s${i}`,
+      onClick: guarded(() => handlers.onPick(o, ev, `s${i}`)),
     })), 8),
-    btn(Math.min(iw, 150 * C.U), '略過此則', handlers.onSkip, { lac: false, h: 34 * C.U }),
+    btn(Math.min(iw, 150 * C.U), '略過此則', guarded(handlers.onSkip), { lac: false, h: 34 * C.U }),
   ], 8), { pad: 12, r: 10 });
 }
 

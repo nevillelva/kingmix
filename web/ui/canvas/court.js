@@ -2,7 +2,11 @@
 // 依賴：core.js（C 狀態）、input.js（hit/hovered）、widgets.js（panel/button/text/portrait/bar/plate）、theme.js、store.js。
 import { C } from './core.js';
 import { hit, hovered } from './input.js';
-import { panel, button, text, measureLines, bar, portrait, plate, personOf } from './widgets.js';
+import { panel, button, text, measureLines, bar, portrait, plate, personOf, seal } from './widgets.js';
+import { modal } from './input.js';
+import { render } from '../render-bus.js';
+import { reduceMotion } from '../util.js';
+import { turnKey, shouldCommit } from '../fx.js';
 import { GOLD, INK, LAC_TEXT, font } from './theme.js';
 import { U } from '../store.js';
 import { FAC, EFFECT, DIPLO_LABEL } from '../labels.js';
@@ -154,6 +158,7 @@ export function optionCard(w, o) {
       panel(x, y, w, h, { lac: !!o.zhu, r: 7 * U0, fill: o.zhu ? undefined : 'rgba(255,250,236,.88)' });
       if (hov) { c.save(); roundRectFill(c, x, y, w, h, 7 * U0, 'rgba(230,185,79,.16)'); c.restore(); }
       if (o.sel) { c.save(); c.strokeStyle = GOLD; c.lineWidth = 3; c.strokeRect(x + 3, y + 3, w - 6, h - 6); c.restore(); }
+      if (o.stampKey && stamp.key === o.stampKey) sealOn(x + w - 26 * U0, y + h / 2, 30 * U0);
       c.save();
       if (o.off) c.globalAlpha = 0.45;
       const mx = x + pad + markW / 2, my = y + h / 2;
@@ -252,3 +257,131 @@ export function paintStack(items, x, top, w, gap = 10 * u()) {
 }
 
 export { GOLD, INK, LAC_TEXT };
+
+// ── 蓋章（stampThen 的 Canvas 版）：期間 U.pendingAction 為 'stamp'，其餘操作入口見到非 null 即忽略。
+// 目前 E 的 fx.js 只有 DOM 版 stampThen；待 E 提供 Canvas 版後，本函式改為轉呼叫之（呼叫端不變）。
+export const stamp = { key: null, t0: 0 };
+
+function sealOn(x, y, s) {
+  const age = (Date.now() - stamp.t0) / 1000;
+  const k = Math.min(1, age / 0.25);
+  C.ctx.save();
+  C.ctx.globalAlpha = k;
+  seal(x, y, s * (1.6 - 0.6 * k), '批', -0.12);
+  C.ctx.restore();
+}
+
+export function stampThen(key, fn) {
+  if (U.pendingAction) return;
+  if (reduceMotion()) return fn();
+  const snapshot = { state: U.state, turn: turnKey(U.state) };
+  U.pendingAction = 'stamp';
+  stamp.key = key; stamp.t0 = Date.now();
+  setTimeout(() => {
+    const ok = shouldCommit(U.state, snapshot);
+    U.pendingAction = null;
+    stamp.key = null;
+    if (!ok) return render();
+    fn();
+  }, 520);
+}
+
+// ── 奏摺水平滑動（A 的 input 尚未提供水平拖曳，暫以 pointer 事件於 canvas 上實作）。
+// 水平位移 ≥ 40px 且明顯大於垂直位移時視為滑動：通知監聽者（±1），並抑制放開當下的 click，避免誤裁決。
+let swipeStart = null;
+let swipeEaten = false;
+const swipeListeners = new Set();
+
+export function onSwipe(fn) { swipeListeners.add(fn); return () => swipeListeners.delete(fn); }
+
+// 點擊防護：滑動後的那次 click 回傳 true（呼叫端應略過裁決）。每次 pointerdown 會重設。
+export function consumeSwipeClick() {
+  if (swipeEaten) { swipeEaten = false; return true; }
+  return false;
+}
+
+// 包裝點擊處理：滑動放開後的 click 不執行 fn。
+export function guarded(fn) { return () => { if (!consumeSwipeClick()) fn(); }; }
+
+export function installSwipe(canvas) {
+  if (!canvas || canvas.__swipeInstalled) return;
+  canvas.__swipeInstalled = true;
+  canvas.addEventListener('pointerdown', (e) => {
+    swipeEaten = false;
+    swipeStart = { x: e.clientX, y: e.clientY };
+  }, { capture: true });
+  canvas.addEventListener('pointerup', (e) => {
+    if (!swipeStart) return;
+    const dx = e.clientX - swipeStart.x, dy = e.clientY - swipeStart.y;
+    swipeStart = null;
+    if (Math.abs(dx) >= 40 * C.U && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      swipeEaten = true;
+      const dir = dx < 0 ? 1 : -1;
+      for (const f of swipeListeners) f(dir);
+    }
+  }, { capture: true });
+}
+
+// ── 文字輸入（自訂年號）：Canvas 內的輸入框，以 modal 繪製；鍵盤與輸入法組字由視窗事件接收。
+// 待 A 提供隱藏 input 方案時，改由該方案取得字串（本函式的 openTextEntry 介面不變）。
+const entry = { open: false, title: '', value: '', maxLen: 4, onSubmit: null, hint: '' };
+let entryWired = false;
+
+export function openTextEntry({ title = '請輸入', maxLen = 4, hint = '', onSubmit }) {
+  entry.open = true; entry.title = title; entry.value = ''; entry.maxLen = maxLen; entry.onSubmit = onSubmit; entry.hint = hint;
+  wireEntry();
+}
+
+export function textEntryOpen() { return entry.open; }
+
+function closeEntry() { entry.open = false; entry.onSubmit = null; }
+
+function submitEntry() {
+  const v = entry.value.trim();
+  const cb = entry.onSubmit;
+  closeEntry();
+  if (cb) cb(v);
+}
+
+function appendEntry(str) {
+  if (!entry.open || !str) return;
+  for (const ch of str) if (entry.value.length < entry.maxLen) entry.value += ch;
+}
+
+function wireEntry() {
+  if (entryWired || typeof globalThis.addEventListener !== 'function') return;
+  entryWired = true;
+  globalThis.addEventListener('keydown', (e) => {
+    if (!entry.open || e.isComposing) return;
+    if (e.key === 'Enter') { e.preventDefault(); submitEntry(); }
+    else if (e.key === 'Backspace') { e.preventDefault(); entry.value = entry.value.slice(0, -1); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeEntry(); }
+    else if (e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey) { e.preventDefault(); appendEntry(e.key); }
+  });
+  globalThis.addEventListener('compositionend', (e) => appendEntry(e.data));
+}
+
+// 每幀由畫面呼叫：若輸入框開啟則登記對話框（點空白處或 Esc 取消）。
+export function drawTextEntry() {
+  if (!entry.open) return;
+  modal((Cx) => {
+    const U0 = Cx.U, W = Cx.W, H = Cx.H;
+    const w = Math.min(W - 40 * U0, 340 * U0), h = 200 * U0;
+    const x = (W - w) / 2, y = (H - h) / 2;
+    panel(x, y, w, h, { block: true, r: 10 * U0 });
+    txt(entry.title, w - 32 * U0, 16, { weight: 'bold' }).draw(x + 16 * U0, y + 14 * U0);
+    if (entry.hint) txt(entry.hint, w - 32 * U0, 12, { color: '#7a5a3a' }).draw(x + 16 * U0, y + 42 * U0);
+    const bx = x + 16 * U0, by = y + 74 * U0, bw = w - 32 * U0, bh = 40 * U0;
+    Cx.ctx.save();
+    Cx.ctx.fillStyle = 'rgba(255,255,255,.7)'; Cx.ctx.strokeStyle = GOLD; Cx.ctx.lineWidth = 1.4;
+    Cx.ctx.fillRect(bx, by, bw, bh); Cx.ctx.strokeRect(bx, by, bw, bh);
+    Cx.ctx.fillStyle = INK; Cx.ctx.font = font(18 * U0, ''); Cx.ctx.textAlign = 'left'; Cx.ctx.textBaseline = 'middle';
+    const blink = Math.floor(Cx.T * 2) % 2 === 0 ? '|' : ' ';
+    Cx.ctx.fillText(entry.value + blink, bx + 10 * U0, by + bh / 2);
+    Cx.ctx.restore();
+    const bw2 = (bw - 10 * U0) / 2;
+    button(bx, y + h - 52 * U0, bw2, 36 * U0, '取消', () => closeEntry(), { lac: false });
+    button(bx + bw2 + 10 * U0, y + h - 52 * U0, bw2, 36 * U0, '確定', () => submitEntry(), {});
+  }, () => closeEntry());
+}
+

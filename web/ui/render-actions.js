@@ -27,7 +27,7 @@ import { markNewYearShown, openNianhao } from './overlays.js';
 import { handleCardAct } from './render-cards.js';
 import { alchemyAvailability, alchemyResultText } from './render-side.js';
 import { companionAct, setCourseAct } from './render-curriculum.js';
-import { txt, vstack, boxed, optionCard, btn, spacer, feedbackItem } from './canvas/court.js';
+import { txt, vstack, boxed, optionCard, btn, spacer, feedbackItem, openTextEntry } from './canvas/court.js';
 import { C } from './canvas/core.js';
 
 // ── 主動決策（Phase 6）：每月兩次行動，不推進時間 ──
@@ -105,10 +105,10 @@ export function actionsItem(w) {
     head.push(txt(`現行年號：${cur}　${hint}`, w, 13));
     const off = dis || blocked;
     cards = PRESET_ERAS.filter(n => n !== cur).map(n => optionCard(w, { mark: n.slice(0, 1), label: n, off, onClick: () => agencyAct('eraset', n) }));
-    cards.push(btn(w, '自訂年號（1–4 字）…', () => {
-      const raw = typeof window !== 'undefined' && window.prompt ? window.prompt('請輸入自訂年號（1–4 字）') : null;
-      if (raw != null) agencyAct('eraconfirm', raw);
-    }, { off, h: 36 * C.U, lac: false }));
+    cards.push(btn(w, '自訂年號（1–4 字）…', () => openTextEntry({
+      title: '自訂年號', hint: '1–4 字，確定後即以此改元', maxLen: 4,
+      onSubmit: (raw) => agencyAct('eraconfirm', raw),
+    }), { off, h: 36 * C.U, lac: false }));
   } else if (panel === 'heir') {
     const cands = eligibleCrownHeirs(U.state);
     const cur = U.state.dynasty.crownPrince;

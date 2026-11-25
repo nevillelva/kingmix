@@ -8,12 +8,12 @@ import { TACTICS } from '../../src/war.js';
 import { MAX_ROUNDS, PEACE_TRIBUTE_COST, RECON_GRAIN_COST, WINS_NEEDED } from '../../src/campaign.js';
 import { U } from './store.js';
 import { DC_HINT, DC_LABEL } from './labels.js';
-import { handleCardAct } from './render-cards.js';
+import { handleCardAct, has } from './render-cards.js';
 import { C } from './canvas/core.js';
 import { campaignActive, chooseDC, chooseOption, finishMonth, fastForward, morningPair, pendingCase, startEventCampaign, campAct } from './game-flow.js';
-import { memorialItem, secondItem, chooseSecond, skipSecond } from './render-memorial.js';
+import { memorialItem, secondItem, chooseSecond, skipSecond, memo } from './render-memorial.js';
 import { actionsItem, crownChoiceItem, slotsItems } from './render-actions.js';
-import { txt, vstack, hrow, boxed, optionCard, btn, spacer, tag, screenInner, paintStack, setContentHeight } from './canvas/court.js';
+import { txt, vstack, hrow, boxed, optionCard, btn, spacer, tag, screenInner, paintStack, setContentHeight, stampThen, installSwipe, drawTextEntry, guarded } from './canvas/court.js';
 
 const GAP = () => 12 * C.U;
 
@@ -39,10 +39,17 @@ function dcItem(w, dc) {
     txt(`${off ? (off.personName || off.name) : '某官'} 查有把柄`, iw, 20, { weight: 'bold' }),
     txt(`把柄等級 ${dc.level}。請裁決如何處置：`, iw, 13),
     vstack(DC_ACTIONS.map((a, i) => optionCard(iw, {
-      mark: String(i + 1), label: DC_LABEL[a], hint: DC_HINT[a], zhu: true, onClick: () => chooseDC(a),
+      mark: String(i + 1), label: DC_LABEL[a], hint: DC_HINT[a], zhu: true, stampKey: `dc${i}`,
+      onClick: guarded(() => stampThen(`dc${i}`, () => chooseDC(a))),
     })), 8),
-    btn(Math.min(iw, 150 * C.U), '稍後處理', () => handleCardAct('defer', dc.id ?? dc.officialId), { lac: false, h: 34 * C.U }),
+    deferBtn(iw, dc),
   ], 8), { pad: 12, r: 10 });
+}
+
+// 稍後處理：與舊版相同，引擎未就緒（無 deferLeverage）時停用並註明。
+function deferBtn(iw, dc) {
+  const ok = has('deferLeverage');
+  return btn(Math.min(iw, 220 * C.U), ok ? '稍後處理' : '稍後處理（引擎尚未就緒）', guarded(() => handleCardAct('defer', dc.id ?? dc.officialId)), { lac: false, h: 34 * C.U, off: !ok, why: '引擎尚未就緒' });
 }
 
 // 本月無奏摺。
@@ -104,8 +111,14 @@ function actionsSection(w) {
   return [crownChoiceItem(w), actionsItem(w), ...slotsItems(w), lastBattleItem(w)];
 }
 
+const secondHandlers = {
+  onPick: (o, e, key) => stampThen(key, () => chooseSecond(o, e)),
+  onSkip: skipSecond,
+};
+
 // 朝堂畫面的全部區塊（由上而下）。
 export function courtItems(w) {
+  memo.n = 0; // 首奏未顯示時，左右滑動不作用
   const items = [scenarioItem(w)];
   if (campaignActive()) { items.push(campaignItem(w), ...actionsSection(w)); return items; }
   const dc = pendingCase();
@@ -114,11 +127,14 @@ export function courtItems(w) {
   const showSecond = !!ev2 && !secondDone;
   const sp = ev ? pickSpeaker(U.state, ev) : null;
   if (!ev) {
-    if (showSecond) items.push(secondItem(ev2, pickSpeaker(U.state, ev2), w, { onPick: chooseSecond, onSkip: skipSecond }));
+    if (showSecond) items.push(secondItem(ev2, pickSpeaker(U.state, ev2), w, secondHandlers));
     else items.push(quietItem(w));
   } else {
-    items.push(memorialItem(ev, sp, w, { onPick: chooseOption, onCamp: startEventCampaign }));
-    if (showSecond) items.push(secondItem(ev2, pickSpeaker(U.state, ev2), w, { onPick: chooseSecond, onSkip: skipSecond }));
+    items.push(memorialItem(ev, sp, w, {
+      onPick: (o, e, key) => stampThen(key, () => chooseOption(o, e)),
+      onCamp: (o, e) => startEventCampaign(o, e),
+    }));
+    if (showSecond) items.push(secondItem(ev2, pickSpeaker(U.state, ev2), w, secondHandlers));
   }
   items.push(...actionsSection(w));
   items.push(ffItem(w));
@@ -127,9 +143,11 @@ export function courtItems(w) {
 
 // 朝堂畫面（registerScreen 使用）。
 export function drawCourt(Cx) {
+  installSwipe(Cx.canvas);
   const L = screenInner(Cx);
   const bottom = paintStack(courtItems(L.w), L.x, L.top, L.w, GAP());
   setContentHeight(bottom);
+  drawTextEntry();
 }
 
 // ── 年終考評（史冊）與邸報：歲末結算後展開，收卷即回宮城 ──
@@ -214,4 +232,5 @@ export function drawReview(Cx) {
   const card = boxed(L.w, (iw) => vstack(items, 8 * C.U), { pad: 14, r: 12 });
   const bottom = paintStack([card], L.x, L.top, L.w, GAP());
   setContentHeight(bottom);
+  drawTextEntry();
 }

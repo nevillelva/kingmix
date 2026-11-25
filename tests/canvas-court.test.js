@@ -116,3 +116,48 @@ test('年終考評與邸報：史冊與邸報皆可繪製並可收卷', () => {
   frame(drawReview);
   clickThrough(drawReview, 2);
 });
+
+test('水平滑動：左滑通知監聽者（+1），且放開後的 click 被防護，不誤裁決', async () => {
+  const { installSwipe, onSwipe, consumeSwipeClick } = await import('../web/ui/canvas/court.js');
+  const handlers = {};
+  const fake = { addEventListener: (t, fn) => { handlers[t] = fn; } };
+  installSwipe(fake);
+  const seen = [];
+  const off = onSwipe((d) => seen.push(d));
+  handlers.pointerdown({ clientX: 200, clientY: 100 });
+  handlers.pointerup({ clientX: 140, clientY: 104 });
+  assert.deepEqual(seen, [1]);
+  assert.equal(consumeSwipeClick(), true, '滑動後的 click 應被防護');
+  assert.equal(consumeSwipeClick(), false, '防護只生效一次');
+  // 垂直或過短的移動不算滑動
+  handlers.pointerdown({ clientX: 200, clientY: 100 });
+  handlers.pointerup({ clientX: 150, clientY: 180 });
+  assert.deepEqual(seen, [1]);
+  off();
+});
+
+test('自訂年號輸入：Canvas 文字輸入框以 modal 繪製，點「確定」回傳目前字串，點空白取消', async () => {
+  const { openTextEntry, textEntryOpen, drawTextEntry } = await import('../web/ui/canvas/court.js');
+  const { takeModal, leaveModal } = await import('../web/ui/canvas/input.js');
+  setup('canvas-court-entry');
+  C.W = 420; C.H = 760;
+  const drawModalFrame = () => {
+    beginFrame();
+    drawTextEntry();
+    const req = takeModal();
+    assert.ok(req, '輸入框應登記為對話框');
+    req.drawFn(C);
+    leaveModal();
+    endFrame();
+  };
+  let got = 'unset';
+  openTextEntry({ title: '自訂年號', maxLen: 4, onSubmit: (v) => { got = v; } });
+  assert.equal(textEntryOpen(), true);
+  drawModalFrame();
+  // 「確定」為框內右側按鈕：取已發布的對話框命中區中 x 最大者。
+  const btns = publishedHits().filter(h => !h.disabled);
+  const ok = btns.reduce((a, b) => (b.x > a.x ? b : a));
+  dispatchPoint(ok.x + ok.w / 2, ok.y + ok.h / 2);
+  assert.equal(got, '', '未輸入即確定，回傳空字串（由 changeEra 判定不合規）');
+  assert.equal(textEntryOpen(), false);
+});
