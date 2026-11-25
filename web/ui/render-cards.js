@@ -2,8 +2,8 @@
 // 畫面以 blocks 回傳（見 canvas/d-parts.js）；點擊經 handleCardAct 執行，行為與舊版 DOM 介面相同。
 import { U } from './store.js';
 import { C } from './canvas/core.js';
-import { card, contentBox, gapOf, pad, stack } from './canvas/d-parts.js';
-import { INK } from './canvas/theme.js';
+import { card, cardHeight, contentBox, gapOf, pad, stack } from './canvas/d-parts.js';
+import { INK, LAC_TEXT } from './canvas/theme.js';
 import { save } from './state-io.js';
 import { render } from './render-bus.js';
 import { EFFECT } from './labels.js';
@@ -58,8 +58,6 @@ export function policyOfferBlocks() {
     blocks.push({ t: 'text', s: `${c.name ?? id}　${c.desc ?? c.description ?? c.text ?? policyEffectText(id)}` });
     blocks.push({ t: 'btns', items: [{ label: `擇「${c.name ?? id}」`, onClick: () => handleCardAct('pickcard', id) }] });
   }
-  const syn = synergyText();
-  if (syn) blocks.push({ t: 'text', s: syn, size: 13 * C.U });
   return blocks;
 }
 
@@ -127,15 +125,37 @@ export function handleCardAct(a, v) {
   return false;
 }
 
-// 年初策卡國策（Canvas）：三選一卡與生效策卡列，畫於 (x, y)，缺省為內容區左上；回傳佔用高度。
+// 年初策卡國策（Canvas）：待選卡、生效策卡列、生效協同列各自獨立，由上而下排列。
+// 版面先行量測（cardHeight／textH），drawPolicyCards 與 policyCardsHeight 共用同一排列，故高度一致。
+function policyLayout(w) {
+  const parts = [];
+  const blocks = policyOfferBlocks();
+  if (blocks.length) parts.push({ card: true, blocks, h: cardHeight(w, { blocks, tone: LAC_TEXT }) });
+  for (const s of [activeCardsText(), synergyText()]) {
+    if (!s) continue;
+    const lineBlocks = [{ t: 'text', s, size: 13 * C.U }];
+    parts.push({ card: false, blocks: lineBlocks, h: stack(0, 0, w - 2 * pad(), lineBlocks, false, INK) });
+  }
+  return parts;
+}
+
+// 策卡區塊的總高度（不含區塊外的間距）；無內容時為 0。
+export function policyCardsHeight(w) {
+  const parts = policyLayout(w);
+  if (!parts.length) return 0;
+  return parts.reduce((sum, p) => sum + p.h, 0) + gapOf() * (parts.length - 1);
+}
+
+// 畫於 (x, y)，缺省為內容區左上；回傳佔用高度（與 policyCardsHeight 相同）。
 export function drawPolicyCards(cc = C, x, y, w) {
   const box = contentBox();
   const bx = x ?? box.x, by = y ?? box.y, bw = w ?? box.w;
-  let h = 0;
-  const blocks = policyOfferBlocks();
-  if (blocks.length) h += card(bx, by, bw, { lac: true, blocks }) + gapOf();
-  const line = activeCardsText();
-  if (line) h += stack(bx + pad(), by + h, bw - 2 * pad(), [{ t: 'text', s: line, size: 13 * cc.U }], true, INK) + gapOf();
-  return h;
+  const parts = policyLayout(bw);
+  let cy = by;
+  for (const p of parts) {
+    if (p.card) cy += card(bx, cy, bw, { lac: true, blocks: p.blocks }) + gapOf();
+    else cy += stack(bx + pad(), cy, bw - 2 * pad(), p.blocks, true, INK) + gapOf();
+  }
+  return parts.length ? cy - by - gapOf() : 0;
 }
 
