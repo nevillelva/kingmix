@@ -1,6 +1,6 @@
 // web/ui/render-nav.js：Canvas 版總導覽。負責頂欄（國勢、日期、章節、功能鈕）、底欄（分頁）與畫面分派。
 // 分派規則：未開局→'start'；已駕崩→'ending'；歷代／圖鑑→'legacy'／'gallery'；待批年終考評→'review'；其餘→U.tab（朝堂 court、後宮 harem…）。
-// 各畫面由負責代理以 registerScreen(名稱, drawFn) 登記；未登記者顯示「尚未移植」。
+// 各畫面由負責代理以 registerScreen(名稱, drawFn) 登記；未登記者不繪製內容。
 import { eraYearText } from '../../src/era.js';
 import { milestoneFor } from '../../src/milestones.js';
 import { sideEventsEnabled, setSideEventsEnabled } from '../../src/side-events.js';
@@ -13,9 +13,14 @@ import { save, drawSaveModal, drawConflictModal, openSaveDialog } from './state-
 import { C, registerChrome, registerOverlay, registerScreen, setScreen, currentScreen, pushToast } from './canvas/core.js';
 import { keepOverlays, paintPendingEncounter } from './render-side.js';
 import { drawCourt, drawReview, reviewPending } from './render-court.js';
+import { campaignActive } from './game-flow.js';
 import { bar, button, seal, text } from './canvas/widgets.js';
 import { GOLD, INK, SEASON_TINT } from './canvas/theme.js';
-import { unlockAudio, stopBgm, sfx, SOUND_KEY } from './audio.js';
+import { drawSoundToggle } from './audio.js';
+import { guideMount, showNewYear } from './overlays.js';
+import { showQuarterCard } from './render-quarter.js';
+import { drawOfficials, drawDC, drawThrone } from './render-officials.js';
+import './render-campaign.js'; // 登記戰役畫面（'campaign'）
 import { renderStart } from './render-start.js';
 import { renderEnding } from './render-ending.js';
 
@@ -48,7 +53,7 @@ function showsNav() {
 function topButtons() {
   const sideOn = U.state ? sideEventsEnabled(U.state) : true;
   return [
-    { key: 'snd', label: U.soundOn ? '音效：開' : '音效：關', on: U.soundOn, onClick: toggleSound },
+    { key: 'snd', label: U.soundOn ? '音效：開' : '音效：關', on: U.soundOn },
     { key: 'side', label: `側線奇遇：${sideOn ? '開' : '關'}`, on: sideOn, off: !U.state, why: '尚未開局', onClick: onSideToggle },
     { key: 'legacy', label: '歷代帝王', onClick: () => { U.tab = 'legacy'; U.panel = null; U.pick1 = null; render(); } },
     { key: 'gallery', label: '圖鑑', onClick: () => { U.tab = 'gallery'; U.panel = null; U.pick1 = null; render(); } },
@@ -63,7 +68,8 @@ function flowButtons(items, x, y, maxW, paint) {
   for (const it of items) {
     const w = Math.max(64 * U_, it.label.length * 15 * U_ + 26 * U_);
     if (cx > x && cx + w > x + maxW) { cx = x; cy += bh + gap; }
-    if (paint) button(cx, cy, w, bh, it.label, it.onClick, { lac: it.lac ?? it.on ?? false, off: it.off, why: it.why, fs: 13 * U_ });
+    if (paint && it.key === 'snd') drawSoundToggle(C, cx, cy, w, bh);
+    else if (paint) button(cx, cy, w, bh, it.label, it.onClick, { lac: it.lac ?? it.on ?? false, off: it.off, why: it.why, fs: 13 * U_ });
     cx += w + gap;
   }
   return cy + bh - y;
@@ -125,12 +131,6 @@ function drawBottom(paint) {
   return total;
 }
 
-function toggleSound() {
-  U.soundOn = !U.soundOn;
-  try { localStorage.setItem(SOUND_KEY, U.soundOn ? 'on' : 'off'); } catch (e) {}
-  if (U.soundOn) { unlockAudio(); sfx('pick'); } else stopBgm();
-}
-
 function onSideToggle() {
   if (!U.state) return;
   const on = !sideEventsEnabled(U.state);
@@ -158,18 +158,28 @@ registerChrome(
 
 // 頁面分派（render-bus 的 render）：依 U 的狀態設定目前畫面，並執行與舊版 render() 相同的狀態副作用。
 export function render() {
-  if (U.tab === 'legacy') return setScreen('legacy');
-  if (U.tab === 'gallery') return setScreen('gallery');
+  const name = resolveScreen();
+  setScreen(name);
+  // 覆蓋層（與舊版 render 同序）：新手提要、季結算卡、年號覆蓋層；僅於存活且非年終考評時。
+  // 快進卡（ffItem）已於朝堂內容中繪製，不在此處理。
+  if (U.state && U.state.alive && name !== 'review') { guideMount(); showQuarterCard(); showNewYear(); }
+}
+
+function resolveScreen() {
+  if (U.tab === 'legacy') return 'legacy';
+  if (U.tab === 'gallery') return 'gallery';
   paintMilestone();
   if (U.state && !U.state.alive) recordLegacyOnce();
   if (!U.state) {
     U.lastBattle = null;
-    return setScreen('start');
+    return 'start';
   }
-  if (!U.state.alive) return setScreen('ending');
+  if (!U.state.alive) return 'ending';
   paintPendingEncounter();
-  if (reviewPending()) return setScreen('review');
-  return setScreen(U.tab);
+  if (reviewPending()) return 'review';
+  // 親征中：朝堂改為戰役畫面（與舊版 campaignCard 相同之切換）。
+  if (U.tab === 'court' && campaignActive()) return 'campaign';
+  return U.tab;
 }
 
 // 章節變動時短訊告知（同一局內首次繪製不發訊；與舊版 paintMilestone 相同）。
@@ -185,5 +195,8 @@ registerScreen('start', renderStart);
 registerScreen('ending', renderEnding);
 registerScreen('court', drawCourt);
 registerScreen('review', drawReview);
+registerScreen('officials', drawOfficials); // 校場（任免官員）
+registerScreen('dc', drawDC);               // 東廠
+registerScreen('throne', drawThrone);       // 御書房（帝王）
 // 全域覆蓋層（奇遇等）：由頂欄迴圈統一承載，任何畫面皆可顯示。
 registerOverlay(keepOverlays);

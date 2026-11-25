@@ -13,6 +13,7 @@ import { C } from './canvas/core.js';
 import { campaignActive, chooseDC, chooseOption, finishMonth, fastForward, morningPair, pendingCase, startEventCampaign, campAct } from './game-flow.js';
 import { memorialItem, secondItem, chooseSecond, skipSecond, memo } from './render-memorial.js';
 import { actionsItem, crownChoiceItem, slotsItems } from './render-actions.js';
+import { drawLastBattleCard, lastBattleCardH } from './render-campaign.js';
 import { txt, vstack, hrow, boxed, optionCard, btn, spacer, tag, screenInner, paintStack, setContentHeight, stampThen, installSwipe, drawTextEntry, guarded } from './canvas/court.js';
 
 const GAP = () => 12 * C.U;
@@ -83,15 +84,10 @@ function campaignItem(w) {
   ], 8), { pad: 12, r: 10 });
 }
 
-// 上次戰報（與舊 lastBattleCard 相同之內容：戰役名與逐回合紀錄）。
+// 上次戰報：以 render-campaign.js 的 drawLastBattleCard 繪製（戰役名與逐回合紀錄）。
 function lastBattleItem(w) {
-  const b = U.lastBattle;
-  if (!b) return spacer(0);
-  return boxed(w, (iw) => vstack([
-    txt('上次戰報', iw, 12, { color: '#7a5a3a' }),
-    txt(b.title || '親征', iw, 16, { weight: 'bold' }),
-    ...b.lines.map(l => txt(l, iw, 13)),
-  ], 4), { pad: 12, r: 10 });
+  if (!U.lastBattle) return spacer(0);
+  return { h: lastBattleCardH(C), draw(x, y, cw) { drawLastBattleCard(C, x, y, cw); } };
 }
 
 // 快進卡（太和殿）：遇停止條件即停，停下之說明於此顯示。
@@ -120,9 +116,10 @@ const secondHandlers = {
 export function courtItems(w) {
   memo.n = 0; // 首奏未顯示時，左右滑動不作用
   const items = [scenarioItem(w)];
-  if (campaignActive()) { items.push(campaignItem(w), ...actionsSection(w)); return items; }
+  // 快進卡於每一分支皆須顯示（與舊版 ffMount 於朝堂永遠附加相同）。
+  if (campaignActive()) { items.push(campaignItem(w), ...actionsSection(w), ffItem(w)); return items; }
   const dc = pendingCase();
-  if (dc) { items.push(dcItem(w, dc)); return items; }
+  if (dc) { items.push(dcItem(w, dc), ffItem(w)); return items; }
   const { first: ev, second: ev2, secondDone } = morningPair();
   const showSecond = !!ev2 && !secondDone;
   const sp = ev ? pickSpeaker(U.state, ev) : null;

@@ -164,7 +164,7 @@ test('Canvas 入口：index.html 僅含單一畫布與隱藏輸入橋接，main.
 test('overlays.js 用 openDialog、render-ruler.js 用 canvas modal，皆不再各自管理 keydown', () => {
   const read = (f) => readFileSync(new URL(`../web/ui/${f}`, import.meta.url), 'utf8');
   const overlays = read('overlays.js');
-  assert.match(overlays, /import \{ openDialog \} from '\.\/dialog\.js'/, 'overlays.js imports openDialog');
+  assert.match(overlays, /from '\.\/dialog\.js'/, 'overlays.js imports dialog.js（openCanvasDialog）');
   assert.doesNotMatch(overlays, /addEventListener\('keydown'|removeEventListener\('keydown'/, 'overlays.js has no own keydown listener');
   // 帝王面板已改為 Canvas：以 input.js 的 modal 承接對話框與 Esc／點背景關閉，不再自行管理 keydown。
   const ruler = read('render-ruler.js');

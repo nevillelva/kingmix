@@ -137,12 +137,3 @@ export function rulerModalFrame() {
   modal((c2) => drawRulerDialog(c2), () => closeRuler());
 }
 
-// ── 舊 DOM 相容（待 C 改寫 render-court.js 後移除）──
-export function rulerEntryHTML() {
-  return '<button type="button" class="btn ghost mini" data-ruler="open">帝王面板</button>';
-}
-if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
-  document.addEventListener('click', (e) => {
-    if (e.target && e.target.closest && e.target.closest('[data-ruler="open"]')) openRuler();
-  });
-}

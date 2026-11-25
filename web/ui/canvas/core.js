@@ -1,8 +1,9 @@
 // web/ui/canvas/core.js：Canvas 2D 介面核心（畫布、縮放、畫面登記、每幀繪製、指標與捲動）。
 // 依賴：theme.js（樣式）、input.js（命中表）、store.js（U.state）。不得 import widgets.js（widgets 反向依賴本檔）。
-import { drawFrameBorder, INK, PAPER, GOLD, font } from './theme.js';
+import { drawFrameBorder, PAPER, GOLD, font } from './theme.js';
 import { beginFrame, endFrame, setView, takeModal, leaveModal, dispatchPoint, closeModal, isHitAt, pointer, beginPress, dragPress, endPress } from './input.js';
 import { U } from '../store.js';
+import { drawFx } from '../fx.js';
 
 // 共用繪製狀態。畫面函式以 drawFn(C) 呼叫；C.ctx 為 2D 上下文，C.U 為單位縮放，C.T 為動畫秒數。
 export const C = {
@@ -21,6 +22,7 @@ export const C = {
 const screens = new Map();
 let curName = null;
 let chrome = null; // { layout(C) -> {top, bottom}, draw(C) }
+const preModal = []; // 於 takeModal() 前每幀呼叫（如 dialog.js 的 drawDialogs）
 const overlays = []; // 全域覆蓋層（奇遇、新年、季報等）：每幀於頂底欄之後繪製，不論目前畫面為何
 const toasts = [];
 let lastFrameTs = 0;
@@ -38,6 +40,9 @@ export function currentState() { return U.state; }
 
 // 頂欄與底欄（render-nav.js 註冊）。layout 回傳兩者高度；draw 於內容區之後繪製並登記其命中。
 export function registerChrome(layout, draw) { chrome = { layout, draw }; }
+
+// 登記於 takeModal 之前每幀呼叫的函式（fn(C)）。
+export function registerPreModal(fn) { preModal.push(fn); }
 
 // 登記全域覆蓋層：fn(C) 每幀呼叫，自行判斷是否需要繪製（不需要時不畫、不登記命中）。
 export function registerOverlay(fn) { overlays.push(fn); }
@@ -89,7 +94,7 @@ export function drawFrame(ts = 0) {
   C.contentH = 0;
   const fn = screens.get(curName);
   if (fn) fn(C);
-  else drawPlaceholder(ctx, content, curName);
+  // 未登記之畫面不繪製內容（各畫面由其模組以 registerScreen 登記）。
   ctx.restore();
   setScroll(C.scroll);
 
@@ -97,6 +102,12 @@ export function drawFrame(ts = 0) {
   setView({ dy: 0, clip: null });
   if (chrome) chrome.draw(C);
   for (const fn of overlays) { setView({ dy: 0, clip: null }); fn(C); }
+
+  // 動效（蓋章、雪景、墨跡）與對話框登記；須於 takeModal() 之前，否則對話框與蓋章不顯示。
+  // drawDialogs 由 dialog.js 經 registerPreModal 登記（直接 import 會形成 core→dialog→widgets→core 循環）。
+  setView({ dy: 0, clip: null });
+  drawFx(C);
+  for (const fn of preModal) fn(C);
 
   // 對話框（疊加於一切之上）。
   const req = takeModal();
@@ -111,14 +122,6 @@ export function drawFrame(ts = 0) {
   drawToasts(ctx, dt);
   endFrame();
   if (C.canvas) C.canvas.style.cursor = isHitAt(pointer.x, pointer.y) ? 'pointer' : 'default';
-}
-
-function drawPlaceholder(ctx, r, name) {
-  ctx.fillStyle = INK;
-  ctx.font = font(16 * C.U, '');
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(`「${name || '—'}」畫面尚未移植至 Canvas`, r.x + r.w / 2, r.y + r.h / 2);
 }
 
 function drawToasts(ctx, dt) {

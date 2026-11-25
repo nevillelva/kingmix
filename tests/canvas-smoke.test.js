@@ -53,6 +53,9 @@ const canvas = {
 const core = await import('../web/ui/canvas/core.js');
 const input = await import('../web/ui/canvas/input.js');
 const { U } = await import('../web/ui/store.js');
+const dlg = await import('../web/ui/dialog.js');
+// 前面的開局測試會留下新手提要等頁內對話框；此處先關閉，避免其命中區域蓋住結局畫面。
+const closeAllDialogs = () => { while (dlg.dialogCount()) dlg.topDialog().close(); };
 await import('../web/ui/render-nav.js'); // 註冊頂欄、底欄與畫面
 const io = await import('../web/ui/state-io.js');
 const { resetStartForm } = await import('../web/ui/render-start.js');
@@ -137,6 +140,7 @@ test('開局按「開始新局」會建立本局並離開開局畫面', () => {
 });
 
 test('結局畫面：諡號卷軸與重新開局', () => {
+  closeAllDialogs();
   const st = createInitialState(7);
   st.alive = false;
   U.state = st; U.seed = '7'; U.tab = 'palace';

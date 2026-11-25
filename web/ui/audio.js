@@ -123,14 +123,6 @@ export function toggleSound(){
   if (U.soundOn) { unlockAudio(); sfx('pick'); } else stopBgm();
 }
 
-// 舊版頁首按鈕之同步（僅於 DOM 存在時）；Canvas 版以 drawSoundToggle 繪製。
-export function paintSnd(){
-  const b = typeof document !== 'undefined' && document.getElementById ? document.getElementById('snd') : null;
-  if (!b) return;
-  b.textContent = sndLabel();
-  b.setAttribute('aria-pressed', String(U.soundOn));
-}
-
 // Canvas 音效按鈕：點擊切換音效（toggleSound）。
 export function drawSoundToggle(C, x, y, w, h){
   button(x, y, w, h, sndLabel(), () => toggleSound(), { lac: false, fs: 13 * (C.U || 1) });

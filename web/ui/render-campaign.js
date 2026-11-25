@@ -36,26 +36,16 @@ function tickScroll(C, prefs) {
   while (scroll.acc >= step && scroll.shown < scroll.total) { scroll.shown = advanceShown(scroll.shown, scroll.total); scroll.acc -= step; }
 }
 
-// 兵力對比：回傳 forceBarModel 之結果（原為 HTML 字串）。
-export function forceBarsHTML(c, state = U.state) { return forceBarModel(c, state); }
-
-// 兵種相剋配對：回傳 counterPairs（原為 HTML 字串）。
-export function counterIconsHTML() { return counterPairs(); }
-
-// 逐回合戰報列：回傳 battleLines（原為 HTML 字串）。依目前播放狀態標示 hidden。
-export function battleScrollHTML(rounds = []) {
-  const prefs = normalizeBattlePrefs(U.battlePrefs);
-  syncScrollTotal(rounds.length, prefs);
-  return battleLines(rounds, prefs, scroll.shown);
-}
-
-// 戰報文字列（原為 <li> HTML）。
-export function warLogList(rounds) {
-  return formatBattleLog({ rounds }).map((line, i) => `${line}${rounds[i]?.starved ? '（粮絕，戰力減損）' : ''}`);
-}
 
 // 上一役戰報（與舊版相同之內容）；於朝堂等畫面以 drawLastBattleCard 繪製。原 lastBattleCard 回傳 HTML，現回傳 ''。
 export function lastBattleCard() { return ''; }
+
+// 上一役戰報卡的高度（含下方間距）；無戰報時為 0。與 drawLastBattleCard 同一版面公式。
+export function lastBattleCardH(C) {
+  if (!U.lastBattle) return 0;
+  const u = C.U || 1, pad = 14 * u, lh = 13 * u * 1.45;
+  return pad + 16 * u * 1.45 + 8 * u + U.lastBattle.lines.length * lh + pad + 10 * u;
+}
 
 // 繪製上一役戰報卡（Canvas）。回傳高度；無戰報時回傳 0。
 export function drawLastBattleCard(C, x, y, w) {
@@ -69,12 +59,6 @@ export function drawLastBattleCard(C, x, y, w) {
   text(title, x + pad, y + pad, { size: 16 * u, weight: 'bold', color: INK, maxW: w - pad * 2 });
   lines.forEach((l, i) => text(l, x + pad, y + pad + 16 * u * 1.45 + 8 * u + i * lh, { size: 13 * u, color: INK, maxW: w - pad * 2 }));
   return h + 10 * u;
-}
-
-// 親征卡（原為 HTML）：現於 Canvas 戰役畫面繪製，此處切換畫面並回傳 ''。
-export function campaignCard() {
-  setScreen('campaign');
-  return '';
 }
 
 // 點擊接線：動態匯入 game-flow.js 之 campAct（避免靜態循環依賴）。

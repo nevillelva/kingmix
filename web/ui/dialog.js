@@ -5,6 +5,8 @@
 import { modal, hit } from './canvas/input.js';
 import { panel, text, button, measureLines } from './canvas/widgets.js';
 import { INK, RED } from './canvas/theme.js';
+import { registerPreModal } from './canvas/core.js';
+import { U } from './store.js';
 
 const stack = [];
 let escKey = false;
@@ -39,7 +41,8 @@ export function setDialogMessage(msg) { const t = stack.at(-1); if (t) t.message
 // 每幀呼叫（core 於 takeModal 前）：有對話框時登記 modal 請求，無則不作為。
 export function drawDialogs() {
   const top = stack.at(-1);
-  if (!top) return;
+  // 雲端衝突為阻擋式對話框（state-io.drawConflictModal 於本幀先登記），此時頁內對話框暫不登記，避免覆寫其 modal。
+  if (!top || U.conflict) return;
   modal((c) => drawDialogBox(c, top), () => {
     // Esc 一律關閉；點背景：可關閉者交由 onOutside 決定（無則關閉）。
     if (escKey) { escKey = false; return top.close(); }
@@ -47,6 +50,8 @@ export function drawDialogs() {
     if (top.spec.dismissible) top.close();
   });
 }
+// 由 core.drawFrame 於 takeModal() 前呼叫（見 core.js 的 registerPreModal）。
+registerPreModal(() => drawDialogs());
 
 // 繪製對話框本體：置中面板、標題、內文、選用的額外區塊、訊息列與按鈕列。
 export function drawDialogBox(c, entry) {

@@ -11,6 +11,10 @@ import { activeCards, activeSynergies, choosePolicyCard, drawPolicyCards as draw
 import { giveItem, listInventory } from '../../src/items.js';
 import { deferLeverage, flushDeferredLeverage } from '../../src/fastforward.js';
 
+// 引擎函式表（靜態匯入）：供 canvas/harem.js、render-court.js 以 has(名稱) 檢查並呼叫。
+export const engine = { activeCards, activeSynergies, choosePolicyCard, drawPolicyCards: drawPolicyCardsEngine, policyCardDef, giveItem, listInventory, deferLeverage, flushDeferredLeverage };
+export const has = (name) => typeof engine[name] === 'function';
+
 const policyName = (id) => { const c = policyCardDef(id); return c ? (c.name ?? c.label ?? id) : id; };
 const policyEffectText = (id) => {
   const c = policyCardDef(id);
@@ -135,16 +139,3 @@ export function drawPolicyCards(cc = C, x, y, w) {
   return h;
 }
 
-// ── 舊 DOM 相容（待 C 改寫 render-court.js 後移除）──
-// 舊版 render-court.js 仍以 HTML 字串引用下列名稱；點擊仍經 onAgency → handleCardAct，行為不變。
-export function deferButton(dc) {
-  return `<button class="btn ghost mini" data-act="defer" data-arg="${String(dc.id ?? dc.officialId ?? '')}">稍後處理</button>`;
-}
-export function policyCardsCard() {
-  const offer = U.state && U.state.policyCards && Array.isArray(U.state.policyCards.offer) ? U.state.policyCards.offer : [];
-  const live = policyOfferBlocks().length > 0;
-  const btns = live ? offer.slice(0, 3).map((id) => `<button class="opt zhu" data-act="pickcard" data-arg="${id}">${policyName(id)}</button>`).join('') : '';
-  const line = activeCardsText();
-  return (live ? `<section class="card"><h2>年度策卡國策</h2><div class="opts">${btns}</div></section>` : '') +
-    (line ? `<div class="sub" style="margin:10px 0 0">${line}</div>` : '');
-}
