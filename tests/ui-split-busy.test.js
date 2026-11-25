@@ -13,45 +13,40 @@ import { readFileSync } from 'node:fs';
   globalThis.localStorage ??= { getItem: () => null, setItem() {}, removeItem() {} };
 }
 
-// 拆分前 render-court.js 的 export 清單（A4 純搬移，須與拆分後一致）。
+// Canvas 版 render-court.js 的 export 清單（畫面以 registerScreen 登記的 drawCourt／drawReview，其餘為輔助函式）。
 const COURT_EXPORTS = [
-  'ACTION_LIMIT', 'actionsCard', 'actionsLeft', 'affectedPortraits', 'agency', 'chooseSecond',
-  'crownChoiceCard', 'effChips', 'memorialCard', 'narrHtml', 'onAgency', 'onSlot', 'portrait',
-  'pressureLine', 'recordQuarterSnapshot', 'renderCourt', 'renderGazette', 'renderReview',
-  'reviewPending', 'secondMemorialCard', 'showQuarterCard', 'skipSecond', 'slotsCard',
-  'speakerCardHtml', 'useAction', 'wireMemorialSwipe', 'wireSecond',
+  'courtItems', 'drawCourt', 'drawReview', 'ffItem', 'reviewPending',
 ];
 
-test('render-court 拆分後保留既有 export 名稱（re-export 一致）', async () => {
+test('render-court（Canvas）匯出之名稱符合契約', async () => {
   const mod = await import('../web/ui/render-court.js');
   assert.deepEqual(Object.keys(mod).sort(), [...COURT_EXPORTS].sort());
 });
 
-test('拆出的檔案各自提供被搬移的函式，且 render-court 轉出之物件相同', async () => {
+test('拆出的檔案各自提供 Canvas 版函式（朝堂、奏摺、朝政行動）', async () => {
   const memorial = await import('../web/ui/render-memorial.js');
   const quarter = await import('../web/ui/render-quarter.js');
   const actions = await import('../web/ui/render-actions.js');
-  const court = await import('../web/ui/render-court.js');
+  const pressure = await import('../web/ui/render-pressure.js');
   for (const [mod, names] of [
-    [memorial, ['memorialCard', 'effChips', 'speakerCardHtml', 'affectedPortraits', 'narrHtml', 'secondMemorialCard', 'chooseSecond', 'skipSecond', 'wireSecond', 'wireMemorialSwipe', 'portrait']],
+    [memorial, ['memorialItem', 'secondItem', 'chooseSecond', 'skipSecond', 'visibleOptions', 'affectedList']],
     [quarter, ['recordQuarterSnapshot', 'showQuarterCard']],
-    [actions, ['ACTION_LIMIT', 'agency', 'actionsLeft', 'useAction', 'actionsCard', 'crownChoiceCard', 'onAgency', 'slotsCard', 'onSlot']],
+    [actions, ['ACTION_LIMIT', 'agency', 'actionsLeft', 'useAction', 'actionsItem', 'crownChoiceItem', 'slotsItems', 'agencyAct', 'slotAct']],
+    [pressure, ['prefecturePressureText', 'courtMinisterText', 'pressureLines']],
   ]) {
     for (const n of names) {
       assert.equal(typeof mod[n], n === 'ACTION_LIMIT' ? 'number' : 'function', `${n} missing`);
-      assert.equal(court[n], mod[n], `${n} should be re-exported from render-court`);
     }
   }
 });
 
-test('B9：奏摺選項與戰報列不再共用 data-i，改用 data-opt-index／data-line-index', () => {
+test('B9：奏摺選項與戰報列不再共用 data-i（DOM 標記已改為 Canvas 命中區）', () => {
   const read = (f) => readFileSync(new URL(`../web/ui/${f}`, import.meta.url), 'utf8');
   for (const f of ['render-court.js', 'render-memorial.js', 'render-campaign.js']) {
     assert.doesNotMatch(read(f), /data-i\b|dataset\.i\b|\[data-i\]/, `${f} still uses data-i`);
   }
-  assert.match(read('render-court.js'), /data-opt-index="\$\{i\}"/);
-  assert.match(read('render-memorial.js'), /\.opt\[data-opt-index\]/);
-  assert.match(read('render-campaign.js'), /data-line-index="\$\{i\}"/);
+  assert.doesNotMatch(read('render-court.js'), /innerHTML|querySelector/, 'render-court.js should not touch DOM');
+  assert.doesNotMatch(read('render-memorial.js'), /innerHTML|querySelector/, 'render-memorial.js should not touch DOM');
 });
 
 test('shouldCommit：同一局且同一回合才裁決', async () => {

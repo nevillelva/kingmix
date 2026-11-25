@@ -11,14 +11,15 @@ import { offerPeace, payPeaceTribute, pickTactic, reconnoiter, startCampaign } f
 import { TACTICS, formatBattleLog } from '../../src/war.js';
 import { autoDecideMemorial } from '../../src/autodecide.js';
 import { runFastForward } from '../../src/fastforward.js';
-import { U, app } from './store.js';
+import { U } from './store.js';
 import { save } from './state-io.js';
 import { render } from './render-bus.js';
-import { esc, rng } from './util.js';
+import { rng } from './util.js';
 import { recordQuarterSnapshot } from './render-quarter.js';
 import { sfx } from './audio.js';
 import { STAT } from './labels.js';
 import { currentEventPool, findPoolEvent } from './event-pool.js';
+import { pushToast } from './canvas/core.js';
 
 // deckIds（選用）：開局策卡 3–5 張，作為本局策卡卡池；空陣列或未給即沿用全部卡池。
 export function newGame(s, scenId, eraRaw, pols, modeKey, deckIds, edicts, origin){
@@ -153,20 +154,8 @@ export const FF_MONTHS = 12;
 
 export const FF_REASON_TEXT = { death: '駕崩', campaign: '親征中', leverage: '東廠把柄', treasury: '國庫過低', people: '民心過低', power: '皇權過低' };
 
-export function ffToast(msg){
-  let el = document.getElementById('ff-toast');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'ff-toast';
-    el.setAttribute('role', 'status');
-    el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);max-width:90vw;padding:10px 16px;border-radius:4px;background:var(--ink);color:var(--paper);font-size:14px;z-index:60;box-shadow:0 6px 18px var(--shadow)';
-    document.body.appendChild(el);
-  }
-  el.textContent = msg;
-  el.hidden = false;
-  clearTimeout(el._t);
-  el._t = setTimeout(() => { el.hidden = true; }, 2600);
-}
+// 快進停下的浮動提示：改走 Canvas 的 toast 佇列（core.js，約 2.6 秒）。
+export function ffToast(msg){ pushToast(msg); }
 
 // 代為批閱本月奏摺（早朝第一則與次奏），以 autoDecideMemorial 挑選。
 export function ffDecideMonth(){
@@ -224,14 +213,4 @@ export function fastForward(){
   save();
   render();
   ffToast(note);
-}
-
-export function ffMount(){
-  if (!U.state || !U.state.alive) return;
-  const card = document.createElement('section');
-  card.className = 'card';
-  const note = U.ffNote ? `<p class="sub" role="status" style="color:var(--vermilion);margin:0 0 10px">${esc(U.ffNote)}</p>` : '';
-  card.innerHTML = `<h2>快進</h2><p class="sub">系統代為批閱奏摺；遇駕崩、親征、東廠把柄，或國庫、民心、皇權告急即停。</p>${note}<button class="btn ghost" id="ff-btn" type="button">快進 12 個月</button>`;
-  app.appendChild(card);
-  document.getElementById('ff-btn').onclick = fastForward;
 }
