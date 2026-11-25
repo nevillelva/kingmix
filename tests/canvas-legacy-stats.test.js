@@ -39,7 +39,7 @@ function recordingContext() {
 const { C, setScreen, currentScreen, drawFrame } = await import('../web/ui/canvas/core.js');
 const { beginFrame, endFrame, dispatchPoint, publishedHits } = await import('../web/ui/canvas/input.js');
 const { U } = await import('../web/ui/store.js');
-const { LEGACY_KEY } = await import('../web/ui/render-legacy.js');
+const { LEGACY_KEY, drawLegacy } = await import('../web/ui/render-legacy.js');
 const { drawLegacyStats, legacyStatsModel, LEGACY_STATS_EMPTY } = await import('../web/ui/canvas/legacy-stats.js');
 
 const run = (i, extra = {}) => ({
@@ -145,4 +145,13 @@ test('畫面登記：legacy-stats 經 drawFrame 繪製，不顯示「尚未移�
   drawFrame(0);
   assert.equal(drawn.some(s => s.includes('尚未移植')), false);
   assert.ok(drawn.some(s => s.includes('統計對照')));
+});
+
+test('帝王表頂部加入分頁列，史冊內容位於分頁列之下', () => {
+  store.set(LEGACY_KEY, JSON.stringify(SAMPLE));
+  C.content = { x: 0, y: 0, w: 400 };
+  C.ctx = recordingContext();
+  frame(drawLegacy);
+  assert.ok(drawn.includes('帝王表') && drawn.includes('統計對照'));
+  assert.ok(drawn.indexOf('帝王表') < drawn.indexOf('史冊'), '分頁列先於史冊標題繪製');
 });

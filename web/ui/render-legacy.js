@@ -8,10 +8,11 @@ import { registerScreen, setScreen } from './canvas/core.js';
 import { panel, text, measureLines } from './canvas/widgets.js';
 import { INK } from './canvas/theme.js';
 import { drawTable } from './dialog.js';
+import { drawLegacyTabs } from './canvas/legacy-stats.js';
 
 // ── 歷代帝王：跨局史冊存於 localStorage；一局結束時記錄一次（以 state.legacyRecorded 防重）。
-export const LEGACY_KEY = 'kingmix-legacy-v1';
-export function loadLegacy(){ try { const r = JSON.parse(localStorage.getItem(LEGACY_KEY) || '[]'); return Array.isArray(r) ? r : []; } catch (e) { return []; } }
+export { LEGACY_KEY, loadLegacy } from './legacy-store.js';
+import { LEGACY_KEY, loadLegacy } from './legacy-store.js';
 
 export function recordLegacyOnce(){
   if (!U.state || U.state.alive || U.state.legacyRecorded) return;
@@ -47,6 +48,7 @@ export function drawLegacy(C){
   const m = legacyModel(runs);
   const u = C.U || 1, x = (C.content?.x || 0) + 12 * u, w = (C.content?.w || C.W) - 24 * u;
   let y = (C.content?.y || 0) + 12 * u;
+  y += drawLegacyTabs(C, 'legacy', y) + 12 * u;
   const pad = 14 * u, subLines = measureLines(m.sub, w - 28 * u, 13 * u, '');
   const cardH = 12 * u + 12 * u * 1.45 + 2 * u + 20 * u * 1.45 + 6 * u + subLines.length * 13 * u * 1.45 + 18 * u;
   panel(x, y, w, cardH, {});

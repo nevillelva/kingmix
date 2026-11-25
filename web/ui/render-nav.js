@@ -55,7 +55,7 @@ function topButtons() {
   return [
     { key: 'snd', label: U.soundOn ? '音效：開' : '音效：關', on: U.soundOn },
     { key: 'side', label: `側線奇遇：${sideOn ? '開' : '關'}`, on: sideOn, off: !U.state, why: '尚未開局', onClick: onSideToggle },
-    { key: 'legacy', label: '歷代帝王', onClick: () => { U.tab = 'legacy'; U.panel = null; U.pick1 = null; render(); } },
+    { key: 'legacy', label: '歷代帝王', on: U.tab === 'legacy' || U.tab === 'legacy-stats', onClick: () => { U.tab = 'legacy'; U.panel = null; U.pick1 = null; render(); } },
     { key: 'gallery', label: '圖鑑', onClick: () => { U.tab = 'gallery'; U.panel = null; U.pick1 = null; render(); } },
     { key: 'fate', label: '命運線', off: !U.state, why: '尚未開局', onClick: () => { U.tab = 'fate'; U.panel = null; U.pick1 = null; render(); } },
     { key: 'save', label: '存檔', onClick: openSaveDialog, lac: true },
@@ -114,7 +114,7 @@ function drawBottom(paint) {
   if (!showsNav()) return 0;
   const U_ = C.U, W = C.W, H = C.H, pad = 10 * U_;
   const tabH = TAB_TOP * U_;
-  const hasBack = U.tab !== 'palace' && currentScreen() !== 'legacy' && currentScreen() !== 'gallery';
+  const hasBack = U.tab !== 'palace' && currentScreen() !== 'legacy' && currentScreen() !== 'legacy-stats' && currentScreen() !== 'gallery';
   const backH = hasBack ? 40 * U_ : 0;
   const total = backH + tabH + 4 * U_;
   if (!paint) return total;
@@ -167,7 +167,7 @@ export function render() {
 }
 
 function resolveScreen() {
-  if (U.tab === 'legacy') return 'legacy';
+  if (U.tab === 'legacy' || U.tab === 'legacy-stats') return U.tab;
   if (U.tab === 'gallery') return 'gallery';
   paintMilestone();
   if (U.state && !U.state.alive) recordLegacyOnce();

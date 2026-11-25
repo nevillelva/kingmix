@@ -6,7 +6,7 @@ import { panel, text, button, measureLines } from './widgets.js';
 import { INK } from './theme.js';
 import { U } from '../store.js';
 import { LEGACY_END, MODE_TEXT } from '../labels.js';
-import { loadLegacy } from '../render-legacy.js';
+import { loadLegacy } from '../legacy-store.js';
 
 export const LEGACY_TABS = Object.freeze([
   { key: 'legacy', label: '帝王表' },
