@@ -6,6 +6,7 @@ import { eraName } from '../../src/era.js';
 import { C } from './canvas/core.js';
 import { modal } from './canvas/input.js';
 import { button, panel, text } from './canvas/widgets.js';
+import { contentBox, gapOf } from './canvas/d-parts.js';
 import { GOLD, INK, RED, font } from './canvas/theme.js';
 import { U } from './store.js';
 
@@ -111,6 +112,17 @@ export function drawRulerDialog(cc = C, u = U) {
     ty += rowH;
   }
   button(x + w / 2 - 80 * S, y + h - 52 * S, 160 * S, 36 * S, '返回朝堂', () => closeRuler(), { fs: 14 * S });
+}
+
+// 朝堂頁的帝王面板入口（Canvas）：畫一顆按鈕於 (x, y)，缺省為內容區左上；回傳佔用高度。
+// 朝堂每幀呼叫本函式即會同時維持對話框（rulerModalFrame）。
+export function drawRulerEntry(cc = C, x, y) {
+  const box = contentBox();
+  const bx = x ?? box.x, by = y ?? box.y;
+  const bw = 150 * cc.U, bh = 36 * cc.U;
+  button(bx, by, bw, bh, '帝王面板', openRuler, { lac: false, fs: 14 * cc.U });
+  rulerModalFrame();
+  return bh + gapOf();
 }
 
 // 開啟與關閉（模組層級的開關；不寫入存檔）。

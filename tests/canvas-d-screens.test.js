@@ -23,6 +23,7 @@ const officials = await import('../web/ui/render-officials.js');
 const ruler = await import('../web/ui/render-ruler.js');
 const rel = await import('../web/ui/render-relations.js');
 const cardsMod = await import('../web/ui/render-cards.js');
+const { POLICY_CARD_IDS } = await import('../src/cards.js');
 
 // 替身 canvas 上下文：方法皆為空操作；measureText 回傳寬度，使文字換行計算可進行。
 function stubCtx() {
@@ -168,4 +169,42 @@ test('東廠：巡漕失敗回饋原因（無此府）且不改 state', () => {
   officials.patrolAct('no-such-prefecture');
   assert.equal(U.feedback, '無此府。');
   assert.equal(JSON.stringify(U.state.canalLog ?? []), before);
+});
+
+test('朝堂入口：drawRulerEntry 畫按鈕、點擊開啟帝王面板', () => {
+  freshState();
+  setScreen('court');
+  input.beginFrame();
+  const h = ruler.drawRulerEntry(C);
+  input.endFrame();
+  assert.ok(h > 0);
+  const hits = input.publishedHits();
+  assert.equal(hits.length, 1);
+  input.dispatchPoint(hits[0].x + hits[0].w / 2, hits[0].y + hits[0].h / 2);
+  assert.equal(ruler.isRulerOpen(), true);
+  ruler.closeRuler();
+  setScreen('officials');
+});
+
+test('年初策卡：drawPolicyCards 於正月有 offer 時繪出三選一並可擇定，無 offer 時不佔高度', () => {
+  freshState();
+  assert.equal(cardsMod.drawPolicyCards(C), 0, '非正月不畫');
+  const offer = POLICY_CARD_IDS.slice(0, 3);
+  U.state.month = 1; U.state.year = 2; U.state.alive = true;
+  U.state.flags = { policy_offer_year: 2 };
+  U.state.policyCards = { active: [], offer };
+  input.beginFrame();
+  const h = cardsMod.drawPolicyCards(C);
+  input.endFrame();
+  assert.ok(h > 0);
+  const hits = input.publishedHits();
+  assert.equal(hits.length, 3, '三張卡各一擇定鈕');
+  assert.doesNotThrow(() => input.dispatchPoint(hits[0].x + hits[0].w / 2, hits[0].y + hits[0].h / 2));
+  assert.equal(U.state.flags.policy_card_year, 2, '擇定後記年');
+});
+
+test('pressureLines：三派並立時列出忠誠流失提示（純文字）', () => {
+  freshState();
+  const lines = officials.pressureLines({ factions: { qingliu: 40, xunggui: 40, hanmen: 40 }, factionPressure: {} });
+  assert.ok(lines.some((l) => /三派並立/.test(l)));
 });

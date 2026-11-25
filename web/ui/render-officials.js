@@ -171,16 +171,16 @@ function partisanBlocks() {
 }
 
 // 朝局的壓力文字（與 render-court 的 pressureLine 同義，改為純文字列）。
-function pressureTexts() {
-  const p = U.state.factionPressure || {};
+export function pressureLines(state = U.state) {
+  const p = state.factionPressure || {};
   const parts = [];
-  const fc = forcingFaction(U.state.factions);
+  const fc = forcingFaction(state.factions);
   if (fc) {
     const pol = POLICIES[FACTION_POLICY[fc]];
     parts.push(`${FAC(fc).l}勢過 ${FACTION_FORCE_THRESHOLD}，已持續 ${p.forcedMonths || 0} / ${FORCE_MONTHS} 月${pol ? `，將逼迫國策改為「${pol.name}」` : ''}。`);
   }
-  if (strongFactionCount(U.state.factions) === 3) parts.push('三派並立：官員忠誠每月流失。');
-  if (factionsBalanced(U.state.factions)) parts.push(`三派均衡：行政效率 ${BALANCED_EFFICIENCY}，稅制增減打折。`);
+  if (strongFactionCount(state.factions) === 3) parts.push('三派並立：官員忠誠每月流失。');
+  if (factionsBalanced(state.factions)) parts.push(`三派均衡：行政效率 ${BALANCED_EFFICIENCY}，稅制增減打折。`);
   const last = (p.forcedPolicies || []).slice(-1)[0];
   if (last) parts.push(`近例：${FAC(last.faction).l}逼迫，國策由「${POLICIES[last.from]?.name || '—'}」改為「${POLICIES[last.to]?.name || '—'}」。`);
   return parts;
@@ -300,7 +300,7 @@ export function drawOfficials() {
     factionBar(f),
     { t: 'gap', h: 6 * S() },
     { t: 'text', s: legend, size: 13 * S() },
-    ...pressureTexts().map((s) => ({ t: 'text', s, size: 13 * S() })),
+    ...pressureLines(U.state).map((s) => ({ t: 'text', s, size: 13 * S() })),
     { t: 'text', s: courtMinisterText(U.state), size: 13 * S() },
     ...partisanBlocks(),
   ]) + gapOf();

@@ -2,10 +2,12 @@
 // 畫面以 blocks 回傳（見 canvas/d-parts.js）；點擊經 handleCardAct 執行，行為與舊版 DOM 介面相同。
 import { U } from './store.js';
 import { C } from './canvas/core.js';
+import { card, contentBox, gapOf, pad, stack } from './canvas/d-parts.js';
+import { INK } from './canvas/theme.js';
 import { save } from './state-io.js';
 import { render } from './render-bus.js';
 import { EFFECT } from './labels.js';
-import { activeCards, activeSynergies, choosePolicyCard, drawPolicyCards, policyCardDef } from '../../src/cards.js';
+import { activeCards, activeSynergies, choosePolicyCard, drawPolicyCards as drawPolicyCardsEngine, policyCardDef } from '../../src/cards.js';
 import { giveItem, listInventory } from '../../src/items.js';
 import { deferLeverage, flushDeferredLeverage } from '../../src/fastforward.js';
 
@@ -37,7 +39,7 @@ export function synergyText() {
 // 已選定本年者、非正月、或尚未抽定者回傳空陣列。
 export function policyOfferBlocks() {
   const s = U.state;
-  if (!s || !s.alive || s.month !== 1 || !drawPolicyCards || !choosePolicyCard) return [];
+  if (!s || !s.alive || s.month !== 1 || !drawPolicyCardsEngine || !choosePolicyCard) return [];
   s.flags = s.flags || {};
   if (s.flags.policy_card_year === s.year) return [];
   if (s.flags.policy_offer_year !== s.year) return [];
@@ -119,6 +121,18 @@ export function handleCardAct(a, v) {
     save(); render(); return true;
   }
   return false;
+}
+
+// 年初策卡國策（Canvas）：三選一卡與生效策卡列，畫於 (x, y)，缺省為內容區左上；回傳佔用高度。
+export function drawPolicyCards(cc = C, x, y, w) {
+  const box = contentBox();
+  const bx = x ?? box.x, by = y ?? box.y, bw = w ?? box.w;
+  let h = 0;
+  const blocks = policyOfferBlocks();
+  if (blocks.length) h += card(bx, by, bw, { lac: true, blocks }) + gapOf();
+  const line = activeCardsText();
+  if (line) h += stack(bx + pad(), by + h, bw - 2 * pad(), [{ t: 'text', s: line, size: 13 * cc.U }], true, INK) + gapOf();
+  return h;
 }
 
 // ── 舊 DOM 相容（待 C 改寫 render-court.js 後移除）──
