@@ -134,3 +134,81 @@ test('D102: 情報尚新時再次刺探不扣國庫，提示無需重複', async
   assert.equal(agency().used, used);
   assert.match(U.feedback, /無需重複刺探/);
 });
+
+// ── D110：朝臣頁關係裁決入口（寫入既有旗標，條件與引擎 stepRelations 一致）──
+test('D110: 朝臣頁入口的裁決旗標皆為引擎讀取的旗標', () => {
+  const engine = read('src/relations.js');
+  const ui = read('web/ui/render-officials.js');
+  for (const k of ['rel_order_purge', 'rel_order_pardon', 'rel_order_mourn', 'rel_order_disband']) {
+    assert.match(engine, new RegExp(k));
+    assert.match(ui, new RegExp(k));
+  }
+  assert.match(ui, /朝綱裁決/);
+});
+
+test('D110: 無互參、無連坐、無結黨時不顯示任何裁決', async () => {
+  const { relOrderOptions } = await import('../web/ui/render-officials.js');
+  setup('audit-g3-rel-none');
+  U.state.flags = {};
+  assert.deepEqual(relOrderOptions(U.state).options, []);
+  assert.equal(relOrderOptions(U.state).pending, null);
+});
+
+test('D110: 互參未決時可準其所參、駁回參奏與赦免連坐；結黨時可許其解黨', async () => {
+  const { relOrderOptions } = await import('../web/ui/render-officials.js');
+  setup('audit-g3-rel-opts');
+  U.state.flags = { impeach_pending: true };
+  let keys = relOrderOptions(U.state).options.map(o => o.flag);
+  assert.deepEqual(keys.sort(), ['rel_order_mourn', 'rel_order_pardon', 'rel_order_purge']);
+  U.state.flags = { bloc_qingliu: true };
+  keys = relOrderOptions(U.state).options.map(o => o.flag);
+  assert.deepEqual(keys, ['rel_order_disband']);
+  U.state.flags = { guilt_spread: true };
+  keys = relOrderOptions(U.state).options.map(o => o.flag);
+  assert.deepEqual(keys, ['rel_order_mourn']);
+});
+
+test('D110: 下達裁決寫入旗標、不耗行動，且同月不可重複下達', async () => {
+  const { setRelOrder, relOrderOptions } = await import('../web/ui/render-officials.js');
+  const { agency } = await import('../web/ui/render-actions.js');
+  setup('audit-g3-rel-set');
+  U.state.flags = { impeach_pending: true };
+  const used = agency().used;
+  setRelOrder('rel_order_purge');
+  assert.equal(U.state.flags.rel_order_purge, true);
+  assert.equal(agency().used, used, '裁決不耗朝政行動');
+  const opts = relOrderOptions(U.state);
+  assert.equal(opts.pending, 'rel_order_purge');
+  assert.ok(opts.options.every(o => o.off), '已下裁決後其餘選項停用');
+  setRelOrder('rel_order_pardon');
+  assert.equal(U.state.flags.rel_order_pardon, undefined, '同月第二道裁決不寫入');
+});
+
+test('D110: 玩家於朝臣頁下達之準其所參，於月結時黜落被參者（引擎端生效）', async () => {
+  const { setRelOrder } = await import('../web/ui/render-officials.js');
+  const { createInitialState } = await import('../src/state.js');
+  const { seedRelations, stepRelations } = await import('../src/relations.js');
+  const s = createInitialState('audit-g3-rel-engine');
+  seedRelations(s);
+  stepRelations(s, () => 0);
+  const { target } = s.relState.impeachment;
+  setup('audit-g3-rel-engine-ui');
+  U.state = s;
+  setRelOrder('rel_order_purge');
+  stepRelations(s, () => 0.99);
+  assert.equal(s.officials.some(o => o.id === target), false);
+});
+
+test('D110: 朝臣頁繪製時出現「朝綱裁決」區塊（有互參在案）', async () => {
+  const { drawOfficials } = await import('../web/ui/render-officials.js');
+  const { beginFrame, endFrame } = await import('../web/ui/canvas/input.js');
+  setup('audit-g3-rel-draw');
+  const log = [];
+  C.ctx = recordingContext(log);
+  U.state.flags = { impeach_pending: true };
+  beginFrame();
+  drawOfficials();
+  endFrame();
+  assert.ok(log.some(s => s.includes('朝綱裁決')), '應繪出朝綱裁決區塊');
+  assert.ok(log.some(s => s.includes('準其所參')), '應列出準其所參');
+});
