@@ -20,7 +20,12 @@ const { createHeir } = await import('../src/succession.js');
 const { makeRng } = await import('../src/rng.js');
 const { curriculumEntry, COURSES } = await import('../src/curriculum.js');
 const { U } = await import('../web/ui/store.js');
-const { canSchedule, curriculumControlHtml, curriculumSummary, setCourseAct } = await import('../web/ui/render-curriculum.js');
+const { canSchedule, curriculumBlocks, curriculumSummary, setCourseAct } = await import('../web/ui/render-curriculum.js');
+
+// 區塊列平面化：取出所有文字與按鈕項目（供斷言）。
+const flatten = (blocks) => blocks.flatMap((b) => (b.t === 'btns' ? b.items.map((it) => ({ label: it.label, onClick: it.onClick })) : [b]));
+// 課程鈕：標籤為課名或「主·課名」（伴讀舉薦鈕不計入）。
+const courseItems = (blocks) => flatten(blocks).filter((x) => x.label && Object.values(COURSES).some((c) => x.label === c.label || x.label === `主·${c.label}`));
 
 function stateWithHeir({ gender = 'male', age = 8 } = {}) {
   const s = applySchemaDefaults(createInitialState(4242));
@@ -42,18 +47,31 @@ test('curriculumSummary：未排課、已排課的文字摘要', () => {
   assert.equal(curriculumSummary({ course: 'martial', merit: 7, terms: [{}, {}] }), '主修騎射　功績 7　季考 2 次');
 });
 
-test('curriculumControlHtml：年幼皇子與皇女皆不出現排課鈕以外之課表（年幼顯示說明）；皇女年滿六歲列出五門課', () => {
+test('curriculumBlocks：年幼皇子與皇女皆只顯示說明；年滿六歲列出五門課（皇女亦然）', () => {
   const { s, h } = stateWithHeir({ age: 3 });
-  assert.equal(curriculumControlHtml(null, s), '');
-  assert.match(curriculumControlHtml(h, s), /年幼/);
+  assert.equal(curriculumBlocks(null, s).length, 0);
+  const young = flatten(curriculumBlocks(h, s));
+  assert.match(young[0].s, /年幼/);
+  assert.equal(young.filter((x) => x.onClick).length, 0, '年幼時無任何可點項目');
+
   const girl = stateWithHeir({ gender: 'female', age: 9 });
-  const gh = curriculumControlHtml(girl.h, girl.s);
-  for (const key of Object.keys(COURSES)) assert.match(gh, new RegExp(`data-arg="${girl.h.id}\\|${key}"`));
+  const gItems = courseItems(curriculumBlocks(girl.h, girl.s));
+  assert.equal(gItems.length, Object.keys(COURSES).length);
+
   h.age = 8;
-  const html = curriculumControlHtml(h, s);
-  for (const key of Object.keys(COURSES)) assert.match(html, new RegExp(`data-arg="${h.id}\\|${key}"`));
-  assert.equal((html.match(/data-act="course"/g) || []).length, 5);
-  assert.doesNotMatch(html, /aria-pressed="true"/);
+  const items = courseItems(curriculumBlocks(h, s));
+  assert.equal(items.length, 5);
+  assert.equal(items.filter((x) => /^主·/.test(x.label)).length, 0, '尚未排課時無主修標記');
+});
+
+test('curriculumBlocks：排課鈕點擊經 setCourse 寫入，主修標記隨之更新', () => {
+  const { s, h } = stateWithHeir({ age: 8 });
+  U.state = s;
+  courseItems(curriculumBlocks(h, s)).find((x) => x.label === COURSES.classics.label).onClick();
+  assert.equal(curriculumEntry(s, h.id).course, 'classics');
+  assert.match(U.feedback, /已排定經史/);
+  const marked = courseItems(curriculumBlocks(h, s)).filter((x) => x.label.startsWith('主·'));
+  assert.equal(marked.length, 1);
 });
 
 test('setCourseAct 經 setCourse 寫入課表；失敗時回饋原因且不改 state', () => {

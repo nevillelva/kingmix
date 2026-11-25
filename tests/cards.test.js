@@ -135,11 +135,11 @@ test('擇定策卡後回饋列出卡名與效果，且生效策卡列同步顯�
   try { RC.handleCardAct('pickcard', 'sea_trade'); } catch (e) { /* 替身 DOM 無法完整重繪，僅驗證訊息 */ }
   assert.equal(U.feedback, '已定策卡：開海通商（商業 +0.6　國庫 +2），施行於本年。');
   assert.deepEqual(U.state.policyCards.active, ['sea_trade']);
-  const line = RC.activeCardsLine();
+  const line = RC.activeCardsText();
   assert.match(line, /生效策卡：開海通商（商業 \+0\.6　國庫 \+2）/);
 });
 
 test('無生效策卡時不顯示生效策卡列', () => {
   U.state = { alive: true, year: 3, month: 5, flags: {}, policyCards: { active: [], offer: null } };
-  assert.equal(RC.activeCardsLine(), '');
+  assert.equal(RC.activeCardsText(), '');
 });

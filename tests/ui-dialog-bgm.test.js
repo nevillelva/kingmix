@@ -166,11 +166,13 @@ test('首屏載入提示：index.html 內含靜態提示與樣式，main.js 於 
   assert.match(main, /removeBootHint\(\);\n\} else/, '錯誤路徑亦移除提示');
 });
 
-test('overlays.js 與 render-ruler.js 改用 openDialog，不再各自管理 keydown', () => {
+test('overlays.js 用 openDialog、render-ruler.js 用 canvas modal，皆不再各自管理 keydown', () => {
   const read = (f) => readFileSync(new URL(`../web/ui/${f}`, import.meta.url), 'utf8');
-  for (const f of ['overlays.js', 'render-ruler.js']) {
-    const src = read(f);
-    assert.match(src, /import \{ openDialog \} from '\.\/dialog\.js'/, `${f} imports openDialog`);
-    assert.doesNotMatch(src, /addEventListener\('keydown'|removeEventListener\('keydown'/, `${f} has no own keydown listener`);
-  }
+  const overlays = read('overlays.js');
+  assert.match(overlays, /import \{ openDialog \} from '\.\/dialog\.js'/, 'overlays.js imports openDialog');
+  assert.doesNotMatch(overlays, /addEventListener\('keydown'|removeEventListener\('keydown'/, 'overlays.js has no own keydown listener');
+  // 帝王面板已改為 Canvas：以 input.js 的 modal 承接對話框與 Esc／點背景關閉，不再自行管理 keydown。
+  const ruler = read('render-ruler.js');
+  assert.match(ruler, /import \{ modal \} from '\.\/canvas\/input\.js'/, 'render-ruler.js uses canvas modal');
+  assert.doesNotMatch(ruler, /addEventListener\('keydown'|removeEventListener\('keydown'/, 'render-ruler.js has no own keydown listener');
 });
