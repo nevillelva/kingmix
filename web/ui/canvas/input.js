@@ -30,7 +30,7 @@ export function setView({ dy = 0, clip = null } = {}) {
 // 登記可點區域。rect 為繪製時的座標（已含捲動）；opts: { disabled, why, hover }。
 // disabled 時點擊不呼叫 onClick，改回傳 why 供 core 以提示顯示。
 export function hit(rect, onClick, opts = {}) {
-  const r = { x: rect.x, y: rect.y + view.dy, w: rect.w, h: rect.h, fn: onClick, disabled: !!opts.disabled, why: opts.why || '' };
+  const r = { x: rect.x, y: rect.y + view.dy, w: rect.w, h: rect.h, fn: onClick, disabled: !!opts.disabled, why: opts.why || '', onDrag: opts.onDrag || null };
   if (view.clip && !intersects(r, view.clip)) return;
   (drawingModal ? cur.modal : cur.screen).push(r);
 }
@@ -78,6 +78,31 @@ export function dispatchPoint(x, y) {
 export function isHitAt(x, y) {
   const list = pub.hasModal ? pub.modal : pub.screen;
   return list.some(r => inside(r, x, y) && !r.disabled);
+}
+
+// 按下時記錄命中的區域（若有 onDrag 則可接收拖曳位移）。回傳該區域或 null。
+let press = null;
+export function beginPress(x, y) {
+  const list = pub.hasModal ? pub.modal : pub.screen;
+  press = null;
+  for (let i = list.length - 1; i >= 0; i--) if (inside(list[i], x, y)) { press = list[i]; break; }
+  return press;
+}
+// 拖曳位移：若按下處的區域有 onDrag，將水平位移交給它並回傳 true。
+export function dragPress(dx) {
+  if (press && press.onDrag) { press.onDrag(dx); return true; }
+  return false;
+}
+export function endPress() { press = null; }
+
+// 隱藏文字輸入：點擊欄位時以隱藏的 <input id="ime"> 接收輸入（支援中文輸入法）。onInput(新值) 每次變更呼叫。
+export function editText(value, onInput) {
+  const ime = typeof document !== 'undefined' && document.getElementById ? document.getElementById('ime') : null;
+  if (!ime) return false;
+  ime.value = value;
+  ime.oninput = () => onInput(ime.value);
+  ime.focus();
+  return true;
 }
 
 export function closeModal() {

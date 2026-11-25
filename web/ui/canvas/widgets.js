@@ -1,7 +1,7 @@
 // web/ui/canvas/widgets.js：紅漆金邊元件（移植自 皇帝成長_v2.html 的 lacquer / btn / wrap / seal / person / bar）。
 // 契約 API：button、panel、bar、portrait、text、toast。另提供 seal、plate、measureLines 供各畫面使用。
 import { C, pushToast } from './core.js';
-import { hit, hovered } from './input.js';
+import { hit, hovered, editText } from './input.js';
 import { GOLD, PAPER, LAC_TEXT, INK, font, roundPath, shade } from './theme.js';
 
 const ctxOf = () => C.ctx;
@@ -259,3 +259,6 @@ export function personOf(o = {}) {
 // 文字提示：排入 toast 佇列（同 v2 的 toast）。
 export function toast(msg) { pushToast(msg); }
 
+
+// 文字輸入欄位的隱藏輸入橋接（見 input.js 的 editText）。
+export { editText };

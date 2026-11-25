@@ -1,7 +1,7 @@
 // web/ui/canvas/core.js：Canvas 2D 介面核心（畫布、縮放、畫面登記、每幀繪製、指標與捲動）。
 // 依賴：theme.js（樣式）、input.js（命中表）、store.js（U.state）。不得 import widgets.js（widgets 反向依賴本檔）。
 import { drawFrameBorder, INK, PAPER, GOLD, font } from './theme.js';
-import { beginFrame, endFrame, setView, takeModal, leaveModal, dispatchPoint, closeModal, isHitAt, pointer } from './input.js';
+import { beginFrame, endFrame, setView, takeModal, leaveModal, dispatchPoint, closeModal, isHitAt, pointer, beginPress, dragPress, endPress } from './input.js';
 import { U } from '../store.js';
 
 // 共用繪製狀態。畫面函式以 drawFn(C) 呼叫；C.ctx 為 2D 上下文，C.U 為單位縮放，C.T 為動畫秒數。
@@ -21,6 +21,7 @@ export const C = {
 const screens = new Map();
 let curName = null;
 let chrome = null; // { layout(C) -> {top, bottom}, draw(C) }
+const overlays = []; // 全域覆蓋層（奇遇、新年、季報等）：每幀於頂底欄之後繪製，不論目前畫面為何
 const toasts = [];
 let lastFrameTs = 0;
 
@@ -37,6 +38,9 @@ export function currentState() { return U.state; }
 
 // 頂欄與底欄（render-nav.js 註冊）。layout 回傳兩者高度；draw 於內容區之後繪製並登記其命中。
 export function registerChrome(layout, draw) { chrome = { layout, draw }; }
+
+// 登記全域覆蓋層：fn(C) 每幀呼叫，自行判斷是否需要繪製（不需要時不畫、不登記命中）。
+export function registerOverlay(fn) { overlays.push(fn); }
 
 export function pushToast(msg, ms = 2600) {
   if (!msg) return;
@@ -92,6 +96,7 @@ export function drawFrame(ts = 0) {
   // 頂欄與底欄：不捲動、不裁切。
   setView({ dy: 0, clip: null });
   if (chrome) chrome.draw(C);
+  for (const fn of overlays) { setView({ dy: 0, clip: null }); fn(C); }
 
   // 對話框（疊加於一切之上）。
   const req = takeModal();
@@ -148,17 +153,30 @@ export function initCanvas(canvas, win = globalThis) {
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
   let down = null;
-  canvas.addEventListener('pointerdown', e => { const p = toLocal(e); pointer.x = p.x; pointer.y = p.y; down = { ...p, sy: C.scroll, moved: false }; });
+  canvas.addEventListener('pointerdown', e => {
+    const p = toLocal(e); pointer.x = p.x; pointer.y = p.y;
+    beginPress(p.x, p.y);
+    down = { x: p.x, y: p.y, lx: p.x, ly: p.y, sy: C.scroll, moved: false, dir: null };
+  });
   canvas.addEventListener('pointermove', e => {
     const p = toLocal(e); pointer.x = p.x; pointer.y = p.y;
-    if (down && Math.abs(p.y - down.y) > 6) {
+    if (!down) return;
+    const dxAll = p.x - down.x, dyAll = p.y - down.y;
+    if (!down.dir && (Math.abs(dxAll) > 6 || Math.abs(dyAll) > 6)) {
+      down.dir = Math.abs(dxAll) > Math.abs(dyAll) ? 'h' : 'v';
       down.moved = true;
-      setScroll(down.sy - (p.y - down.y));
     }
+    if (down.dir === 'h') {
+      dragPress(p.x - down.lx);
+    } else if (down.dir === 'v') {
+      setScroll(down.sy - dyAll);
+    }
+    down.lx = p.x; down.ly = p.y;
   });
   const up = e => {
     const p = toLocal(e); pointer.x = p.x; pointer.y = p.y;
     const d = down; down = null;
+    endPress();
     if (!d || d.moved) return;
     const res = dispatchPoint(p.x, p.y);
     if (res.why) pushToast(res.why);

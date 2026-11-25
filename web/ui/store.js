@@ -1,4 +1,4 @@
-// web/ui/store.js：介面共用的可變狀態（原為頂層 let，改為單一物件以便跨模組讀寫）。
+// web/ui/store.js：介面共用的可變狀態（單一物件，跨模組讀寫）。
 export const U = {
   state: null,
   seed: '',
@@ -27,6 +27,16 @@ export const U = {
   quarterCard: null,
   milestoneSeed: null,
   milestoneId: null,
-  slotPending: null,
+  slotPending: null,   // 等待確認覆寫的存檔欄位編號
+  saveOpen: false,     // 存檔管理對話框是否開啟
+  saveMsg: '',         // 最近一次存檔訊息（同時以提示顯示）
+  saveFallback: null,  // 下載失敗時的備援存檔碼 { text, note }
+  conflict: null,      // 雲端衝突對話框 { local, remote, winner, resolve }
+  ffNote: null,        // 快進停下的說明（game-flow）
+  bootError: null,     // 開機錯誤（事件資料載入失敗）
 };
-export const app = document.getElementById('app');
+
+// Canvas 版無 DOM 容器；保留欄位以免既有模組於載入時因 undefined 出錯（DOM 不存在時為 null）。
+export const app = (typeof document !== 'undefined' && document && typeof document.getElementById === 'function')
+  ? document.getElementById('app')
+  : null;

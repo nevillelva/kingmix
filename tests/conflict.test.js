@@ -108,7 +108,7 @@ test('出貨版本的 CLOUD_SAVE_ENABLED 為 false', () => {
 });
 
 test('旗標開啟時，衝突判定會要求玩家確認並顯示衝突對話框', async () => {
-  const appended = [];
+  const appended = []; // 保留替身；Canvas 版不再使用 DOM 掛載
   const stub = () => new Proxy(function () {}, {
     get: (t, k) => (k === 'then' ? undefined : k === Symbol.toPrimitive ? () => '' : stub()),
     apply: () => stub(), set: () => true,
@@ -137,5 +137,8 @@ test('旗標開啟時，衝突判定會要求玩家確認並顯示衝突對話�
   U.cloud.snap = { exists: true, data: () => ({ seed: 1, state: remote }) };
   mod.checkCloudConflict(); // 不等待：對話框等待玩家選擇
   await new Promise((r) => setTimeout(r, 50));
-  assert.ok(appended.length >= 1, 'askConflict 應掛上對話框');
+  // Canvas 版：衝突對話框以 U.conflict 等待玩家選擇（由畫面每幀呈現），不再掛載 DOM。
+  assert.ok(U.conflict && typeof U.conflict.resolve === 'function', 'askConflict 應設定 U.conflict 待選');
+  U.conflict.resolve('local');
+  U.conflict = null;
 });

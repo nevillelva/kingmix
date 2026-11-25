@@ -157,13 +157,15 @@ test('bgmLookahead：落後（now 超過排程時刻）時自 now+0.05 重新起
 
 // ── 原始碼層級檢查 ───────────────────────────────────────────
 
-test('首屏載入提示：index.html 內含靜態提示與樣式，main.js 於 render 後移除', () => {
+test('Canvas 入口：index.html 僅含單一畫布與隱藏輸入橋接，main.js 啟動畫布並顯示載入畫面', () => {
   const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
   const main = readFileSync(new URL('../web/ui/main.js', import.meta.url), 'utf8');
-  assert.match(html, /<main id="app"><div class="boot-loading" id="boot-loading"[^>]*>載入中…<\/div><\/main>/);
-  assert.match(html, /\.boot-loading\{/);
-  assert.match(main, /try \{ render\(\); \} finally \{ removeBootHint\(\); \}/);
-  assert.match(main, /removeBootHint\(\);\n\} else/, '錯誤路徑亦移除提示');
+  assert.match(html, /<canvas id="game"/);
+  assert.match(html, /<input id="ime"/);
+  assert.doesNotMatch(html, /<main id="app"/, '不再使用 DOM 版面容器');
+  assert.match(main, /initCanvas\(canvas\);/);
+  assert.match(main, /setScreen\('boot'\);/);
+  assert.match(main, /setScreen\('bootError'\);/, '事件資料失敗時顯示錯誤畫面');
 });
 
 test('overlays.js 與 render-ruler.js 改用 openDialog，不再各自管理 keydown', () => {

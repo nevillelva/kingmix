@@ -1,14 +1,18 @@
-import { pruneNewYearKeys } from './newyear-keys.js';
-// web/ui/state-io.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
+// web/ui/state-io.js：存檔（自動存檔、排程寫入）、匯出匯入、三格欄位、雲端狀態與衝突對話框（Canvas 版）。
 import { SAVE_VERSION, STATE_SCHEMA_VERSION, exportSave, finalizeLoaded, importSave, restoreSave, serializeSave, writeAutoSave } from '../../src/save.js';
 import { resolveConflict, stampSave } from '../../src/conflict.js';
 import { eraYearText, migrateEraLog } from '../../src/era.js';
 import { prepareMonth } from '../../src/month-start.js';
 import { U } from './store.js';
-import { esc, useCap } from './util.js';
+import { useCap } from './util.js';
 import { render } from './render-bus.js';
 import { syncUnlocks, UNLOCK_FAIL_MSG } from './unlock-store.js';
 import { currentEventPool } from './event-pool.js';
+import { pruneNewYearKeys } from './newyear-keys.js';
+import { C, pushToast } from './canvas/core.js';
+import { modal } from './canvas/input.js';
+import { button, panel, text } from './canvas/widgets.js';
+import { INK } from './canvas/theme.js';
 
 export const SAVE_KEY = 'kingmix-save-v1';
 // 損毀自動存檔的備份鍵（「開新局」前先另存，避免資料無聲遺失）。
@@ -16,24 +20,23 @@ export const CORRUPT_BACKUP_KEY = 'kingmix-save-v1-corrupt-backup';
 
 export const AUTO_SAVE_FAIL_MSG = '自動存檔失敗（瀏覽器儲存空間可能已滿），請匯出存檔備份';
 
-// 寫入本機自動存檔（v2 包裝，不推送雲端）。成功回傳 true；失敗時於存檔訊息區提示，記憶體進度保留。
+// 寫入本機自動存檔（v2 包裝，不推送雲端）。成功回傳 true；失敗時顯示存檔訊息，記憶體進度保留。
 let autoSaveFailed = false;
-function writeLocal(seed, state){
+function writeLocal(seed, state) {
   const ok = writeAutoSave(globalThis.localStorage, SAVE_KEY, seed, state);
   if (!ok) { autoSaveFailed = true; saveMsg(AUTO_SAVE_FAIL_MSG); }
   else if (autoSaveFailed) { autoSaveFailed = false; saveMsg(''); }
   return ok;
 }
 
-// 存檔排程：save() 不再同步寫入，改於瀏覽器閒置時（無 requestIdleCallback 則 setTimeout 0）合併寫入一次。
-// 頁面隱藏（pagehide、visibilitychange 為 hidden）時立即 flush，避免關頁前遺失進度。
+// 存檔排程：save() 於閒置時合併寫入一次；頁面隱藏時立即 flush。
 let saveDirty = false;
 let saveQueued = false;
 const runIdle = cb => (typeof requestIdleCallback === 'function'
   ? requestIdleCallback(cb, { timeout: 2000 })
   : setTimeout(cb, 0));
 
-export function flushSave(){
+export function flushSave() {
   if (!saveDirty) return;
   saveDirty = false;
   if (!U.state) return;
@@ -42,7 +45,7 @@ export function flushSave(){
   cloudPush();
 }
 
-export function scheduleSave(){
+export function scheduleSave() {
   if (U.state) {
     if (!Number.isInteger(U.state.schemaVersion)) U.state.schemaVersion = STATE_SCHEMA_VERSION;
     stampSave(U.state, Date.now());
@@ -54,7 +57,7 @@ export function scheduleSave(){
 }
 
 // 對外名稱與呼叫方式不變（仍為無參數的 save()），內部改走排程寫入。
-export function save(){ scheduleSave(); }
+export function save() { scheduleSave(); }
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('pagehide', flushSave);
@@ -64,7 +67,7 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
 // 旗標：雲端存檔的衝突處理（版本比較與確認覆寫）已完成，但後端 db 尚未接上；在正式啟用前預設關閉。
 export const CLOUD_SAVE_ENABLED = false;
 
-export async function initCloud(){
+export async function initCloud() {
   if (!CLOUD_SAVE_ENABLED) return;
   try {
     const [dbns, user] = await Promise.all([useCap('db'), useCap('user')]);
@@ -75,13 +78,13 @@ export async function initCloud(){
     U.cloud.snap = await dbns.collection('data/users/' + uid).doc('save').get();
   } catch (e) { U.cloud.db = null; }
   await checkCloudConflict();
-  // 事件資料載入失敗時（U.events 為空）不得進入遊戲，錯誤橫幅保留於畫面上。
+  // 事件資料載入失敗時（U.events 為空）不得進入遊戲，錯誤畫面保留。
   if (!U.state && U.events && U.events.length) render();
 }
 
-export function cloudDoc(){ return U.cloud.db.collection('data/users/' + U.cloud.uid).doc('save'); }
+export function cloudDoc() { return U.cloud.db.collection('data/users/' + U.cloud.uid).doc('save'); }
 
-export function cloudPush(){
+export function cloudPush() {
   if (!CLOUD_SAVE_ENABLED || !U.cloud.db || !U.cloud.uid || !U.state) return;
   // 與 src/save.js 的 v2 格式一致：{ version, savedAt(ISO), seed, state }
   const body = { ...serializeSave(U.state), seed: U.seed };
@@ -89,12 +92,20 @@ export function cloudPush(){
   U.cloud.queue = U.cloud.queue.then(() => cloudDoc().set(body)).catch(() => {});
 }
 
-export function cloudSave(){
+export function cloudSave() {
   return U.cloud.snap && U.cloud.snap.exists ? U.cloud.snap.data() : null;
 }
 
-// 載入時比較本機與雲端存檔；兩者不同時由玩家選擇（較新者以標籤標示，不自動覆寫）。
-export async function checkCloudConflict(){
+// 雲端狀態提示文字（存檔對話框內顯示）。
+export function cloudStatusText() {
+  if (!CLOUD_SAVE_ENABLED) return '雲端存檔尚未啟用，目前僅使用本機自動存檔與手動匯出。';
+  if (!U.cloud.db) return '雲端暫時無法連線，僅使用本機存檔。';
+  const cs = cloudSave();
+  return cs && Number.isFinite(cs.savedAt) ? `雲端已連線，最近存檔於 ${new Date(cs.savedAt).toLocaleString('zh-TW')}。` : '雲端已連線，尚無雲端存檔。';
+}
+
+// 載入時比較本機與雲端存檔；兩者不同時由玩家選擇（不自動覆寫）。
+export async function checkCloudConflict() {
   const remote = cloudSave();
   const raw = load();
   if (!remote || !remote.state || !raw || !raw.state) return;
@@ -121,40 +132,44 @@ export async function checkCloudConflict(){
   render();
 }
 
-// 確認覆寫的頁內對話框（沿用 overlays 的 .dlg-ov / .dlg 版型，不修改 overlays.js）。回傳 Promise<'local' | 'remote'>。
-export function askConflict(local, remote, winner){
-  const info = s => {
-    let yr = '';
-    try { yr = eraYearText(s); } catch (e) { yr = ''; }
-    const at = Number.isFinite(s.savedAt) ? new Date(s.savedAt).toLocaleString('zh-TW') : '時間未知';
-    return `${esc(yr || '（進度未知）')}・版本 ${Number.isFinite(s.saveVersion) ? s.saveVersion : 0}・${esc(at)}`;
-  };
-  const newerLabel = winner === 'remote' ? '雲端存檔較新' : '本機存檔較新';
+// 衝突對話框：設定 U.conflict，由 drawConflictModal 於每幀呈現；玩家選擇後 resolve。回傳 Promise<'local' | 'remote'>。
+export function askConflict(local, remote, winner) {
   return new Promise(resolve => {
-    const ov = document.createElement('div');
-    ov.className = 'dlg-ov';
-    ov.innerHTML = `<div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="cf-t" aria-describedby="cf-d">
-        <h2 id="cf-t">存檔不一致</h2>
-        <p id="cf-d">雲端與本機的存檔不同（${esc(newerLabel)}）。請選擇要使用的存檔。</p>
-        <p class="sub">雲端：${info(remote)}<br>本機：${info(local)}</p>
-        <div class="dlg-btns"><button type="button" class="btn ghost mini" data-cf="remote">用雲端</button>
-          <button type="button" class="btn zhu mini" data-cf="local">用本機</button></div>
-      </div>`;
-    ov.addEventListener('click', e => {
-      const b = e.target.closest('[data-cf]');
-      if (!b) return;
-      ov.remove();
-      resolve(b.dataset.cf);
-    });
-    document.body.appendChild(ov);
-    ov.querySelector(`[data-cf="${winner === 'remote' ? 'remote' : 'local'}"]`).focus();
+    U.conflict = { local, remote, winner, resolve };
   });
+}
+
+function conflictInfo(s) {
+  let yr = '';
+  try { yr = eraYearText(s); } catch (e) { yr = ''; }
+  const at = Number.isFinite(s.savedAt) ? new Date(s.savedAt).toLocaleString('zh-TW') : '時間未知';
+  return `${yr || '（進度未知）'}・版本 ${Number.isFinite(s.saveVersion) ? s.saveVersion : 0}・${at}`;
+}
+
+// 每幀呈現衝突對話框（由 render-nav 的頂欄繪製呼叫）。
+export function drawConflictModal() {
+  const cf = U.conflict;
+  if (!cf) return false;
+  modal(() => {
+    const r = dialogRect(300);
+    panel(r.x, r.y, r.w, r.h, { block: true });
+    const U_ = C.U, pad = 18 * U_;
+    text('存檔不一致', r.x + pad, r.y + pad, { size: 20 * U_, weight: 'bold', color: INK });
+    const newer = cf.winner === 'remote' ? '雲端存檔較新' : '本機存檔較新';
+    let y = r.y + pad + 36 * U_;
+    y += text(`雲端與本機的存檔不同（${newer}）。請選擇要使用的存檔。`, r.x + pad, y, { size: 14 * U_, maxW: r.w - 2 * pad, color: INK }) + 8 * U_;
+    y += text(`雲端：${conflictInfo(cf.remote)}\n本機：${conflictInfo(cf.local)}`, r.x + pad, y, { size: 13 * U_, maxW: r.w - 2 * pad, color: INK });
+    const by = r.y + r.h - pad - 40 * U_, bw = (r.w - 2 * pad - 12 * U_) / 2;
+    const pick = choice => () => { U.conflict = null; cf.resolve(choice); };
+    button(r.x + pad, by, bw, 40 * U_, '用雲端', pick('remote'), { lac: false });
+    button(r.x + pad + bw + 12 * U_, by, bw, 40 * U_, '用本機', pick('local'), { lac: true });
+  }, () => {});
+  return true;
 }
 
 // 讀取本機自動存檔：parseSave → migrateState → validateState。
 // 回傳 null（無存檔）、{ seed, state, version }（有效）或 { corrupt: true, error, errors, raw }（損毀）。
-// 舊格式（v1）讀到後寫回為 v2。
-export function load(){
+export function load() {
   let raw = null;
   try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { return null; }
   if (!raw) return null;
@@ -164,17 +179,17 @@ export function load(){
   return { seed: r.seed, state: r.state, version: r.version };
 }
 
-export function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+export function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 
 // 「開新局」於損毀存檔時使用：先另存備份，成功後才清除自動存檔。備份失敗則保留原檔並回傳 false。
-export function discardCorruptSave(raw){
+export function discardCorruptSave(raw) {
   try { localStorage.setItem(CORRUPT_BACKUP_KEY, raw); }
   catch (e) { saveMsg('無法備份損毀存檔（儲存空間可能已滿），請先按「匯出損毀存檔」。'); return false; }
   clearSave();
   return true;
 }
 
-// ── 存檔匯出／匯入：引擎在 src/save.js；此處只負責下載、讀檔與中文訊息。
+// ── 存檔匯出／匯入：引擎在 src/save.js；此處負責下載、讀檔與中文訊息。
 export const SAVE_ERR = {
   invalid_json: '檔案不是存檔（無法解析）',
   future_version: '版本過新，請更新遊戲後再匯入',
@@ -184,45 +199,38 @@ export const SAVE_ERR = {
   invalid_version: '檔案不是存檔（版本號無效）',
   invalid_alive: '存檔內容不完整（存活狀態無效）',
 };
-// 驗證錯誤代碼（如 invalid_stat_treasury）未列入 SAVE_ERR 者，統一顯示為格式不完整。
+// 驗證錯誤代碼未列入 SAVE_ERR 者，統一顯示為格式不完整。
 export const reasonText = code => SAVE_ERR[code] || '存檔內容不完整或格式錯誤';
 
-export function saveMsg(text){ const m = document.getElementById('save-msg'); if (m) m.textContent = text; }
-
-// 備援：下載失敗或取消時，於存檔訊息區顯示存檔碼與「複製存檔碼」按鈕（不依賴 blob 下載）。
-export function saveCopyFallback(text, note){
-  const m = document.getElementById('save-msg');
-  if (!m) return;
-  m.textContent = '';
-  const t = document.createElement('p'); t.textContent = note; m.appendChild(t);
-  const ta = document.createElement('textarea');
-  ta.readOnly = true; ta.rows = 3; ta.value = text; ta.style.cssText = 'width:100%;font-size:11px';
-  m.appendChild(ta);
-  const btn = document.createElement('button');
-  btn.type = 'button'; btn.className = 'btn zhu mini'; btn.textContent = '複製存檔碼';
-  btn.onclick = async () => {
-    try { await navigator.clipboard.writeText(text); t.textContent = '已複製存檔碼，可貼到檔案保存。'; }
-    catch (e) { ta.focus(); ta.select(); t.textContent = '無法自動複製，請手動全選上方存檔碼後複製。'; }
-  };
-  m.appendChild(btn);
+// 存檔訊息：保存於 U.saveMsg，並以提示顯示（空字串清除）。
+export function saveMsg(msg) {
+  U.saveMsg = msg || '';
+  if (msg) pushToast(msg);
 }
 
-export async function exportGame(){
+// 備援：下載失敗或取消時，於存檔對話框提供「複製存檔碼」（不依賴 blob 下載）。
+export function saveCopyFallback(text, note) {
+  U.saveFallback = { text, note };
+  U.saveOpen = true;
+  saveMsg(note);
+}
+
+export async function exportGame() {
   if (!U.state) return saveMsg('尚無進行中的局，無法匯出。');
-  let text, filename;
+  let body, filename;
   try {
-    text = exportSave({ ...U.state, seed: U.seed });
+    body = exportSave({ ...U.state, seed: U.seed });
     const d = new Date(), p = n => String(n).padStart(2, '0');
     filename = `kingmix-save-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
   } catch (e) { return saveMsg('匯出失敗，請再試一次。'); }
-  return saveTextFile(filename, text);
+  return saveTextFile(filename, body);
 }
 
 // 下載任意存檔字串（匯出存檔與匯出損毀存檔共用）。
-export async function saveTextFile(filename, text){
-  // Artifacts 內 blob 下載無效，優先走 claude.use('downloads')；不可用時退回原本的 anchor 下載。
+export async function saveTextFile(filename, text) {
+  // 優先走 claude.use('downloads')；不可用時退回 anchor 下載。
   let dl = null;
-  try { dl = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null; } catch (e) { dl = null; }
+  try { dl = (globalThis.window && window.claude && window.claude.use) ? await window.claude.use('downloads') : null; } catch (e) { dl = null; }
   if (dl) {
     try {
       await dl.save({ filename, data: text });
@@ -239,30 +247,33 @@ export async function saveTextFile(filename, text){
   } catch (e) { saveCopyFallback(text, '下載失敗，改用備援。'); }
 }
 
-export function importGame(file){
+// 匯入：由 main.js 綁定隱藏的 <input type=file> 之 change 事件。
+export function importGame(file) {
   if (U.pendingAction) return; // 蓋章進行中不匯入
   const reader = new FileReader();
   reader.onload = () => {
     const r = finalizeLoaded(importSave(String(reader.result)));
     if (!r.ok) return saveMsg(reasonText(r.error));
-    U.seed = r.seed; pruneNewYearKeys(U.seed); U.state = r.state; migrateEraLog(U.state); prepareMonth(U.state, currentEventPool());
-    U.reviewedCount = (U.state.annals || []).length;
-    U.panel = null; U.pick1 = null; U.feedback = ''; U.reviewPage = 'score'; U.tab = 'palace';
+    loadState(r.seed, r.state);
     save(); render(); saveMsg('已匯入存檔。');
   };
   reader.onerror = () => saveMsg('匯入失敗：無法讀取檔案。');
   reader.readAsText(file);
 }
 
+// 將讀入的存檔設為目前進度（共用：匯入、欄位讀取、雲端／本機續玩）。
+export function loadState(seed, state) {
+  U.seed = seed; pruneNewYearKeys(U.seed); U.state = state; migrateEraLog(U.state); prepareMonth(U.state, currentEventPool());
+  U.reviewedCount = (U.state.annals || []).length;
+  U.panel = null; U.pick1 = null; U.feedback = ''; U.reviewPage = 'score'; U.tab = 'palace';
+}
+
 // ── 多存檔欄位（3 格）：每格鍵為 kingmix-save-slot-N，格式同 src/save.js；自動存檔 kingmix-save-v1 不變。
 export const SLOT_COUNT = 3;
-
 export const slotKey = n => `kingmix-save-slot-${n}`;
-
- // 等待確認覆寫的欄位編號
 export const slotRaw = n => { try { return localStorage.getItem(slotKey(n)); } catch (e) { return null; } };
 
-export function slotLabel(n){
+export function slotLabel(n) {
   const raw = slotRaw(n);
   if (raw === null) return '空';
   const r = restoreSave(raw);
@@ -270,39 +281,89 @@ export function slotLabel(n){
   try { return eraYearText(r.state); } catch (e) { return '無法讀取'; }
 }
 
-export function paintSlots(){
-  const box = document.getElementById('slot-tools');
-  if (!box) return;
-  const rows = [];
-  for (let n = 1; n <= SLOT_COUNT; n++) {
-    const occupied = slotRaw(n) !== null;
-    const confirm = U.slotPending === n
-      ? `<span class="slot-confirm">覆寫欄位 ${n}？<button type="button" class="snd" data-slot-ok="${n}">確定覆寫</button><button type="button" class="snd" data-slot-cancel="${n}">取消</button></span>`
-      : '';
-    rows.push(`<div class="slot-row"><span class="slot-name">欄位 ${n}：${esc(slotLabel(n))}</span>`
-      + `<button type="button" class="snd" data-slot-save="${n}">存到欄位 ${n}</button>`
-      + `<button type="button" class="snd" data-slot-load="${n}"${occupied ? '' : ' disabled'}>讀取欄位 ${n}</button>${confirm}</div>`);
-  }
-  box.innerHTML = rows.join('');
-}
-
-export function slotWrite(n){
+export function slotWrite(n) {
   try {
     const obj = serializeSave({ ...U.state, seed: U.seed });
     localStorage.setItem(slotKey(n), JSON.stringify(obj));
-    U.slotPending = null; paintSlots();
+    U.slotPending = null;
     saveMsg(`已存到欄位 ${n}。`);
-  } catch (e) { U.slotPending = null; paintSlots(); saveMsg('存檔失敗，瀏覽器可能拒絕寫入。'); }
+  } catch (e) { U.slotPending = null; saveMsg('存檔失敗，瀏覽器可能拒絕寫入。'); }
 }
 
-export function slotLoad(n){
+export function slotLoad(n) {
   if (U.pendingAction) return; // 蓋章進行中不讀檔
   const raw = slotRaw(n);
   if (raw === null) return saveMsg(`欄位 ${n} 是空的。`);
   const r = restoreSave(raw);
   if (!r.ok) return saveMsg(`欄位 ${n} 無法讀取（${reasonText(r.error)}）。`);
-  U.seed = r.seed; pruneNewYearKeys(U.seed); U.state = r.state; migrateEraLog(U.state); prepareMonth(U.state, currentEventPool());
-  U.reviewedCount = (U.state.annals || []).length;
-  U.panel = null; U.pick1 = null; U.feedback = ''; U.reviewPage = 'score'; U.tab = 'palace';
-  save(); render(); paintSlots(); saveMsg(`已讀取欄位 ${n}。`);
+  U.slotPending = null;
+  loadState(r.seed, r.state);
+  save(); render(); saveMsg(`已讀取欄位 ${n}。`);
+}
+
+// 存檔按鈕行為（與舊版 slot-tools 相同）：未覆寫過即直存；已有內容須二次確認。
+export function slotSaveClick(n) {
+  if (!U.state) return saveMsg('尚無進行中的局，無法存檔。');
+  if (slotRaw(n) !== null) { U.slotPending = n; return; }
+  slotWrite(n);
+}
+
+// ── 存檔管理對話框（取代舊版頂欄的匯出／匯入與多存檔列）。
+export function openSaveDialog() { U.saveOpen = true; }
+
+export function drawSaveModal() {
+  if (!U.saveOpen) return false;
+  modal(() => {
+    const U_ = C.U, pad = 16 * U_;
+    const r = dialogRect(560);
+    panel(r.x, r.y, r.w, r.h, { block: true });
+    const x = r.x + pad, iw = r.w - 2 * pad;
+    let y = r.y + pad;
+    text('存檔管理', x, y, { size: 20 * U_, weight: 'bold', color: INK });
+    y += 34 * U_;
+    y += text(cloudStatusText(), x, y, { size: 13 * U_, maxW: iw, color: INK }) + 6 * U_;
+    if (U.saveMsg) y += text(U.saveMsg, x, y, { size: 13 * U_, maxW: iw, color: '#8a1f22' }) + 6 * U_;
+    if (U.saveFallback) {
+      y += text(U.saveFallback.note, x, y, { size: 13 * U_, maxW: iw, color: INK }) + 6 * U_;
+      const fb = U.saveFallback;
+      button(x, y, iw, 36 * U_, '複製存檔碼', () => {
+        const nav = globalThis.navigator;
+        if (!nav || !nav.clipboard) return saveMsg('無法自動複製，請改用匯出存檔。');
+        nav.clipboard.writeText(fb.text).then(() => saveMsg('已複製存檔碼，可貼到檔案保存。'), () => saveMsg('無法自動複製，請改用匯出存檔。'));
+      }, { lac: true });
+      y += 46 * U_;
+    }
+    const bw = (iw - 10 * U_) / 2;
+    button(x, y, bw, 40 * U_, '匯出存檔', () => { exportGame(); }, { lac: true, off: !U.state, why: '尚無進行中的局，無法匯出。' });
+    button(x + bw + 10 * U_, y, bw, 40 * U_, '匯入存檔', () => {
+      const f = typeof document !== 'undefined' ? document.getElementById('imp-file') : null;
+      if (f) f.click();
+    }, { lac: false });
+    y += 52 * U_;
+    text('多存檔欄位', x, y, { size: 14 * U_, weight: 'bold', color: INK });
+    y += 24 * U_;
+    for (let n = 1; n <= SLOT_COUNT; n++) {
+      const occupied = slotRaw(n) !== null;
+      text(`欄位 ${n}：${slotLabel(n)}`, x, y + 10 * U_, { size: 13 * U_, color: INK });
+      const bx = x + iw * 0.42, bwid = (iw * 0.58 - 8 * U_) / 2;
+      if (U.slotPending === n) {
+        text(`覆寫欄位 ${n}？`, x, y + 10 * U_ + 20 * U_, { size: 12 * U_, color: '#8a1f22' });
+        button(bx, y, bwid, 36 * U_, '確定覆寫', () => slotWrite(n), { lac: true });
+        button(bx + bwid + 8 * U_, y, bwid, 36 * U_, '取消', () => { U.slotPending = null; }, { lac: false });
+      } else {
+        button(bx, y, bwid, 36 * U_, `存到欄位 ${n}`, () => slotSaveClick(n), { lac: true });
+        button(bx + bwid + 8 * U_, y, bwid, 36 * U_, `讀取欄位 ${n}`, () => slotLoad(n), { lac: false, off: !occupied, why: `欄位 ${n} 是空的。` });
+      }
+      y += 46 * U_;
+    }
+    button(x, r.y + r.h - pad - 40 * U_, iw, 40 * U_, '關閉', () => { U.saveOpen = false; U.saveFallback = null; }, { lac: false });
+  }, () => { U.saveOpen = false; U.saveFallback = null; });
+  return true;
+}
+
+function dialogRect(h) {
+  const U_ = C.U;
+  const w = Math.min(C.W - 24 * U_, 560 * U_);
+  const hh = Math.min(C.H - 24 * U_, h * U_);
+  return { x: (C.W - w) / 2, y: Math.max(12 * U_, (C.H - hh) / 2), w, h: hh };
 }
