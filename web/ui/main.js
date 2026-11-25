@@ -14,6 +14,7 @@ import './render-facility.js';
 import './canvas/harem.js';
 import './dialog.js'; // 登記對話框於 takeModal 前的繪製（registerPreModal）
 import './fx.js';
+import './canvas/fate.js';
 
 // 舊格式新年鍵 kingmix.newyear.<seed>.<year>（值為 '1'）於開機時清除；每種子一鍵 kingmix.newyear.<seed> 保留。
 function purgeLegacyNewYearKeys() {
