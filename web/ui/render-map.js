@@ -181,6 +181,8 @@ export function drawMapScreen() {
   pnl(detX, detY, detW, wide ? H - detY - pad : Math.min(H - detY - pad, 340 * u), { fill: PAPER });
   let y = detY + 12 * u;
   const lx = detX + 12 * u, lw = detW - 24 * u;
+  // 回饋行（如側線開關、奇遇抉擇之結果）置於詳情區最上方。
+  if (U.feedback) y += tx(U.feedback, lx, y, 13, { color: RED, maxW: lw }) + 6 * u;
   if (!m) {
     tx('點選州府，檢視其知府、城防與巡幸狀況。點邊界鄰國可開外交面板。', lx, y, 13, { color: 'rgba(28,26,23,.6)', maxW: lw });
     C.contentH = 0;

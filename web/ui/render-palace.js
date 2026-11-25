@@ -7,6 +7,7 @@ import { render } from './render-bus.js';
 import { FACILITIES, constructionOf, facilityLevels } from '../../src/facilities.js';
 import { C, registerScreen, setScreen } from './canvas/core.js';
 import { panel } from './canvas/widgets.js';
+import { RED } from './canvas/theme.js';
 import { tx, btn } from './canvas/bfx.js';
 import { drawPalaceScene, palaceZones, drawSeasonTint } from './canvas/palace.js';
 import { drawSideRow, keepOverlays } from './render-side.js';
@@ -88,7 +89,9 @@ export function drawPalaceScreen() {
   drawPalaceScene(zones, goZone, W, sceneH, sceneTop);
   const season = seasonOf();
   if (season) { g.save(); g.translate(0, sceneTop); drawSeasonTint(g, season, W, sceneH); g.restore(); }
-  tx('太和殿處理朝政奏摺；御書房（史冊與帝王）、校場（朝臣任免）、後宮與慈寧宮（嬪妃與子嗣）、東廠各司其事；空地可營造宮內設施。', 16 * u, sceneTop + sceneH + 2 * u, 12, { color: 'rgba(28,26,23,.6)', maxW: W - 32 * u });
+  const noteY = sceneTop + sceneH + 2 * u;
+  const noteUsed = tx('太和殿處理朝政奏摺；御書房（史冊與帝王）、校場（朝臣任免）、後宮與慈寧宮（嬪妃與子嗣）、東廠各司其事；空地可營造宮內設施。', 16 * u, noteY, 12, { color: 'rgba(28,26,23,.6)', maxW: W - 32 * u });
+  if (U.feedback) tx(U.feedback, 16 * u, noteY + noteUsed + 4 * u, 13, { color: RED, maxW: W - 32 * u });
   const by = sceneTop + sceneH + noteH;
   const bw = Math.min(170 * u, W / 2 - 18 * u);
   btn(12 * u, by, bw, 36 * u, '展開全國輿圖', () => { U.tab = 'map'; U.panel = null; U.pick1 = null; render(); }, { ghost: true });
