@@ -21,6 +21,8 @@ import { guideMount, showNewYear } from './overlays.js';
 import { showQuarterCard } from './render-quarter.js';
 import { drawOfficials, drawDC, drawThrone } from './render-officials.js';
 import './render-campaign.js'; // 登記戰役畫面（'campaign'）
+import './render-gallery.js'; // 登記圖鑑畫面（'gallery'）
+import { applySeason, inkFlash } from './fx.js';
 import { renderStart } from './render-start.js';
 import { renderEnding } from './render-ending.js';
 
@@ -161,6 +163,8 @@ registerChrome(
 export function render() {
   const name = resolveScreen();
   setScreen(name);
+  applySeason(); // 季節主題與雪景（依遊戲月份）
+  inkFlash(name); // 畫面切換時墨跡轉場（同畫面重繪不閃）
   // 覆蓋層（與舊版 render 同序）：新手提要、季結算卡、年號覆蓋層；僅於存活且非年終考評時。
   // 快進卡（ffItem）已於朝堂內容中繪製，不在此處理。
   if (U.state && U.state.alive && name !== 'review') { guideMount(); showQuarterCard(); showNewYear(); }

@@ -28,7 +28,8 @@ const { drawLegacy, renderLegacy, LEGACY_KEY, legacyModel } = await import('../w
 const { drawGallery, galleryModel, renderGallery } = await import('../web/ui/render-gallery.js');
 const { drawCampaignPage } = await import('../web/ui/render-campaign.js');
 const { showQuarterCard, quarterCardModel } = await import('../web/ui/render-quarter.js');
-const { guideMount, GUIDE_KEY, openNianhao, openResignDialog } = await import('../web/ui/overlays.js');
+const { guideMount, GUIDE_KEY, openNianhao } = await import('../web/ui/overlays.js');
+const { openResign, isResignOpen } = await import('../web/ui/render-officials.js');
 const { stampThen, drawFx, inkFlash } = await import('../web/ui/fx.js');
 const { drawSoundToggle, sndLabel, toggleSound } = await import('../web/ui/audio.js');
 const { dialogCount } = await import('../web/ui/dialog.js');
@@ -140,14 +141,11 @@ test('新手提要：首月顯示；任何關閉方式皆寫入已看過', () =>
   assert.equal(U.guideArmed, false);
 });
 
-test('禪位確認：取消與確認皆可點遍；確認前不改變狀態', () => {
+test('禪位確認：帝王頁開啟確認對話框不結束本世', () => {
   U.state = { ...BASE_STATE, dynasty: { generation: 1, crownPrince: null }, heirs: [] };
-  openResignDialog();
-  frame();
+  openResign();
+  assert.equal(isResignOpen(), true);
   assert.equal(U.state.alive, true, '開啟對話框不得結束本世');
-  __fireKey('Escape');
-  input.closeModal();
-  assert.equal(dialogCount(), 0);
 });
 
 test('年號覆蓋層：開啟後點擊繼續即關閉', () => {

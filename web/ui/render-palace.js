@@ -10,6 +10,7 @@ import { panel } from './canvas/widgets.js';
 import { tx, btn } from './canvas/bfx.js';
 import { drawPalaceScene, palaceZones, drawSeasonTint } from './canvas/palace.js';
 import { drawSideRow, keepOverlays } from './render-side.js';
+import { ackFacilityMark } from './render-facility.js';
 
 // 宮城引擎（src/palace.js：pendingMarks、seasonFor）可能尚未合入；以動態匯入防護，缺漏時宮城照常呈現。
 let engine = {};
@@ -52,7 +53,7 @@ export function seasonOf() {
 
 // 地標點選：設施空地前往設施頁，其餘依 nav.tab 前往分頁。
 export function goZone(z) {
-  if (z.facility) U.tab = 'facility';
+  if (z.facility) { ackFacilityMark(z.facility); U.tab = 'facility'; }
   else U.tab = z.nav?.tab ?? 'palace';
   U.panel = null;
   U.pick1 = null;

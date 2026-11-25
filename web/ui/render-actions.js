@@ -22,13 +22,18 @@ import { FAC, FACTION, REASON, heirPersonLabel, officeName } from './labels.js';
 import { sfx } from './audio.js';
 import { save } from './state-io.js';
 import { render } from './render-bus.js';
-import { campAct } from './game-flow.js';
+import { campAct, campaignActive } from './game-flow.js';
 import { markNewYearShown, openNianhao } from './overlays.js';
 import { handleCardAct } from './render-cards.js';
 import { alchemyAvailability, alchemyResultText } from './render-side.js';
 import { companionAct, setCourseAct } from './render-curriculum.js';
 import { txt, vstack, boxed, optionCard, btn, spacer, feedbackItem, openTextEntry } from './canvas/court.js';
 import { C } from './canvas/core.js';
+
+// 宣戰停用條件（E-002）：本月行動用盡、已結盟，或戰役進行中，皆不可宣戰（盟國之規則見 src/diplomacy.js）。
+export function declareWarBlocked(d, dis) {
+  return !!(dis || d?.allied || campaignActive());
+}
 
 // ── 主動決策（Phase 6）：每月兩次行動，不推進時間 ──
 export const ACTION_LIMIT = 2;
@@ -160,7 +165,7 @@ export function actionsItem(w) {
         ['ally', '結盟', `好感達 ${ALLIANCE_MIN_ATTITUDE}，最多 ${MAX_ALLIANCES} 國；盟國不可宣戰`, false],
         ['war', '宣戰', '三回合親征，成敗決於戰局與議和', true],
       ];
-      cards = paths.map(([k, l, hh, war]) => optionCard(w, { mark: war ? '征' : '和', label: l, hint: hh, zhu: war, off: dis, onClick: () => agencyAct('dpath', k) }));
+      cards = paths.map(([k, l, hh, war]) => optionCard(w, { mark: war ? '征' : '和', label: l, hint: hh, zhu: war, off: war ? declareWarBlocked(d, dis) : dis, onClick: () => agencyAct('dpath', k) }));
       for (const h of eligiblePrincesses(U.state)) {
         cards.push(optionCard(w, { mark: '女', label: `和親：${h.name}`, hint: `皇女出嫁，花費國庫 ${MARRIAGE_COST}，停戰 ${PRINCESS_TRUCE_MONTHS} 月，好感 +${PRINCESS_ATTITUDE_GAIN}`, off: dis, onClick: () => agencyAct('dprincess', h.id) }));
       }
