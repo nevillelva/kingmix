@@ -258,3 +258,36 @@ test('A-002/A-046: 常駐列接入開局畫面損毀卡與頂欄（drawTop）', 
   assert.match(read('web/ui/render-start.js'), /corruptBackupFailing\(\)/);
   assert.match(read('web/ui/render-nav.js'), /autoSaveFailing\(\)/);
 });
+
+// ── C-025：手機自訂年號鍵盤；「顯示輸入框」預設開啟，開啟時聚焦隱藏的 #ime，關閉時僅用 Canvas 框 ──
+test('C-025: 自訂年號輸入預設顯示輸入框，開啟時聚焦 #ime，關閉時釋放焦點', async () => {
+  const court = await import('../web/ui/canvas/court.js');
+  const { takeModal, leaveModal, beginFrame, endFrame } = await import('../web/ui/canvas/input.js');
+  setup('audit-g3-ime');
+  const calls = [];
+  const ime = { value: '', focus() { calls.push('focus'); }, blur() { calls.push('blur'); } };
+  const origDoc = globalThis.document;
+  globalThis.document = { ...origDoc, getElementById: (id) => (id === 'ime' ? ime : null), activeElement: null };
+  try {
+    assert.equal(court.textEntryShowsInput(), true, '預設為顯示');
+    court.openTextEntry({ title: '自訂年號', maxLen: 4, onSubmit: () => {} });
+    assert.deepEqual(calls, ['focus'], '開啟時聚焦隱藏輸入框以喚起手機鍵盤');
+    court.setTextEntryShowsInput(false);
+    assert.equal(court.textEntryShowsInput(), false);
+    assert.equal(calls.at(-1), 'blur', '隱藏時釋放 #ime 焦點，僅用 Canvas 內文字框');
+    court.setTextEntryShowsInput(true);
+    assert.equal(calls.at(-1), 'focus');
+    // 畫面上的切換鈕：點擊後切換顯示狀態
+    C.W = 420; C.H = 760;
+    beginFrame();
+    court.drawTextEntry();
+    const req = takeModal();
+    req.drawFn(C);
+    leaveModal();
+    endFrame();
+    const { publishedHits, dispatchPoint } = await import('../web/ui/canvas/input.js');
+    const toggle = publishedHits().find(h => !h.disabled && h.h === 28); // 切換鈕高 28（面板本身亦登記為區域，故以高度辨識）
+    dispatchPoint(toggle.x + toggle.w / 2, toggle.y + toggle.h / 2);
+    assert.equal(court.textEntryShowsInput(), false, '點擊切換鈕可關閉顯示');
+  } finally { globalThis.document = origDoc; }
+});
