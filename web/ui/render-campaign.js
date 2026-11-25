@@ -1,159 +1,109 @@
-// web/ui/render-campaign.js：皇帝養成綜合版網頁介面（由 web/index.html 內嵌模組拆分，行為不變）。
-import { TACTICS, formatBattleLog, nominalStrength } from '../../src/war.js';
-import { MAX_ROUNDS, PEACE_TRIBUTE_COST, RECON_GRAIN_COST, WINS_NEEDED } from '../../src/campaign.js';
+// web/ui/render-campaign.js：親征、戰況、戰報與上一役戰報（Canvas）。
+// 繪製與版面見 canvas/campaign.js；本檔負責戰報播放狀態（依 C.T 逐回合顯示）與點擊接線（campAct）。
+// 既有匯出保留名稱；回傳值由 HTML 改為資料模型（見各函式註解）。
+import { formatBattleLog } from '../../src/war.js';
+import { battleTickMs, normalizeBattlePrefs } from '../../src/war-autoplay.js';
 import { U } from './store.js';
-import { esc, fbLine } from './util.js';
-import { battleTickMs, nextBattleSpeed, visibleRoundCount, battleFrames } from '../../src/war-autoplay.js';
+import { registerScreen, setScreen } from './canvas/core.js';
+import { panel, text, bar, button } from './canvas/widgets.js';
+import { INK } from './canvas/theme.js';
+import {
+  UNIT_CHAIN, unitBeats, counterPairs, forceBarModel, battleLines, reduceBattlePrefs, advanceShown, skipShown, drawCampaign,
+} from './canvas/campaign.js';
 
-// 兵種相剋（騎→盾→弓→槍→騎：前者剋後者）。僅作戰報圖示，不改動戰術數值。
-export const UNIT_CHAIN = Object.freeze(['騎', '盾', '弓', '槍']);
-export const unitBeats = (u) => UNIT_CHAIN[(UNIT_CHAIN.indexOf(u) + 1) % UNIT_CHAIN.length];
+export { UNIT_CHAIN, unitBeats };
 
-// 戰報捲動的播放狀態（模組層級，跨渲染保留）：shown 為已顯示回合數；速度與自動戰鬥偏好見 U.battlePrefs。
-const scroll = { total: 0, shown: 0, timer: null };
+// 戰報播放狀態（模組層級，跨幀保留）：shown 為已顯示回合數，total 為目前回合總數，last 為上次計時的 C.T。
+const scroll = { total: 0, shown: 0, last: null, acc: 0 };
 
 // 新一役（回合數歸零或縮減）時重設；回合數增加時，新回合依播放速度逐一出現。
-function syncScrollTotal(n) {
+function syncScrollTotal(n, prefs) {
   if (n < scroll.total) { scroll.total = n; scroll.shown = Math.min(scroll.shown, n); }
   else if (n > scroll.total) scroll.total = n;
   if (n === 0) scroll.shown = 0;
-  if (U.battlePrefs?.auto) scroll.shown = scroll.total;
+  if (prefs.auto) scroll.shown = scroll.total;
 }
 
-function stopScrollTimer() {
-  if (scroll.timer !== null) { clearInterval(scroll.timer); scroll.timer = null; }
+// 每幀依 C.T 推進播放（每 battleTickMs 顯示一回合）；自動戰鬥時全數顯示。
+function tickScroll(C, prefs) {
+  const t = C.T || 0;
+  if (scroll.last === null) scroll.last = t;
+  const dt = Math.max(0, t - scroll.last) * 1000;
+  scroll.last = t;
+  if (prefs.auto || scroll.shown >= scroll.total) { scroll.acc = 0; return; }
+  scroll.acc += dt;
+  const step = battleTickMs(prefs.speed);
+  while (scroll.acc >= step && scroll.shown < scroll.total) { scroll.shown = advanceShown(scroll.shown, scroll.total); scroll.acc -= step; }
 }
 
-function startScrollTimer() {
-  if (scroll.timer !== null || scroll.shown >= scroll.total || U.battlePrefs?.auto) return;
-  if (typeof setInterval !== 'function') return;
-  scroll.timer = setInterval(() => {
-    scroll.shown = Math.min(scroll.total, scroll.shown + 1);
-    paintScroll();
-    if (scroll.shown >= scroll.total) stopScrollTimer();
-  }, battleTickMs(U.battlePrefs?.speed));
-}
+// 兵力對比：回傳 forceBarModel 之結果（原為 HTML 字串）。
+export function forceBarsHTML(c, state = U.state) { return forceBarModel(c, state); }
 
-// 將播放狀態寫回畫面中的戰報捲動區（不需重繪整張卡）。
-function paintScroll() {
-  if (typeof document === 'undefined') return;
-  document.querySelectorAll('.battle-scroll').forEach((box) => {
-    box.querySelectorAll('li[data-line-index]').forEach((li) => {
-      li.hidden = Number(li.dataset.lineIndex) >= scroll.shown;
-    });
-    const speedBtn = box.parentElement?.querySelector('[data-battle="speed"]');
-    if (speedBtn) speedBtn.textContent = `加速 x${U.battlePrefs.speed}`;
-    const autoBtn = box.parentElement?.querySelector('[data-battle="auto"]');
-    if (autoBtn) { autoBtn.textContent = `自動戰鬥：${U.battlePrefs.auto ? '開' : '關'}`; autoBtn.setAttribute('aria-pressed', String(U.battlePrefs.auto)); }
-    const count = box.parentElement?.querySelector('[data-battle="count"]');
-    if (count) count.textContent = `${scroll.shown}／${scroll.total} 回合`;
-  });
-}
+// 兵種相剋配對：回傳 counterPairs（原為 HTML 字串）。
+export function counterIconsHTML() { return counterPairs(); }
 
-// 點擊委派：跳過（全數顯示）與加速（x1 ↔ x2）。掛在 document 上，於每次重繪後仍有效。
-if (typeof document !== 'undefined') {
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest?.('[data-battle]');
-    if (!btn) return;
-    if (btn.dataset.battle === 'skip') {
-      stopScrollTimer();
-      scroll.shown = scroll.total;
-      paintScroll();
-    } else if (btn.dataset.battle === 'speed') {
-      U.battlePrefs.speed = nextBattleSpeed(U.battlePrefs.speed);
-      stopScrollTimer();
-      startScrollTimer();
-      paintScroll();
-    } else if (btn.dataset.battle === 'auto') {
-      U.battlePrefs.auto = !U.battlePrefs.auto;
-      if (U.battlePrefs.auto) { stopScrollTimer(); scroll.shown = scroll.total; }
-      else startScrollTimer();
-      paintScroll();
-    }
-  });
-}
-
-// 兵力條：以最近一回合的我方、敵方戰力比例呈現；尚無回合時，我方取名目戰力，敵方取偵察所得（未明則不顯示敵方）。
-export function forceBarsHTML(c, state = U.state) {
-  const last = (c.rounds || []).at(-1);
-  let ours = last ? last.ours : null;
-  if (ours == null && state) {
-    try { ours = Math.round(nominalStrength(state)); } catch (e) { ours = null; }
-  }
-  const enemy = last ? last.enemy : (c.intel === 'scouted' ? c.estimate : null);
-  const oursOk = Number.isFinite(ours) && ours > 0;
-  const enemyOk = Number.isFinite(enemy) && enemy > 0;
-  const total = (oursOk ? ours : 0) + (enemyOk ? enemy : 0);
-  const pct = (v) => (total > 0 ? Math.round((v / total) * 100) : 0);
-  return `<div class="force-bars" aria-label="兵力對比">
-    <div class="fbar"><span class="fbar-lbl">我方</span><span class="fbar-track"><span class="fbar-fill ours" style="width:${oursOk ? pct(ours) : 0}%"></span></span><span class="fbar-num">${oursOk ? ours : '—'}</span></div>
-    <div class="fbar"><span class="fbar-lbl">敵方</span><span class="fbar-track"><span class="fbar-fill enemy" style="width:${enemyOk ? pct(enemy) : 0}%"></span></span><span class="fbar-num">${enemyOk ? enemy : '未明'}</span></div>
-  </div>`;
-}
-
-// 兵種相剋圖示列：騎 剋 盾、盾 剋 弓、弓 剋 槍、槍 剋 騎。
-export function counterIconsHTML() {
-  const pairs = UNIT_CHAIN.map((u) =>
-    `<span class="counter-pair"><span class="uicon">${esc(u)}</span><span class="arrow" aria-hidden="true">剋</span><span class="uicon">${esc(unitBeats(u))}</span></span>`);
-  return `<div class="counter-chain" aria-label="兵種相剋：騎剋盾、盾剋弓、弓剋槍、槍剋騎">${pairs.join('<span aria-hidden="true">・</span>')}</div>`;
-}
-
-// 逐回合戰報捲動（每回合一列：戰術、雙方戰力、戰損、勝負與剋制關係）。
+// 逐回合戰報列：回傳 battleLines（原為 HTML 字串）。依目前播放狀態標示 hidden。
 export function battleScrollHTML(rounds = []) {
-  syncScrollTotal(rounds.length);
-  if (U.battlePrefs.auto) { stopScrollTimer(); scroll.shown = scroll.total; }
-  else if (scroll.shown < scroll.total) startScrollTimer();
-  const frames = battleFrames(rounds);
-  const items = rounds.map((r, i) => {
-    const [line] = formatBattleLog({ rounds: [r] });
-    const f = frames[i];
-    const mark = r.line && r.line.includes('剋敵') ? '▲' : r.line && r.line.includes('遭') ? '▼' : '●';
-    const tone = r.won ? 'win' : 'lose';
-    return `<li data-line-index="${i}" class="${tone}"${i >= scroll.shown ? ' hidden' : ''}><span class="rd-mark" aria-hidden="true">${mark}</span><span>${esc(line)}${r.starved ? '（粮絕，戰力減損）' : ''}</span><span class="rd-bar" aria-label="我方${f.oursPct}％、敵方${f.enemyPct}％" style="display:inline-block;width:60px;height:6px;margin-left:6px;vertical-align:middle;background:linear-gradient(to right,var(--ours,#5a7fb0) ${f.oursPct}%,var(--enemy,#b0604a) ${f.oursPct}%)"></span></li>`;
-  }).join('');
-  const empty = rounds.length ? '' : '<li class="sub">尚無回合。</li>';
-  return `<div class="battle-wrap">
-    <div class="battle-ctl">
-      <span class="sub" data-battle="count">${visibleRoundCount(U.battlePrefs, scroll.total, scroll.shown)}／${scroll.total} 回合</span>
-      <button type="button" class="btn ghost mini" data-battle="auto" aria-pressed="${U.battlePrefs.auto}">自動戰鬥：${U.battlePrefs.auto ? '開' : '關'}</button>
-      <button type="button" class="btn ghost mini" data-battle="skip">跳過</button>
-      <button type="button" class="btn ghost mini" data-battle="speed">加速 x${U.battlePrefs.speed}</button>
-    </div>
-    <ol class="list battle-scroll" role="log" aria-live="polite" style="max-height:220px;overflow:auto;margin:0 0 8px">${items}${empty}</ol>
-  </div>`;
+  const prefs = normalizeBattlePrefs(U.battlePrefs);
+  syncScrollTotal(rounds.length, prefs);
+  return battleLines(rounds, prefs, scroll.shown);
 }
 
-// 本工作階段最近一役的戰報（戰役結束即清除於 state，故另存於此）
+// 戰報文字列（原為 <li> HTML）。
 export function warLogList(rounds) {
-  const lines = formatBattleLog({ rounds });
-  return lines.map((line, i) => `<li><span>${esc(line)}${rounds[i]?.starved ? '（粮絕，戰力減損）' : ''}</span></li>`).join('');
+  return formatBattleLog({ rounds }).map((line, i) => `${line}${rounds[i]?.starved ? '（粮絕，戰力減損）' : ''}`);
 }
 
-export function lastBattleCard() {
-  if (!U.lastBattle) return '';
-  return `<section class="card" aria-label="上一役戰報"><h2>戰報・${esc(U.lastBattle.title)}</h2>
-    <ul class="list war-log">${U.lastBattle.lines.map(l => `<li><span>${esc(l)}</span></li>`).join('')}</ul></section>`;
+// 上一役戰報（與舊版相同之內容）；於朝堂等畫面以 drawLastBattleCard 繪製。原 lastBattleCard 回傳 HTML，現回傳 ''。
+export function lastBattleCard() { return ''; }
+
+// 繪製上一役戰報卡（Canvas）。回傳高度；無戰報時回傳 0。
+export function drawLastBattleCard(C, x, y, w) {
+  if (!U.lastBattle) return 0;
+  const u = C.U || 1, pad = 14 * u;
+  const lines = U.lastBattle.lines;
+  const title = `戰報・${U.lastBattle.title}`;
+  const lh = 13 * u * 1.45;
+  const h = pad + 16 * u * 1.45 + 8 * u + lines.length * lh + pad;
+  panel(x, y, w, h, {});
+  text(title, x + pad, y + pad, { size: 16 * u, weight: 'bold', color: INK, maxW: w - pad * 2 });
+  lines.forEach((l, i) => text(l, x + pad, y + pad + 16 * u * 1.45 + 8 * u + i * lh, { size: 13 * u, color: INK, maxW: w - pad * 2 }));
+  return h + 10 * u;
 }
 
+// 親征卡（原為 HTML）：現於 Canvas 戰役畫面繪製，此處切換畫面並回傳 ''。
 export function campaignCard() {
-  const c = U.state.campaign;
-  const scouted = c.intel === 'scouted';
-  const tactics = Object.entries(TACTICS).map(([k, t]) => `
-    <button class="opt zhu" data-act="camp-tactic" data-arg="${k}">
-      <span class="mark">${t.label.slice(0,1)}</span>
-      <span class="otxt"><span class="label">${t.label}</span>
-      <span class="hint">耗粮 ${t.grain}${c.grain < t.grain ? '（粮草不足，戰力減損）' : ''}${t.gambleChance ? '　（有賭運，成敗難料）' : ''}</span></span></button>`).join('');
-  const canRecon = c.round === 0 && !scouted;
-  return `${fbLine()}<section class="card"><h2>軍務・${esc(c.title || '親征')}</h2>
-    <div class="kicker">第 ${Math.min(c.round + 1, MAX_ROUNDS)} 回合　・　己勝 ${c.ourWins}　敵勝 ${c.enemyWins}</div>
-    <div class="sub">至多 ${MAX_ROUNDS} 回合，先勝 ${WINS_NEEDED} 回合者勝。粮草 ${Math.floor(c.grain)}。敵情：${scouted ? `約 ${c.estimate}（誤差約 ±8%）` : '未明'}</div>
-    ${forceBarsHTML(c)}
-    ${counterIconsHTML()}
-    ${battleScrollHTML(c.rounds || [])}
-    <div class="sub" style="margin-bottom:6px">選擇本回合戰術：</div>
-    <div class="opts">${tactics}</div>
-    ${canRecon ? `<button class="btn ghost" data-act="camp-recon">遣探偵察（耗粮 ${RECON_GRAIN_COST}）</button>` : ''}
-    ${c.round >= 1 ? `<button class="btn ghost" data-act="camp-peace">遣使議和</button>` : ''}
-    ${c.neighborId ? `<button class="btn ghost" data-act="camp-tribute">歲幣求和（耗國庫 ${PEACE_TRIBUTE_COST}）</button>` : ''}
-  </section>`;
+  setScreen('campaign');
+  return '';
 }
+
+// 點擊接線：動態匯入 game-flow.js 之 campAct（避免靜態循環依賴）。
+async function campActAsync(a, v) {
+  const { campAct } = await import('./game-flow.js');
+  return campAct(a, v);
+}
+
+// 戰役畫面（Canvas）：每幀呼叫。無進行中的戰役時顯示空狀態。
+export function drawCampaignPage(C) {
+  const c = U.state?.campaign;
+  const u = C.U || 1, top = (C.content?.y || 0) + 12 * u, x = (C.content?.x || 0) + 12 * u, w = (C.content?.w || C.W) - 24 * u;
+  if (!c || c.status !== 'active') {
+    panel(x, top, w, 60 * u, {});
+    text('此時並無親征。', x + 14 * u, top + 20 * u, { size: 14 * u, color: INK });
+    C.contentH = Math.max(C.contentH || 0, 100 * u);
+    return;
+  }
+  const prefs = normalizeBattlePrefs(U.battlePrefs);
+  U.battlePrefs = prefs;
+  syncScrollTotal((c.rounds || []).length, prefs);
+  tickScroll(C, prefs);
+  drawCampaign({ panel, text, bar, button }, C, {
+    c, state: U.state, prefs, shown: scroll.shown, x: (C.content?.x || 0) + 12 * u, y: top, w: (C.content?.w || C.W) - 24 * u,
+    onAct: (a, v) => campActAsync(a, v),
+    onPref: (action) => { U.battlePrefs = reduceBattlePrefs(normalizeBattlePrefs(U.battlePrefs), action); },
+    onSkip: () => { scroll.shown = skipShown(scroll.total); },
+  });
+}
+
+
+registerScreen('campaign', drawCampaignPage);

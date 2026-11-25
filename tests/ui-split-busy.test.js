@@ -47,6 +47,7 @@ test('B9：奏摺選項與戰報列不再共用 data-i（DOM 標記已改為 Can
   }
   assert.doesNotMatch(read('render-court.js'), /innerHTML|querySelector/, 'render-court.js should not touch DOM');
   assert.doesNotMatch(read('render-memorial.js'), /innerHTML|querySelector/, 'render-memorial.js should not touch DOM');
+  assert.match(read('canvas/campaign.js'), /hidden: i >= visible/, '戰報列以 hidden 旗標標示未播放之列（Canvas）');
 });
 
 test('shouldCommit：同一局且同一回合才裁決', async () => {
