@@ -52,6 +52,7 @@ function topButtons() {
     { key: 'side', label: `側線奇遇：${sideOn ? '開' : '關'}`, on: sideOn, off: !U.state, why: '尚未開局', onClick: onSideToggle },
     { key: 'legacy', label: '歷代帝王', onClick: () => { U.tab = 'legacy'; U.panel = null; U.pick1 = null; render(); } },
     { key: 'gallery', label: '圖鑑', onClick: () => { U.tab = 'gallery'; U.panel = null; U.pick1 = null; render(); } },
+    { key: 'fate', label: '命運線', off: !U.state, why: '尚未開局', onClick: () => { U.tab = 'fate'; U.panel = null; U.pick1 = null; render(); } },
     { key: 'save', label: '存檔', onClick: openSaveDialog, lac: true },
   ];
 }

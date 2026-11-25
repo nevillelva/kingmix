@@ -12,6 +12,7 @@ import './render-palace.js';
 import './render-map.js';
 import './render-facility.js';
 import './canvas/harem.js';
+import './canvas/fate.js';
 
 // 舊格式新年鍵 kingmix.newyear.<seed>.<year>（值為 '1'）於開機時清除；每種子一鍵 kingmix.newyear.<seed> 保留。
 function purgeLegacyNewYearKeys() {
