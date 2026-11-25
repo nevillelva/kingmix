@@ -9,7 +9,7 @@ import { U } from './store.js';
 import { setRenderer } from './render-bus.js';
 import { recordLegacyOnce } from './render-legacy.js';
 import { levelWord, pctOf } from './util.js';
-import { save, drawSaveModal, drawConflictModal, openSaveDialog } from './state-io.js';
+import { autoSaveFailing, save, drawSaveModal, drawConflictModal, openSaveDialog } from './state-io.js';
 import { C, registerChrome, registerOverlay, registerScreen, setScreen, currentScreen, pushToast } from './canvas/core.js';
 import { keepOverlays, paintPendingEncounter } from './render-side.js';
 import { drawCourt, drawReview, reviewPending } from './render-court.js';
@@ -107,6 +107,11 @@ function drawTop(paint) {
   if (ms) {
     if (paint) text(`當前章節：${ms}`, pad, y, { size: 12 * U_, color: INK });
     y += 20 * U_;
+  }
+  // 自動存檔失敗常駐列（A-046）：寫入成功後由 state-io.js 清除旗標。
+  if (autoSaveFailing()) {
+    if (paint) text('自動存檔失敗，請匯出存檔備份', pad, y, { size: 12 * U_, color: '#8a1f22', weight: 'bold', maxW: W - 2 * pad });
+    y += 18 * U_;
   }
   return y + 4 * U_;
 }

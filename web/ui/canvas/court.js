@@ -1,7 +1,7 @@
 // web/ui/canvas/court.js：朝堂、奏摺、朝政行動共用的 Canvas 版面元件（量測與繪製分離：每個元件先回報高度 h，再於 draw(x,y,w) 繪製）。
 // 依賴：core.js（C 狀態）、input.js（hit/hovered）、widgets.js（panel/button/text/portrait/bar/plate）、theme.js、store.js。
 import { C } from './core.js';
-import { hit, hovered } from './input.js';
+import { hit, hovered, editText } from './input.js';
 import { panel, button, text, measureLines, bar, portrait, plate, personOf, seal } from './widgets.js';
 import { modal } from './input.js';
 import { render } from '../render-bus.js';
@@ -324,17 +324,50 @@ export function installSwipe(canvas) {
 
 // ── 文字輸入（自訂年號）：Canvas 內的輸入框，以 modal 繪製；鍵盤與輸入法組字由視窗事件接收。
 // 待 A 提供隱藏 input 方案時，改由該方案取得字串（本函式的 openTextEntry 介面不變）。
-const entry = { open: false, title: '', value: '', maxLen: 4, onSubmit: null, hint: '' };
+// showInput：「顯示輸入框」，預設開啟；開啟時聚焦隱藏的 #ime 以喚起手機鍵盤，關閉時僅使用 Canvas 內文字框（C-025）。
+// imeOn：目前由 #ime 接收輸入（此時視窗鍵盤事件交由 #ime 的 oninput 處理，避免重複輸入）。
+const entry = { open: false, title: '', value: '', maxLen: 4, onSubmit: null, hint: '', showInput: true, imeOn: false };
 let entryWired = false;
+
+function imeEl() {
+  return typeof document !== 'undefined' && document.getElementById ? document.getElementById('ime') : null;
+}
+
+function syncEntryIme() {
+  const ime = imeEl();
+  if (entry.open && entry.showInput) {
+    entry.imeOn = editText(entry.value, (v) => {
+      entry.value = v.slice(0, entry.maxLen);
+      if (ime && ime.value !== entry.value) ime.value = entry.value;
+    });
+  } else {
+    entry.imeOn = false;
+    if (ime && ime.blur) ime.blur();
+  }
+}
+
+function imeFocused() {
+  const ime = imeEl();
+  return entry.imeOn && !!ime && typeof document !== 'undefined' && document.activeElement === ime;
+}
 
 export function openTextEntry({ title = '請輸入', maxLen = 4, hint = '', onSubmit }) {
   entry.open = true; entry.title = title; entry.value = ''; entry.maxLen = maxLen; entry.onSubmit = onSubmit; entry.hint = hint;
   wireEntry();
+  syncEntryIme();
 }
 
 export function textEntryOpen() { return entry.open; }
+export function textEntryShowsInput() { return entry.showInput; }
+export function setTextEntryShowsInput(on) {
+  entry.showInput = !!on;
+  if (entry.open) syncEntryIme();
+}
 
-function closeEntry() { entry.open = false; entry.onSubmit = null; }
+function closeEntry() {
+  entry.open = false; entry.onSubmit = null;
+  syncEntryIme();
+}
 
 function submitEntry() {
   const v = entry.value.trim();
@@ -353,12 +386,14 @@ function wireEntry() {
   entryWired = true;
   globalThis.addEventListener('keydown', (e) => {
     if (!entry.open || e.isComposing) return;
+    // 由 #ime 接收輸入時，字元與退格交由其 oninput 處理；確定與取消仍於此處理。
+    if (imeFocused() && e.key !== 'Enter' && e.key !== 'Escape') return;
     if (e.key === 'Enter') { e.preventDefault(); submitEntry(); }
     else if (e.key === 'Backspace') { e.preventDefault(); entry.value = entry.value.slice(0, -1); }
     else if (e.key === 'Escape') { e.preventDefault(); closeEntry(); }
     else if (e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey) { e.preventDefault(); appendEntry(e.key); }
   });
-  globalThis.addEventListener('compositionend', (e) => appendEntry(e.data));
+  globalThis.addEventListener('compositionend', (e) => { if (!imeFocused()) appendEntry(e.data); });
 }
 
 // 每幀由畫面呼叫：若輸入框開啟則登記對話框（點空白處或 Esc 取消）。
@@ -366,7 +401,7 @@ export function drawTextEntry() {
   if (!entry.open) return;
   modal((Cx) => {
     const U0 = Cx.U, W = Cx.W, H = Cx.H;
-    const w = Math.min(W - 40 * U0, 340 * U0), h = 200 * U0;
+    const w = Math.min(W - 40 * U0, 340 * U0), h = 236 * U0;
     const x = (W - w) / 2, y = (H - h) / 2;
     panel(x, y, w, h, { block: true, r: 10 * U0 });
     txt(entry.title, w - 32 * U0, 16, { weight: 'bold' }).draw(x + 16 * U0, y + 14 * U0);
@@ -379,6 +414,7 @@ export function drawTextEntry() {
     const blink = Math.floor(Cx.T * 2) % 2 === 0 ? '|' : ' ';
     Cx.ctx.fillText(entry.value + blink, bx + 10 * U0, by + bh / 2);
     Cx.ctx.restore();
+    button(bx, y + 122 * U0, bw, 28 * U0, `${entry.showInput ? '☑' : '☐'} 顯示輸入框（喚起手機鍵盤）`, () => setTextEntryShowsInput(!entry.showInput), { lac: false });
     const bw2 = (bw - 10 * U0) / 2;
     button(bx, y + h - 52 * U0, bw2, 36 * U0, '取消', () => closeEntry(), { lac: false });
     button(bx + bw2 + 10 * U0, y + h - 52 * U0, bw2, 36 * U0, '確定', () => submitEntry(), {});

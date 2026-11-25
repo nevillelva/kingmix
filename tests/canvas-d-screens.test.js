@@ -208,3 +208,123 @@ test('pressureLines：三派並立時列出忠誠流失提示（純文字）', (
   const lines = officials.pressureLines({ factions: { qingliu: 40, xunggui: 40, hanmen: 40 }, factionPressure: {} });
   assert.ok(lines.some((l) => /三派並立/.test(l)));
 });
+
+// ── 稽核 D 修補（feat/fix-d-audit）──
+
+const courtMod = await import('../web/ui/render-court.js');
+const { SYNERGIES, policyCardDef, POLICY_CARD_IDS: IDS } = await import('../src/cards.js');
+const { ASSASSIN_TYRANNY_THRESHOLD } = await import('../src/assassination.js');
+const { STATUS_TEXT, OUTCOME_TEXT, personBlocks, tyrannyAssassinText } = officials;
+
+test('D061 朝政分頁：drawRulerEntry 每幀執行，開啟中即維持帝王面板對話框（不只在點擊時）', () => {
+  freshState();
+  setScreen('court');
+  ruler.openRuler();
+  input.beginFrame();
+  courtMod.drawCourt(C);
+  const req = input.takeModal();
+  input.leaveModal();
+  input.endFrame();
+  assert.ok(req, '朝政分頁每幀應請求帝王面板對話框');
+  ruler.closeRuler();
+  setScreen('officials');
+});
+
+test('D061 朝政分頁：入口按鈕（150×36）登記命中，點擊即開啟帝王面板', () => {
+  freshState();
+  setScreen('court');
+  ruler.closeRuler();
+  input.beginFrame();
+  courtMod.drawCourt(C);
+  input.endFrame();
+  const entry = input.publishedHits().find((h) => Math.round(h.w) === 150 && Math.round(h.h) === 36);
+  assert.ok(entry, '朝政分頁應有帝王面板入口');
+  input.dispatchPoint(entry.x + entry.w / 2, entry.y + entry.h / 2);
+  assert.equal(ruler.isRulerOpen(), true);
+  ruler.closeRuler();
+  setScreen('officials');
+});
+
+test('D105 年初策卡：drawPolicyCards 實際繪出高度與 policyCardsHeight 量測值一致（paintStack 版面依賴此）', () => {
+  freshState();
+  U.state.month = 1; U.state.year = 2; U.state.alive = true;
+  U.state.flags = { policy_offer_year: 2 };
+  U.state.policyCards = { active: [], offer: POLICY_CARD_IDS_HEAD(3) };
+  const measured = cardsMod.policyCardsHeight(300);
+  input.beginFrame();
+  const drawn = cardsMod.drawPolicyCards(C, 0, 0, 300);
+  input.endFrame();
+  assert.ok(measured > 0);
+  assert.equal(drawn, measured);
+});
+
+test('D105 年初策卡：courtItems 含策卡區塊，且位於朝政行動區之前（快進卡仍為末項）', () => {
+  freshState();
+  U.state.month = 1; U.state.year = 2; U.state.alive = true;
+  U.state.flags = { policy_offer_year: 2 };
+  U.state.policyCards = { active: [], offer: POLICY_CARD_IDS_HEAD(3) };
+  const measured = cardsMod.policyCardsHeight(300);
+  const items = courtMod.courtItems(300);
+  const idx = items.findIndex((it) => it && it.h === measured);
+  assert.ok(measured > 0 && idx > 0, '策卡區塊應存在於朝堂項目中');
+  assert.ok(idx < items.length - 1, '策卡區塊不得為快進卡之後');
+});
+
+test('D107 生效列獨立：無待選卡時，生效策卡與生效協同仍顯示（策卡區塊不為零高）', () => {
+  freshState();
+  const pair = findSynergyPair();
+  assert.ok(pair, '測試需要一組可成立協同的策卡');
+  U.state.month = 5; U.state.year = 2; U.state.alive = true;
+  U.state.flags = {};
+  U.state.policyCards = { active: pair, offer: [] };
+  assert.equal(cardsMod.policyOfferBlocks().length, 0, '非正月無待選卡');
+  assert.notEqual(cardsMod.activeCardsText(), '');
+  assert.notEqual(cardsMod.synergyText(), '');
+  assert.ok(cardsMod.policyCardsHeight(300) > 0, '生效列應佔高度');
+});
+
+test('D107 生效協同不依附於待選卡：policyOfferBlocks 不再內含協同文字', () => {
+  freshState();
+  const pair = findSynergyPair();
+  U.state.month = 1; U.state.year = 3; U.state.alive = true;
+  U.state.flags = { policy_offer_year: 3 };
+  U.state.policyCards = { active: pair, offer: POLICY_CARD_IDS_HEAD(3) };
+  const texts = cardsMod.policyOfferBlocks().map((b) => b.s ?? '');
+  assert.ok(!texts.some((s) => s.startsWith('生效協同')), '協同列應由外層獨立繪製');
+});
+
+test('D009 人物卡：展開內容含「野心 n」', () => {
+  freshState();
+  const o = { ...U.state.officials[0], ambition: 37 };
+  const flat = personBlocks(o).map((b) => b.s ?? '').join('\n');
+  assert.ok(flat.includes('野心 37'), '人物卡應顯示野心數值');
+});
+
+test('D056 帝王頁暴政文字：與 ASSASSIN_TYRANNY_THRESHOLD 一致', () => {
+  assert.equal(tyrannyAssassinText(), `暴政逾 ${ASSASSIN_TYRANNY_THRESHOLD} 者，另有遇刺之險。`);
+  assert.ok(!tyrannyAssassinText().includes('逾 40'));
+});
+
+test('D066 東廠：imprisoned 狀態有中文文字，不以英文鍵顯示', () => {
+  assert.equal(STATUS_TEXT.imprisoned, '下獄中');
+});
+
+test('D078 近期結案：outcome 鍵皆有中文對照', () => {
+  for (const k of ['no_evidence', 'no_confession', 'warned', 'punished', 'imprisoned']) {
+    assert.match(OUTCOME_TEXT[k] ?? '', /[一-鿿]/, `${k} 應有中文`);
+  }
+});
+
+// 取前 n 張策卡 id（卡庫順序固定）。
+function POLICY_CARD_IDS_HEAD(n) { return IDS.slice(0, n); }
+
+// 找出一組可成立協同的兩張策卡。
+function findSynergyPair() {
+  for (const syn of SYNERGIES) {
+    const [t1, t2] = syn.tags;
+    const a = IDS.find((id) => (policyCardDef(id)?.tags ?? []).includes(t1));
+    const b = IDS.find((id) => id !== a && (policyCardDef(id)?.tags ?? []).includes(t2));
+    if (a && b) return [a, b];
+  }
+  return null;
+}

@@ -8,7 +8,8 @@ import { TACTICS } from '../../src/war.js';
 import { MAX_ROUNDS, PEACE_TRIBUTE_COST, RECON_GRAIN_COST, WINS_NEEDED } from '../../src/campaign.js';
 import { U } from './store.js';
 import { DC_HINT, DC_LABEL } from './labels.js';
-import { handleCardAct, has } from './render-cards.js';
+import { handleCardAct, has, drawPolicyCards, policyCardsHeight } from './render-cards.js';
+import { drawRulerEntry } from './render-ruler.js';
 import { C } from './canvas/core.js';
 import { campaignActive, chooseDC, chooseOption, finishMonth, fastForward, morningPair, pendingCase, startEventCampaign, campAct } from './game-flow.js';
 import { memorialItem, secondItem, chooseSecond, skipSecond, memo } from './render-memorial.js';
@@ -102,6 +103,19 @@ export function ffItem(w) {
   ], 6), { pad: 12, r: 10 });
 }
 
+// 帝王面板入口（朝政分頁開頭）：高度與按鈕相同；draw 每幀呼叫 drawRulerEntry，以維持對話框開啟。
+function rulerEntryItem() {
+  const bh = 36 * C.U;
+  return { h: bh, draw(x, y) { drawRulerEntry(C, x, y); } };
+}
+
+// 年初策卡區塊：高度先行量測（與 drawPolicyCards 同一排列），無內容時不佔位。
+function policyCardsItem(w) {
+  const h = policyCardsHeight(w);
+  if (!h) return null;
+  return { h, draw(x, y, cw) { drawPolicyCards(C, x, y, cw); } };
+}
+
 // 朝政行動區：冊立東宮、朝政行動、時段、上次戰報（僅無待決案件且存活時）。
 function actionsSection(w) {
   if (pendingCase() || !U.state.alive) return [];
@@ -116,11 +130,11 @@ const secondHandlers = {
 // 朝堂畫面的全部區塊（由上而下）。
 export function courtItems(w) {
   memo.n = 0; // 首奏未顯示時，左右滑動不作用
-  const items = [scenarioItem(w)];
+  const items = [scenarioItem(w), rulerEntryItem()];
   // 快進卡於每一分支皆須顯示（與舊版 ffMount 於朝堂永遠附加相同）。
-  if (campaignActive()) { items.push(campaignItem(w), ...actionsSection(w), ffItem(w)); return items; }
+  if (campaignActive()) { items.push(campaignItem(w), policyCardsItem(w), ...actionsSection(w), ffItem(w)); return items; }
   const dc = pendingCase();
-  if (dc) { items.push(dcItem(w, dc), ffItem(w)); return items; }
+  if (dc) { items.push(dcItem(w, dc), policyCardsItem(w), ffItem(w)); return items; }
   const { first: ev, second: ev2, secondDone } = morningPair();
   const showSecond = !!ev2 && !secondDone;
   const sp = ev ? pickSpeaker(U.state, ev) : null;
@@ -134,7 +148,7 @@ export function courtItems(w) {
     }));
     if (showSecond) items.push(secondItem(ev2, pickSpeaker(U.state, ev2), w, secondHandlers));
   }
-  items.push(...actionsSection(w));
+  items.push(policyCardsItem(w), ...actionsSection(w));
   items.push(ffItem(w));
   return items;
 }

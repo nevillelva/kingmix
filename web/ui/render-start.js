@@ -11,7 +11,7 @@ import { isUnlocked, unlockRequirementText } from '../../src/unlocks.js';
 import { EDICT_DEFS, validateEdictChoice } from '../../src/edicts.js';
 import { loadUnlocks, syncUnlocks, UNLOCK_FAIL_MSG } from './unlock-store.js';
 import { U } from './store.js';
-import { cloudSave, discardCorruptSave, load, reasonText, save, saveMsg, saveTextFile } from './state-io.js';
+import { cloudSave, corruptBackupFailing, discardCorruptSave, load, reasonText, save, saveMsg, saveTextFile } from './state-io.js';
 import { newGame } from './game-flow.js';
 import { currentEventPool } from './event-pool.js';
 import { render } from './render-bus.js';
@@ -177,12 +177,17 @@ function resumeSaved(state, seed) {
   U.reviewedCount = (U.state.annals || []).length;
 }
 
-// 損毀提示卡：匯出損毀存檔、開新局（開新局前另存備份）。
+// 解鎖寫入失敗提示（A-048）：只在寫入失敗狀態由「否」轉「是」時提示一次，不於每幀重複推送。
+let lastUnlockFail = false;
+export function unlockFailNotice(prev, now) { return !!now && !prev; }
+
+// 損毀提示卡：匯出損毀存檔、開新局（開新局前另存備份）。備份失敗時常駐警示（A-002）。
 function corruptCard(L, y, corrupt) {
   const lines = [
     { t: '本機存檔損毀', size: 16, weight: 'bold' },
     { t: `瀏覽器中的自動存檔無法讀取（${reasonText(corrupt.error)}），已停止使用。可先匯出損毀存檔留底，或開新局（開新局前會將損毀內容另存於瀏覽器備份）。`, size: 13, gap: 8 },
   ];
+  if (corruptBackupFailing()) lines.push({ t: '上次無法備份損毀存檔（儲存空間可能已滿），開新局前請先按「匯出損毀存檔」留底。', size: 13, color: RED, gap: 8 });
   let h = card(L, y, L.cw, lines, {});
   h += buttonRow(L, y + h, [
     { label: '匯出損毀存檔', onClick: () => { const d = new Date().toISOString().slice(0, 10); saveTextFile(`kingmix-save-corrupt-${d}.json`, corrupt.raw); } },
@@ -195,7 +200,8 @@ export function renderStart() {
   const L = layout();
   const snap = snapshot();
   const corrupt = snap.corrupt;
-  if (snap.writeFailed) saveMsg(UNLOCK_FAIL_MSG);
+  if (unlockFailNotice(lastUnlockFail, snap.writeFailed)) saveMsg(UNLOCK_FAIL_MSG);
+  lastUnlockFail = !!snap.writeFailed;
   const unlockRec = snap.unlockRec;
   let y = 14 * L.U;
 

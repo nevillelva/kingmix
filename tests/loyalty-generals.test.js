@@ -11,7 +11,7 @@ const uiSource = readFileSync(new URL('../web/ui/render-officials.js', import.me
 
 // 忠誠門檻統一：UI 一律引用 ASSASSIN_LOW_LOYALTY，不再寫死 40。
 test('忠誠門檻統一：render-officials 自 assassination.js 匯入常數，且不再以 40 為門檻', () => {
-  assert.match(uiSource, /import \{ ASSASSIN_LOW_LOYALTY \} from '\.\.\/\.\.\/src\/assassination\.js'/);
+  assert.match(uiSource, /import \{ ASSASSIN_LOW_LOYALTY(?:, ASSASSIN_TYRANNY_THRESHOLD)? \} from '\.\.\/\.\.\/src\/assassination\.js'/);
   assert.equal(/loy\s*[<>]=?\s*40\b|loyalty\s*<\s*40\b/.test(uiSource), false, '不得出現忠誠 40 門檻');
   assert.equal(ASSASSIN_LOW_LOYALTY, 50);
 });

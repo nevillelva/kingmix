@@ -2,7 +2,7 @@
 // 畫面：drawOfficials（朝臣）、drawDC（東廠）、drawThrone（帝王）。后宮與子嗣（renderHarem）歸 B，不在此檔。
 // 行為與舊版 DOM 介面一致：任免、東廠、漕運、黨爭、進諫、禪位皆走既有引擎函式與 useAction 記帳。
 import { FACTIONS, isCourtOfficial, loyaltySafetyStatus } from '../../src/officials.js';
-import { ASSASSIN_LOW_LOYALTY } from '../../src/assassination.js';
+import { ASSASSIN_LOW_LOYALTY, ASSASSIN_TYRANNY_THRESHOLD } from '../../src/assassination.js';
 import { buildGeneralCard, isGeneral } from '../../src/general-cards.js';
 import { BOND_THRESHOLD, isBonded, remonstrate, sharedCount } from '../../src/bonds.js';
 import { describeTraits } from '../../src/people.js';
@@ -24,6 +24,7 @@ import { render } from './render-bus.js';
 import { actionsLeft, useAction } from './render-actions.js';
 import { giveItemBlocks, deferBlock, flushBlock } from './render-cards.js';
 import { relationsBlock } from './render-relations.js';
+import { BLOC_GAIN, GUILT_LOYALTY, IMPEACH_LOYALTY } from '../../src/relations.js';
 import { prefecturePressureText, courtMinisterText } from './render-pressure.js';
 import { confirmResign } from './overlays.js';
 import { C, currentScreen } from './canvas/core.js';
@@ -151,6 +152,45 @@ function candidateBlocks() {
 }
 
 // ── 黨爭 ──
+// ── 朝綱裁決（D110）：互參、連坐、結黨的裁決旗標由玩家於朝臣頁下達，寫入既有 state.flags（同事件 setFlag）。
+// 可選條件與引擎 src/relations.js 的 stepRelations 一致；裁決於下次月結生效，不耗朝政行動（同東廠把柄裁決）。
+const REL_ORDER_DEFS = [
+  { flag: 'rel_order_purge', label: '準其所參', hint: `黜落被參之臣（須有互參在案）`, when: (f) => !!f.impeach_pending },
+  { flag: 'rel_order_pardon', label: '駁回參奏', hint: `參人忠誠下挫 ${IMPEACH_LOYALTY}（須有互參在案）`, when: (f) => !!f.impeach_pending },
+  { flag: 'rel_order_mourn', label: '赦免連坐', hint: `受連坐之師生、姻親忠誠回復 ${GUILT_LOYALTY}；有互參在案時，並免被參者之連坐`, when: (f) => !!f.guilt_spread || !!f.impeach_pending },
+  { flag: 'rel_order_disband', label: '許其解黨', hint: `已成黨之派勢力各減 ${BLOC_GAIN * 2}`, when: (f) => FACTIONS.some((k) => !!f[`bloc_${k}`]) },
+];
+
+// 目前可下達的裁決，以及本月已下達者（pending，月結後清除）。純函式（只讀 flags）。
+export function relOrderOptions(state = U.state) {
+  const flags = state?.flags || {};
+  const pending = REL_ORDER_DEFS.find((d) => flags[d.flag]) || null;
+  const options = REL_ORDER_DEFS.filter((d) => d.when(flags)).map((d) => ({ flag: d.flag, label: d.label, hint: d.hint, off: !!pending }));
+  return { pending: pending ? pending.flag : null, options };
+}
+
+// 下達裁決：寫入旗標；同月已有裁決者不再寫入。不耗行動。
+export function setRelOrder(flag) {
+  const def = REL_ORDER_DEFS.find((d) => d.flag === flag);
+  if (!def || !U.state) return;
+  U.state.flags = U.state.flags || {};
+  if (relOrderOptions(U.state).pending) { U.feedback = '本月已下達裁決，待月結生效。'; return render(); }
+  U.state.flags[flag] = true;
+  U.feedback = `已下達裁決「${def.label}」，於月結生效。`;
+  save(); render();
+}
+
+function relOrderBlocks(rel) {
+  const out = [{ t: 'text', s: '互參、連坐、結黨皆於月結自然浮現。裁決於下次月結生效，不耗朝政行動。', size: 13 * S() }];
+  if (rel.pending) {
+    const d = REL_ORDER_DEFS.find((x) => x.flag === rel.pending);
+    out.push({ t: 'text', s: `本月已下達：${d.label}，待月結生效。`, size: 13 * S() });
+  }
+  for (const o of rel.options) out.push({ t: 'text', s: `${o.label}：${o.hint}`, size: 12.5 * S() });
+  out.push({ t: 'btns', items: rel.options.map((o) => ({ label: o.label, onClick: () => setRelOrder(o.flag), off: o.off, why: '已下達裁決', lac: false })) });
+  return out;
+}
+
 function partisanBlocks() {
   const s = partisanStatus(U.state);
   if (!s.enabled) return [];
@@ -205,6 +245,11 @@ function factionBar(f) {
   };
 }
 
+// 帝王頁暴政注記：遇刺之險的門檻取自 assassination.js（與結算用的常數一致）。
+export function tyrannyAssassinText() {
+  return `暴政逾 ${ASSASSIN_TYRANNY_THRESHOLD} 者，另有遇刺之險。`;
+}
+
 // ── 人物卡 ──
 // 人物卡展開內容（同舊版 personCard）：年歲與派系官職、安全線、五項能力、特質、進諫或共歷、賜寶。
 export function personBlocks(o) {
@@ -213,7 +258,7 @@ export function personBlocks(o) {
   const f = FAC(o.faction);
   const traits = describeTraits(o).slice(0, 3).join('　');
   const blocks = [
-    { t: 'text', s: `${o.age ?? '—'} 歲　${f.l}　${o.office ? officeName(o.office) : '閒置'}${bonded ? '　君臣相得' : ''}`, size: 13 * S() },
+    { t: 'text', s: `${o.age ?? '—'} 歲　${f.l}　${o.office ? officeName(o.office) : '閒置'}　野心 ${o.ambition ?? '—'}${bonded ? '　君臣相得' : ''}`, size: 13 * S() },
     { t: 'text', s: safetyText(o, bonded), size: 13 * S() },
     { t: 'text', s: `能力　${Object.keys(ABIL).map((k) => `${ABIL[k]} ${o.abilities?.[k] ?? '—'}`).join('　')}`, size: 13 * S() },
   ];
@@ -309,6 +354,9 @@ export function drawOfficials() {
 
   y += section(x, y, w, '朝臣關係圖', [relationsBlock(U.state, inner)]) + gapOf();
 
+  const rel = relOrderOptions(U.state);
+  if (rel.options.length || rel.pending) y += section(x, y, w, '朝綱裁決', relOrderBlocks(rel)) + gapOf();
+
   const officeRows = [
     { t: 'text', s: '需求未達者仍可任命，效果打折。免職後的空缺，若有完全達標之臣，月末由吏部自動補任。', size: 13 * S() },
     ...officeBlocks(),
@@ -331,7 +379,10 @@ export function drawOfficials() {
 }
 
 // ── 東廠頁 ──
-const STATUS_TEXT = { leverage: '把柄待決', deferred: '暫緩', investigating: '調查中' };
+export const STATUS_TEXT = { leverage: '把柄待決', deferred: '暫緩', investigating: '調查中', imprisoned: '下獄中' };
+
+// 近期結案的處置結果（dongchang.js 的 outcome 鍵）。
+export const OUTCOME_TEXT = { no_evidence: '查無實據', no_confession: '無供詞', warned: '口頭告誡', punished: '降職罷黜', imprisoned: '下獄' };
 
 export function patrolAct(id) {
   const r = dispatchCanalPatrol(U.state, id);
@@ -398,7 +449,7 @@ export function drawDC() {
     lac: true,
     blocks: [
       { t: 'title', s: '近期結案' },
-      ...(closed.length ? closed.map((c) => ({ t: 'text', s: `${off(c.officialId)}　${c.outcome || '結案'}`, size: 13 * S() })) : [{ t: 'text', s: '尚無結案。' }]),
+      ...(closed.length ? closed.map((c) => ({ t: 'text', s: `${off(c.officialId)}　${OUTCOME_TEXT[c.outcome] ?? '結案'}`, size: 13 * S() })) : [{ t: 'text', s: '尚無結案。' }]),
     ],
   }) + gapOf();
   setContentHeight(y);
@@ -492,7 +543,7 @@ export function drawThrone() {
     { t: 'kv', k: '征戰', v: `${U.state.wars.length} 次 · 勝 ${wins}` },
     { t: 'kv', k: '暴政', v: `${ty.value} / ${ty.max}` },
     { t: 'bar', v: ty.value, max: 100, color: ty.qingliuDrainOn ? '#c04a3a' : undefined },
-    { t: 'text', s: `責罰、下獄會累積暴政。暴政達 ${ty.threshold}，清流勢力每月下降 1${ty.qingliuDrainOn ? '（目前生效）' : ''}。暴政逾 40 者，另有遇刺之險。`, size: 12.5 * S() },
+    { t: 'text', s: `責罰、下獄會累積暴政。暴政達 ${ty.threshold}，清流勢力每月下降 1${ty.qingliuDrainOn ? '（目前生效）' : ''}。${tyrannyAssassinText()}`, size: 12.5 * S() },
     { t: 'btns', items: [{ label: '禪位予皇子', onClick: openResign, lac: false }] },
   ]) + gapOf();
   const chron = (U.state.chronicle || []).map((c) => chronicleLine(c));

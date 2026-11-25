@@ -22,6 +22,8 @@ export const AUTO_SAVE_FAIL_MSG = '自動存檔失敗（瀏覽器儲存空間可
 
 // 寫入本機自動存檔（v2 包裝，不推送雲端）。成功回傳 true；失敗時顯示存檔訊息，記憶體進度保留。
 let autoSaveFailed = false;
+// 常駐旗標（A-046）：自動存檔寫入失敗期間為真，供頂欄常駐列顯示；寫入成功即清除。
+export function autoSaveFailing() { return autoSaveFailed; }
 function writeLocal(seed, state) {
   const ok = writeAutoSave(globalThis.localStorage, SAVE_KEY, seed, state);
   if (!ok) { autoSaveFailed = true; saveMsg(AUTO_SAVE_FAIL_MSG); }
@@ -182,9 +184,17 @@ export function load() {
 export function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 
 // 「開新局」於損毀存檔時使用：先另存備份，成功後才清除自動存檔。備份失敗則保留原檔並回傳 false。
+// 備份失敗時設常駐旗標（A-002），開局畫面損毀卡持續顯示；備份成功即清除。
+let corruptBackupFailed = false;
+export function corruptBackupFailing() { return corruptBackupFailed; }
 export function discardCorruptSave(raw) {
   try { localStorage.setItem(CORRUPT_BACKUP_KEY, raw); }
-  catch (e) { saveMsg('無法備份損毀存檔（儲存空間可能已滿），請先按「匯出損毀存檔」。'); return false; }
+  catch (e) {
+    corruptBackupFailed = true;
+    saveMsg('無法備份損毀存檔（儲存空間可能已滿），請先按「匯出損毀存檔」。');
+    return false;
+  }
+  corruptBackupFailed = false;
   clearSave();
   return true;
 }
