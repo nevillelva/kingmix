@@ -9,7 +9,7 @@ import { ERA_CHANGE_COOLDOWN_MONTHS, ERA_CHANGE_PRESTIGE_COST, ERA_REASON_TEXT, 
 import { CHANGE_CROWN_PRINCE_PRESTIGE_COST, chooseCrownPrince, eligibleCrownHeirs, heirFaction } from '../../src/heirs-choice.js';
 import { TAX_TIERS, ensureEconomy, setTaxTier } from '../../src/economy.js';
 import { REPAIR_COST, cityOf, ensureCity, repairCity } from '../../src/city.js';
-import { ALLIANCE_MIN_ATTITUDE, DECLARE_WAR_LOSS, DECLARE_WAR_REWARD, INVEST_ATTITUDE, INVEST_COST, MARRIAGE_COST, MAX_ALLIANCES, NEIGHBORS, PRINCESS_ATTITUDE_GAIN, PRINCESS_TRUCE_MONTHS, TRADE_OPEN_COST, TRIBUTE_GAIN, TRIBUTE_MIN_ATTITUDE, acceptTribute, arrangeMarriage, diplomacyOf, eligiblePrincesses, formAlliance, investNeighbor, marryPrincess, neighborById, openTrade } from '../../src/diplomacy.js';
+import { ALLIANCE_MIN_ATTITUDE, DECLARE_WAR_LOSS, DECLARE_WAR_REWARD, INVEST_ATTITUDE, INVEST_COST, MARRIAGE_COST, MAX_ALLIANCES, NEIGHBORS, PRINCESS_ATTITUDE_GAIN, PRINCESS_TRUCE_MONTHS, SCOUT_COST, SCOUT_TTL, TRADE_OPEN_COST, TRIBUTE_GAIN, TRIBUTE_MIN_ATTITUDE, acceptTribute, arrangeMarriage, canDiplomacy, diplomacyOf, eligiblePrincesses, formAlliance, investNeighbor, marryPrincess, neighborById, openTrade, scoutNeighbor } from '../../src/diplomacy.js';
 import { assignOffice, dismissOffice, suggestCandidate } from '../../src/offices.js';
 import { startCampaign } from '../../src/campaign.js';
 import { remonstrate } from '../../src/bonds.js';
@@ -156,11 +156,12 @@ export function actionsItem(w) {
         ['marry', '聯姻', `花費國庫 ${MARRIAGE_COST}，好感 +15，二年內不易開戰`, false],
         ['tribute', '朝貢', `好感達 ${TRIBUTE_MIN_ATTITUDE}，得國庫 ${TRIBUTE_GAIN}、威儀 +1`, false],
         ['invest', '冊封', `花費國庫 ${INVEST_COST}，好感 +${INVEST_ATTITUDE}；此後每年自動朝貢`, false],
+        ['scout', '刺探', `花費國庫 ${SCOUT_COST}，${SCOUT_TTL} 月內與其開戰，戰前即得敵情`, false],
         ['trade', '互市', `花費國庫 ${TRADE_OPEN_COST}，每月得國庫小幅增益，久之產良馬`, false],
         ['ally', '結盟', `好感達 ${ALLIANCE_MIN_ATTITUDE}，最多 ${MAX_ALLIANCES} 國；盟國不可宣戰`, false],
         ['war', '宣戰', '三回合親征，成敗決於戰局與議和', true],
       ];
-      cards = paths.map(([k, l, hh, war]) => optionCard(w, { mark: war ? '征' : '和', label: l, hint: hh, zhu: war, off: dis, onClick: () => agencyAct('dpath', k) }));
+      cards = paths.map(([k, l, hh, war]) => optionCard(w, { mark: war ? '征' : k === 'scout' ? '探' : '和', label: l, hint: hh, zhu: war, off: dis || (k === 'scout' && !canDiplomacy(U.state, 'scout', n.id)), onClick: () => agencyAct('dpath', k) }));
       for (const h of eligiblePrincesses(U.state)) {
         cards.push(optionCard(w, { mark: '女', label: `和親：${h.name}`, hint: `皇女出嫁，花費國庫 ${MARRIAGE_COST}，停戰 ${PRINCESS_TRUCE_MONTHS} 月，好感 +${PRINCESS_ATTITUDE_GAIN}`, off: dis, onClick: () => agencyAct('dprincess', h.id) }));
       }
@@ -351,7 +352,9 @@ export function agencyAct(a, v) {
     else if (v === 'ally') { r = formAlliance(U.state, n.id); msg = `與${n.name}結盟。`; }
     else if (v === 'invest') { r = investNeighbor(U.state, n.id); msg = `冊封${n.name}，其君奉表稱臣。`; }
     else if (v === 'trade') { r = openTrade(U.state, n.id); msg = `與${n.name}開通互市。`; }
+    else if (v === 'scout') { r = scoutNeighbor(U.state, n.id); msg = `遣使刺探${n.name}，情報可用 ${SCOUT_TTL} 月。`; }
     else { r = startCampaign(U.state, { strength: n.strength, reward: { ...DECLARE_WAR_REWARD }, loss: { ...DECLARE_WAR_LOSS } }, { neighborId: n.id }); msg = `宣戰${n.name}，親征出兵。`; if (r.ok) { U.state.campaign.title = `征討${n.name}`; } }
+    if (!r.ok && v === 'scout' && r.reason === 'already') { U.feedback = `${n.name}之情報尚新，無需重複刺探。`; return render(); }
     if (!r.ok) { U.feedback = `此舉未成：${REASON[r.reason] || '條件未符'}。`; return render(); }
     if (v === 'war') { sfx('pick'); }
     return useAction(msg);
