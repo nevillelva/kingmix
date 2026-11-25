@@ -212,3 +212,49 @@ test('D110: 朝臣頁繪製時出現「朝綱裁決」區塊（有互參在案�
   assert.ok(log.some(s => s.includes('朝綱裁決')), '應繪出朝綱裁決區塊');
   assert.ok(log.some(s => s.includes('準其所參')), '應列出準其所參');
 });
+
+// ── A-048：解鎖寫入失敗提示只於狀態由「否」轉「是」時出現一次（不再每幀推送）──
+test('A-048: renderStart 不再每幀提示；unlockFailNotice 只在寫入失敗狀態轉變時為真', async () => {
+  const src = read('web/ui/render-start.js');
+  assert.doesNotMatch(src, /if \(snap\.writeFailed\) saveMsg\(UNLOCK_FAIL_MSG\);/);
+  const { unlockFailNotice } = await import('../web/ui/render-start.js');
+  assert.equal(unlockFailNotice(false, true), true, '由否轉是：提示');
+  assert.equal(unlockFailNotice(true, true), false, '持續失敗：不再提示');
+  assert.equal(unlockFailNotice(true, false), false, '恢復：不提示');
+  assert.equal(unlockFailNotice(false, false), false);
+});
+
+// ── A-002、A-044、A-046：存檔失敗改為常駐（寫入成功後清除）──
+test('A-002: 損毀存檔備份失敗時常駐旗標為真，成功後清除', async () => {
+  const { discardCorruptSave, corruptBackupFailing } = await import('../web/ui/state-io.js');
+  const orig = globalThis.localStorage;
+  try {
+    globalThis.localStorage = { setItem() { throw new Error('full'); }, getItem: () => null, removeItem() {} };
+    assert.equal(discardCorruptSave('{broken'), false);
+    assert.equal(corruptBackupFailing(), true);
+    globalThis.localStorage = { setItem() {}, getItem: () => null, removeItem() {} };
+    assert.equal(discardCorruptSave('{broken'), true);
+    assert.equal(corruptBackupFailing(), false);
+  } finally { globalThis.localStorage = orig; }
+});
+
+test('A-046: 自動存檔寫入失敗時常駐旗標為真，寫入成功後清除', async () => {
+  const { save, flushSave, autoSaveFailing } = await import('../web/ui/state-io.js');
+  const { createInitialState } = await import('../src/state.js');
+  const orig = globalThis.localStorage;
+  setup('audit-g3-autosave');
+  try {
+    globalThis.localStorage = { setItem() { throw new Error('full'); }, getItem: () => null, removeItem() {} };
+    save(); flushSave();
+    assert.equal(autoSaveFailing(), true);
+    globalThis.localStorage = { setItem() {}, getItem: () => null, removeItem() {} };
+    U.state = createInitialState('audit-g3-autosave-2');
+    save(); flushSave();
+    assert.equal(autoSaveFailing(), false);
+  } finally { globalThis.localStorage = orig; }
+});
+
+test('A-002/A-046: 常駐列接入開局畫面損毀卡與頂欄（drawTop）', () => {
+  assert.match(read('web/ui/render-start.js'), /corruptBackupFailing\(\)/);
+  assert.match(read('web/ui/render-nav.js'), /autoSaveFailing\(\)/);
+});
